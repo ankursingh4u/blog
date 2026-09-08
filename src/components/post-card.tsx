@@ -1,4 +1,5 @@
-import { CoverArt } from '@/components/ui/cover-art';
+import Image from 'next/image';
+import { CoverArt, coverPhoto } from '@/components/ui/cover-art';
 import Link from 'next/link';
 import { CheckCircle2, Clock } from 'lucide-react';
 import type { PostCard as PostCardData } from '@/lib/posts';
@@ -11,8 +12,10 @@ import { categoryPath } from '@/lib/urls';
  * ratio, so nothing can shift the grid — the CLS budget for a listing page is
  * spent almost entirely here.
  *
- * The cover is drawn rather than fetched (see `CoverArt`), so there is no image
- * request to prioritise; the old `priority` prop went with it.
+ * The cover is a licensed photograph when one has been chosen, and drawn art
+ * otherwise (see `CoverArt`) — never the OG card, which has the headline baked
+ * into it. The old `priority` prop went when the drawn fallback arrived and
+ * there was no longer always an image request to prioritise.
  */
 export function PostCard({
   post,
@@ -24,6 +27,7 @@ export function PostCard({
   className?: string;
 }) {
   const published = formatDate(post.publishedAt);
+  const photo = coverPhoto(post);
   const verified = post.testedOnBuild && post.lastVerifiedAt;
 
   if (variant === 'compact') {
@@ -31,10 +35,20 @@ export function PostCard({
       <article className={cn('group', className)}>
         <Link href={post.href} className="flex gap-4">
           <div className="relative aspect-[4/3] w-24 shrink-0 overflow-hidden rounded-md bg-muted">
-            <CoverArt
-              seed={post.category.slug}
-              className="transition-transform duration-300 group-hover:scale-105"
-            />
+            {photo ? (
+              <Image
+                src={photo}
+                alt=""
+                fill
+                sizes="96px"
+                className="object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+            ) : (
+              <CoverArt
+                seed={post.category.slug}
+                className="transition-transform duration-300 group-hover:scale-105"
+              />
+            )}
           </div>
           <div className="min-w-0">
             <h3 className="line-clamp-2 text-sm font-medium leading-snug group-hover:text-brand">
@@ -69,15 +83,27 @@ export function PostCard({
         tabIndex={-1}
         aria-hidden="true"
       >
-        <CoverArt
-          seed={post.category.slug}
-          className="transition-transform duration-500 group-hover:scale-[1.03]"
-        />
-        <div className="relative grid h-full w-full place-items-center">
-          <span className="font-mono text-xs uppercase tracking-widest text-white/70">
-            {post.category.name}
-          </span>
-        </div>
+        {photo ? (
+          <Image
+            src={photo}
+            alt=""
+            fill
+            sizes={isFeatured ? '(max-width: 1024px) 100vw, 50vw' : '(max-width: 768px) 100vw, 33vw'}
+            className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+          />
+        ) : (
+          <>
+            <CoverArt
+              seed={post.category.slug}
+              className="transition-transform duration-500 group-hover:scale-[1.03]"
+            />
+            <div className="relative grid h-full w-full place-items-center">
+              <span className="font-mono text-xs uppercase tracking-widest text-white/70">
+                {post.category.name}
+              </span>
+            </div>
+          </>
+        )}
       </Link>
 
       <div className={cn('flex flex-1 flex-col p-5', isFeatured && 'lg:p-8')}>

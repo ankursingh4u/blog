@@ -51,3 +51,32 @@ export const Screenshot = z.object({
 });
 export type Screenshot = z.infer<typeof Screenshot>;
 export const ScreenshotArray = z.array(Screenshot);
+
+/**
+ * Attribution for an openly-licensed cover photograph.
+ *
+ * Lives here rather than beside the Openverse client so the article page can
+ * read it without pulling in the search and storage code. Every field defaults
+ * to empty: a generated card has no credit, and the renderer treats an empty
+ * creator and licence as "nothing to display".
+ */
+export const ImageCreditSchema = z.object({
+  creator: z.string().default(''),
+  creatorUrl: z.string().default(''),
+  license: z.string().default(''),
+  licenseUrl: z.string().default(''),
+  sourceUrl: z.string().default(''),
+  sourceName: z.string().default(''),
+  title: z.string().default(''),
+});
+export type ImageCreditData = z.infer<typeof ImageCreditSchema>;
+
+export const EMPTY_CREDIT: ImageCreditData = {
+  creator: '',
+  creatorUrl: '',
+  license: '',
+  licenseUrl: '',
+  sourceUrl: '',
+  sourceName: '',
+  title: '',
+};

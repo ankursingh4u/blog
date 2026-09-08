@@ -17,7 +17,9 @@
     "db:reset": "prisma db push --force-reset && npm run db:seed",
     "generate": "tsx scripts/generate.ts",
     "scheduler": "tsx scripts/scheduler.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "scheduler:generate": "tsx scripts/scheduler.ts --generate",
+    "ingest": "tsx scripts/ingest-only.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

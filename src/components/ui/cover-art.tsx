@@ -19,6 +19,21 @@
  * the same contract as `next/image` with `fill`.
  */
 
+/**
+ * The photograph to show for a post, or null to fall back to drawn cover art.
+ *
+ * A licence is what distinguishes a real photo from the generated OG card:
+ * the card is stored in `featuredImage` too, but carries no credit. Checking
+ * the licence rather than the path means the rule holds wherever the file
+ * happens to live.
+ */
+export function coverPhoto(post: {
+  featuredImage: string | null;
+  imageCredit?: { license: string };
+}): string | null {
+  return post.imageCredit?.license && post.featuredImage ? post.featuredImage : null;
+}
+
 /** Stable small hash so a given seed always maps to the same hue. */
 function hueFor(seed: string): number {
   let h = 0;

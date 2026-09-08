@@ -1,4 +1,6 @@
 import { CoverArt } from '@/components/ui/cover-art';
+import { ImageCreditLine } from '@/components/admin/cover-picker';
+import { ImageCreditSchema, EMPTY_CREDIT, parseJson } from '@/lib/json';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ChevronRight, ExternalLink, Zap } from 'lucide-react';
@@ -43,6 +45,12 @@ export async function ArticleView({ post }: { post: FullPost }) {
   }
 
   const toc = extractToc(post.body);
+
+  // A cover is a photograph only when it carries a licence. The generated OG
+  // card lives under /uploads/og/ and has no credit, so it is excluded here and
+  // the drawn cover is used instead.
+  const credit = parseJson(post.imageCredit, ImageCreditSchema, EMPTY_CREDIT);
+  const photo = credit.license && post.featuredImage ? post.featuredImage : null;
 
   // A post in a child category gets both rungs, so the trail reads
   // Home > Tech > Windows > title.
@@ -136,14 +144,34 @@ export async function ArticleView({ post }: { post: FullPost }) {
             </header>
 
             {/*
-              Deliberately not `post.featuredImage`. That is the OG card, with
-              the headline drawn into it — directly beneath the same headline as
-              an H1 it read as a stuttering duplicate. It stays the `og:image`
-              for social previews, where the baked text is the point.
+              A real photograph if one has been chosen, otherwise the drawn
+              cover. Never the OG card: that has the headline rendered into the
+              PNG, and directly beneath the same headline as an H1 it read as a
+              stuttering duplicate. It stays the `og:image` for social previews,
+              where the baked text is the point.
             */}
-            <div className="relative mt-8 aspect-[1200/630] overflow-hidden rounded-lg border border-border bg-muted">
-              <CoverArt seed={post.category.slug} />
-            </div>
+            <figure className="mt-8">
+              <div className="relative aspect-[1200/630] overflow-hidden rounded-lg border border-border bg-muted">
+                {photo ? (
+                  <Image
+                    src={photo}
+                    alt={credit.title || post.title}
+                    fill
+                    priority
+                    sizes="(max-width: 1024px) 100vw, 832px"
+                    className="object-cover"
+                  />
+                ) : (
+                  <CoverArt seed={post.category.slug} />
+                )}
+              </div>
+              {/* CC-BY and CC-BY-SA require this credit to be shown. It is not
+                  decoration — without it the licence is not satisfied. */}
+              <ImageCreditLine
+                credit={credit}
+                className="mt-2 text-xs text-muted-foreground"
+              />
+            </figure>
 
             <Callout
               title="Quick answer"

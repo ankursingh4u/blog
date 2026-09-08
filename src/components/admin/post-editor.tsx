@@ -4,6 +4,7 @@ import { useActionState, useMemo, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Eye, Plus, Sparkles, Trash2, Upload } from 'lucide-react';
+import { CoverPicker } from '@/components/admin/cover-picker';
 
 import {
   regenerateSection,
@@ -378,6 +379,8 @@ export function PostEditor({
         <FaqEditor faq={faq} onChange={setFaq} />
 
         <MediaEditor
+          postId={post.id}
+          title={title}
           featuredImage={featuredImage}
           screenshots={screenshots}
           onFeaturedChange={setFeaturedImage}
@@ -571,11 +574,15 @@ function FaqEditor({ faq, onChange }: { faq: FaqItem[]; onChange: (next: FaqItem
 }
 
 function MediaEditor({
+  postId,
+  title,
   featuredImage,
   screenshots,
   onFeaturedChange,
   onScreenshotsChange,
 }: {
+  postId: string;
+  title: string;
   featuredImage: string;
   screenshots: Screenshot[];
   onFeaturedChange: (url: string) => void;
@@ -685,6 +692,8 @@ function MediaEditor({
         `formAction`. The whole save form is posted to `uploadScreenshot`, which
         reads only `file` and `prefix` and ignores the rest.
       */}
+      <CoverPicker postId={postId} defaultQuery={title} />
+
       <div className="mt-6 rounded-md border border-dashed border-border p-4">
         <div className="flex flex-wrap items-end gap-3">
           <div>

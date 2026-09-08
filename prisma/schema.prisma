@@ -97,6 +97,12 @@ model Post {
   metaTitle       String
   metaDescription String
   featuredImage   String?
+  // Attribution for `featuredImage` when it is an openly-licensed photograph
+  // rather than a generated card. CC-BY and CC-BY-SA require the creator,
+  // licence and a link back, so the data has to travel with the image or the
+  // site cannot legally display it.
+  // JSON: { creator, creatorUrl, license, licenseUrl, sourceUrl, sourceName, title }
+  imageCredit     String  @default("")
   screenshots     String  @default("[]") // JSON array of { url, alt, width, height }
   sourceUrls      String  @default("[]") // JSON array of { url, title }
 

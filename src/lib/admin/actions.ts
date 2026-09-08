@@ -18,6 +18,7 @@ import { runPipeline, uniqueSlug, type PipelineRunResult } from '@/pipeline/run'
 import { assignAuthor } from '@/pipeline/select';
 import { research } from '@/pipeline/research';
 import { generateFeaturedImage } from '@/pipeline/featured-image';
+import { searchImages, storeImage, type ImageCandidate } from '@/lib/images';
 import type { CategorySlug } from '@/pipeline/parser';
 
 /**
@@ -180,6 +181,85 @@ export async function createPost(_prev: ActionState, formData: FormData): Promis
 
   revalidatePath('/admin/posts');
   redirect(`/admin/posts/${post.id}`);
+}
+
+/* ------------------------------------------------------------ cover images */
+
+const ImageSearchInput = z.object({ query: z.string().min(2).max(120) });
+
+export interface ImageSearchState {
+  ok: boolean;
+  message: string;
+  results?: ImageCandidate[];
+}
+
+/** Searches Openverse for an openly-licensed cover. No key, no cost. */
+export async function searchCoverImages(
+  _prev: ImageSearchState,
+  formData: FormData,
+): Promise<ImageSearchState> {
+  const parsed = ImageSearchInput.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { ok: false, message: 'Type at least two characters to search.' };
+
+  try {
+    const results = await searchImages(parsed.data.query);
+    return {
+      ok: true,
+      message: results.length ? '' : 'Nothing matched. Try a broader phrase.',
+      results,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      message: `Image search failed: ${error instanceof Error ? error.message : 'unknown error'}`,
+    };
+  }
+}
+
+const ApplyImageInput = z.object({
+  id: z.string().min(1),
+  candidateJson: z.string().min(2),
+});
+
+/**
+ * Stores a chosen image locally and attaches it, with its attribution, to a
+ * post.
+ *
+ * The credit is written in the same operation as the image. Storing one without
+ * the other would leave a CC-BY photo on the site with no way to render the
+ * credit its licence requires.
+ */
+export async function applyCoverImage(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const parsed = ApplyImageInput.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return FAIL('Could not read the selected image.');
+
+  const post = await prisma.post.findUnique({
+    where: { id: parsed.data.id },
+    select: { slug: true },
+  });
+  if (!post) return FAIL('That post no longer exists.');
+
+  let candidate: ImageCandidate;
+  try {
+    candidate = JSON.parse(parsed.data.candidateJson) as ImageCandidate;
+  } catch {
+    return FAIL('Could not read the selected image.');
+  }
+
+  try {
+    const stored = await storeImage(candidate, post.slug);
+    await prisma.post.update({
+      where: { id: parsed.data.id },
+      data: { featuredImage: stored.url, imageCredit: toJson(stored.credit) },
+    });
+    revalidatePath(`/admin/posts/${parsed.data.id}`);
+    return OK(`Cover set. Credit: ${stored.credit.creator} (${stored.credit.license}).`);
+  } catch (error) {
+    return FAIL(error instanceof Error ? error.message : 'Could not store that image.');
+  }
 }
 
 export async function savePost(_prev: ActionState, formData: FormData): Promise<ActionState> {
