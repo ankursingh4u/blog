@@ -354,7 +354,11 @@ async function revalidatePost(category: CategoryRef & { parent?: { slug: string 
 }
 
 /** Slugs are unique in the schema; append -2, -3… rather than failing the run. */
-async function uniqueSlug(base: string): Promise<string> {
+/**
+ * Exported so the admin's create-post action uses the same collision rule the
+ * pipeline does, rather than a second implementation that could disagree.
+ */
+export async function uniqueSlug(base: string): Promise<string> {
   const root = slugify(base) || 'windows-fix';
   let candidate = root;
   let n = 1;

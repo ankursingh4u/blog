@@ -29,8 +29,15 @@ const COVERS_DIR = path.join(process.cwd(), 'public', 'uploads', 'covers');
 async function main() {
   const force = process.argv.includes('--force');
 
+  // `generatedBy: 'HUMAN'` alone is no longer a safe selector: articles written
+  // by hand in the admin carry it too, and this script would delete them. The
+  // seeded fixtures additionally stamp a known marker into `qualityNotes`, so
+  // both conditions are required.
   const fixtures = await prisma.post.findMany({
-    where: { generatedBy: 'HUMAN' },
+    where: {
+      generatedBy: 'HUMAN',
+      qualityNotes: { startsWith: 'Development fixture' },
+    },
     select: { id: true, slug: true, featuredImage: true },
   });
   const generated = await prisma.post.count({ where: { generatedBy: 'AI' } });
@@ -51,7 +58,9 @@ async function main() {
     return;
   }
 
-  const { count } = await prisma.post.deleteMany({ where: { generatedBy: 'HUMAN' } });
+  const { count } = await prisma.post.deleteMany({
+    where: { generatedBy: 'HUMAN', qualityNotes: { startsWith: 'Development fixture' } },
+  });
   console.log(`\ndeleted ${count} post(s)`);
 
   // Sweep covers that nothing references any more.

@@ -1,3 +1,4 @@
+import { Plus } from 'lucide-react';
 import Link from 'next/link';
 import type { Prisma } from '@prisma/client';
 
@@ -63,6 +64,10 @@ export default async function AdminPostsPage({ searchParams }: { searchParams: S
         <h2 className="text-lg font-semibold">
           {total} post{total === 1 ? '' : 's'}
         </h2>
+        <Link href="/admin/posts/new" className={buttonClass('primary', 'md')}>
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          New article
+        </Link>
       </div>
 
       <form method="get" action="/admin/posts" className="mt-5 flex flex-wrap items-end gap-3">

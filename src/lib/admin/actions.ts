@@ -14,7 +14,11 @@ import { setSetting, SETTING_DEFAULTS, type SettingKey } from '@/lib/settings';
 import { generateText } from '@/lib/ai';
 import { categoryPath, postPath } from '@/lib/urls';
 import { extractSection } from '@/lib/admin/section';
-import { runPipeline, type PipelineRunResult } from '@/pipeline/run';
+import { runPipeline, uniqueSlug, type PipelineRunResult } from '@/pipeline/run';
+import { assignAuthor } from '@/pipeline/select';
+import { research } from '@/pipeline/research';
+import { generateFeaturedImage } from '@/pipeline/featured-image';
+import type { CategorySlug } from '@/pipeline/parser';
 
 /**
  * Admin server actions.
@@ -79,6 +83,104 @@ const PostInput = z.object({
   screenshotsJson: z.string().default('[]'),
   relatedSlugsJson: z.string().default('[]'),
 });
+
+const CreatePostInput = z.object({
+  /** Optional: start from a topic the Google News ingest already found. */
+  keywordId: z.string().optional(),
+  title: z.string().min(10, 'Give it a working title of at least 10 characters.').max(140),
+  categoryId: z.string().min(1, 'Pick a section.'),
+});
+
+/**
+ * Creates an empty article for a human to write.
+ *
+ * Nothing here calls a language model. Discovery is RSS, the sources are
+ * fetched HTML, and the cover is rendered locally by /api/og — so a
+ * hand-written article costs nothing to produce, which is the entire point of
+ * having this alongside the pipeline.
+ *
+ * Starting from a queued keyword carries the work the ingest already did:
+ * the section, and the citable sources found for that story. Those are the
+ * expensive part to reproduce by hand, and having them attached before you
+ * start is what keeps a hand-written piece to the same sourcing standard as a
+ * generated one.
+ */
+export async function createPost(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const parsed = CreatePostInput.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return FAIL('Fix the highlighted fields.', fieldErrors(parsed.error));
+  const { keywordId, title, categoryId } = parsed.data;
+
+  const category = await prisma.category.findUnique({
+    where: { id: categoryId },
+    include: { parent: { select: { name: true, slug: true } } },
+  });
+  if (!category) return FAIL('That section no longer exists.', { categoryId: 'Unknown section.' });
+
+  const author = await assignAuthor(category.slug, null);
+  if (!author) return FAIL('No authors exist — run the seed first.');
+
+  const slug = await uniqueSlug(slugify(title));
+
+  // Pull the sources the ingest already found for this story. Free — RSS and
+  // plain HTTP — but slow enough to be worth doing once, here, rather than
+  // making the writer wait for it later.
+  let sources: Array<{ url: string; title: string }> = [];
+  if (keywordId) {
+    const keyword = await prisma.keyword.findUnique({ where: { id: keywordId } });
+    if (keyword) {
+      try {
+        const found = await research(keyword, category.slug as CategorySlug);
+        sources = found.map((s) => ({ url: s.url, title: s.title }));
+      } catch {
+        // A story with no reachable source is still worth writing by hand —
+        // the writer supplies their own. Do not block creation on it.
+      }
+      await prisma.keyword.update({ where: { id: keyword.id }, data: { status: 'USED' } });
+    }
+  }
+
+  const post = await prisma.post.create({
+    data: {
+      title,
+      slug,
+      categoryId: category.id,
+      authorId: author.id,
+      status: 'DRAFT',
+      quickAnswer: '',
+      body: '',
+      affectedBuilds: toJson([]),
+      faq: toJson([]),
+      metaTitle: title.slice(0, 70),
+      metaDescription: '',
+      screenshots: toJson([]),
+      sourceUrls: toJson(sources),
+      relatedSlugs: toJson([]),
+      // HUMAN is what separates a hand-written article from pipeline output —
+      // it is also what the quality gate's absence is explained by, so nothing
+      // downstream mistakes an unscored draft for a failed one.
+      generatedBy: 'HUMAN',
+      qualityNotes: 'Written by hand in the admin. No AI generation or quality gate ran on it.',
+    },
+  });
+
+  // Free: /api/og renders locally. Doing it now means the draft can be
+  // published later without a separate step, since publishing requires a cover.
+  try {
+    const image = await generateFeaturedImage({
+      title,
+      category: category.name,
+      slug,
+    });
+    if (image) {
+      await prisma.post.update({ where: { id: post.id }, data: { featuredImage: image } });
+    }
+  } catch {
+    // The editor has an uploader and a regenerate script; not worth failing on.
+  }
+
+  revalidatePath('/admin/posts');
+  redirect(`/admin/posts/${post.id}`);
+}
 
 export async function savePost(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const parsed = PostInput.safeParse(Object.fromEntries(formData));
