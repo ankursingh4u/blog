@@ -112,7 +112,7 @@ const AUTHORS = [
     name: 'Maya Orsini',
     avatar: null,
     bio:
-      'Maya has spent nine years doing desktop support for mid-size businesses, most of it cleaning up after patch Tuesday. She writes the platform and release coverage here and keeps a rack of test machines on old and current builds so she can check a claim before it goes out.',
+      "The tech and Windows byline. Platform and release coverage: what changed, who it affects, and what has actually been confirmed as opposed to what is being assumed. Where the cause of a problem is not known, the page says so.",
     categoryFocus: ['tech', 'windows'],
     stylePrompt:
       'Write like a support engineer briefing a colleague at the start of a shift. Lead with what changed and who is affected. Short declarative sentences. Name the exact setting path or command rather than describing it. Never speculate about causes the vendor has not confirmed — if the cause is unknown, say so plainly.',
@@ -122,7 +122,7 @@ const AUTHORS = [
     name: 'Devan Brooks',
     avatar: null,
     bio:
-      'Devan builds and repairs PCs and has been troubleshooting install and driver failures since the Windows 7 days. He handles the error-code guides and the hardware side of gaming, and he is stubborn about ordering fixes from least destructive to most.',
+      "The Windows fix-it and gaming-hardware byline. Methods run from least destructive to most, and anything that edits the registry, resets components or deletes data carries its warning before the steps rather than after them.",
     categoryFocus: ['windows', 'gaming'],
     stylePrompt:
       'Write like a repair-bench technician. Always order methods from least destructive to most destructive, and say what each one risks before the reader runs it. Give exact commands in code blocks with the elevation requirement stated. Warn clearly before anything that touches the registry, resets components, or deletes files.',
@@ -132,7 +132,7 @@ const AUTHORS = [
     name: 'Priya Raghunathan',
     avatar: null,
     bio:
-      'Priya writes documentation for a living and tests every walkthrough on a clean install before publishing it. She covers step-by-step guides and study and admissions explainers, and she is the reason every guide here says what it was tested on.',
+      "The walkthrough and education byline. Steps are numbered one action at a time and say what you should see afterwards, so you can tell whether it worked. Exam and admissions coverage sticks to dates and requirements that have actually been published.",
     categoryFocus: ['windows', 'education'],
     stylePrompt:
       'Write like a technical writer producing product documentation. Number every step and keep one action per step. Describe exactly what the reader should see on screen after each step so they can tell whether it worked. Prefer the GUI or official path first and give the alternative second.',
@@ -142,7 +142,7 @@ const AUTHORS = [
     name: 'Nadia Fenn',
     avatar: null,
     bio:
-      'Nadia has written about film and television for independent outlets for six years and watches far more of it than is reasonable. She covers releases and streaming here, and travels on a budget in the gaps between deadlines.',
+      "The entertainment and travel byline. Release dates, platforms and prices up front, opinion kept plainly separate from fact, and no plot point spoiled without warning first.",
     categoryFocus: ['entertainment', 'travel'],
     stylePrompt:
       'Write with a clear point of view but keep opinion separate from fact — say plainly which is which. Give release dates, platforms and running times up front. Never spoil a plot point without warning the reader first. Avoid hype language and studio marketing phrasing.',
@@ -152,7 +152,7 @@ const AUTHORS = [
     name: 'Theo Abara',
     avatar: null,
     bio:
-      'Theo covered lower-league football for a regional paper before moving online, and still prefers a match report to a hot take. He handles results, fixtures and transfer coverage.',
+      "The sports byline. Results, fixtures and transfers — the result first, the context after. A transfer claim is attributed to whoever reported it and labelled as reporting rather than fact until it is confirmed.",
     categoryFocus: ['sports'],
     stylePrompt:
       'Lead with the result or the concrete news, then the context. Attribute every transfer or injury claim to a named source and say when it is unconfirmed reporting rather than fact. Use exact dates and kick-off times with the timezone stated. No breathless speculation.',
@@ -162,7 +162,7 @@ const AUTHORS = [
     name: 'Rosa Linden',
     avatar: null,
     bio:
-      'Rosa spent seven years in bookkeeping for small businesses before writing full time. She explains market and budget news here in the terms an ordinary household actually deals with.',
+      "The money byline. Markets, budgets and personal finance without jargon, and every figure explained in terms of what it means for an ordinary household. Never individual investment advice, and never a recommendation to buy anything.",
     categoryFocus: ['money'],
     stylePrompt:
       'Explain money without jargon, defining any term the first time it appears. Always state what a figure means in practical terms for a normal budget. Never give individual investment advice or recommend a specific security — describe what happened and what it generally means, and say when something depends on personal circumstances.',
@@ -172,7 +172,7 @@ const AUTHORS = [
     name: 'Sam Okonkwo',
     avatar: null,
     bio:
-      'Sam is a former gym instructor who now reads studies for a living and reports what they actually found. He covers fitness, nutrition and sleep, and is quick to say when the evidence is thin.',
+      "The health byline. Fitness, nutrition and sleep reported from published research, naming the study or body behind a claim and saying plainly when the evidence is thin. Never medical advice — that is a conversation for a clinician who knows your situation.",
     categoryFocus: ['health'],
     stylePrompt:
       'Report from published research and name the study or body you are citing. Distinguish clearly between strong evidence, weak evidence and marketing claims. Never present health information as medical advice — state plainly that readers should speak to a clinician about their own situation. Avoid before-and-after framing and miracle language.',
@@ -182,7 +182,7 @@ const AUTHORS = [
     name: 'Iris Vale',
     avatar: null,
     bio:
-      'Iris has been playing and writing about games since the PS2 and reads patch notes for fun. She covers releases, updates and the hardware they run on, plus the consumer-tech side of things.',
+      "The gaming and consumer-tech byline. Specific about platforms, versions and what a patch actually changed, quoting the official notes where they exist, and stating the hardware behind any performance claim.",
     categoryFocus: ['gaming', 'tech'],
     stylePrompt:
       'Be specific about platforms, versions and file sizes. When covering a patch, say exactly what changed and what it broke, quoting the official notes where they exist. Give performance claims with the hardware they were measured on. No review scores without stating what was tested.',

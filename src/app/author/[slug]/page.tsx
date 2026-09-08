@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 
@@ -86,6 +87,20 @@ export default async function AuthorPage({ params }: { params: Params }) {
             ))}
           </div>
         ) : null}
+
+        {/* Stated plainly rather than buried. A named byline on a news site
+            reads as a person; here it marks a beat and the standard that beat
+            is written to, and the articles beneath it are AI-drafted and
+            human-approved. Leaving that to be inferred would be misleading. */}
+        <p className="mt-6 max-w-2xl rounded-md border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
+          This is a section byline, not an individual journalist. It marks the beat and the
+          standard the articles below are written to. Every one is drafted with AI assistance and
+          approved by a person before publishing —{' '}
+          <Link href="/editorial-policy" className="underline hover:text-foreground">
+            the editorial policy
+          </Link>{' '}
+          sets out exactly which parts are which.
+        </p>
 
         <h2 className="mt-10 text-2xl font-bold tracking-tight">
           {posts.length === 1 ? 'One article' : `Articles`} by {author.name}
