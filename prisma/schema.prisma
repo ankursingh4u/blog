@@ -1,0 +1,150 @@
+// FixDesk data model.
+//
+// Local dev runs on SQLite; production runs on Postgres (Supabase). Everything
+// here is deliberately Postgres-compatible: no SQLite-only types, JSON columns
+// are stored as String and parsed through Zod in src/lib/json.ts so the same
+// schema works on both engines without a migration rewrite.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum PostStatus {
+  DRAFT
+  REVIEW
+  APPROVED
+  PUBLISHED
+  ARCHIVED
+}
+
+enum GeneratedBy {
+  AI
+  HUMAN
+}
+
+enum KeywordSource {
+  FEED
+  MANUAL
+}
+
+enum KeywordStatus {
+  QUEUED
+  USED
+  SKIPPED
+}
+
+model Author {
+  id            String   @id @default(cuid())
+  name          String
+  slug          String   @unique
+  avatar        String?
+  bio           String
+  categoryFocus String   @default("[]") // JSON array of category slugs
+  stylePrompt   String
+  createdAt     DateTime @default(now())
+
+  posts Post[]
+
+  @@index([slug])
+}
+
+model Category {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  description String
+  // Ordering on the homepage / nav. Lower sorts first.
+  position    Int     @default(0)
+  accent      String  @default("violet")
+
+  // Optional parent, for sub-sections such as /tech/windows. One level only —
+  // a child may not itself have children. Posts may live in either a top-level
+  // category or a child; src/lib/urls.ts derives the URL depth from this.
+  parentId String?
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children Category[] @relation("CategoryTree")
+
+  posts    Post[]
+  keywords Keyword[]
+
+  @@index([slug])
+  @@index([parentId, position])
+}
+
+model Post {
+  id     String @id @default(cuid())
+  title  String
+  slug   String @unique
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  authorId String
+  author   Author @relation(fields: [authorId], references: [id], onDelete: Restrict)
+
+  status PostStatus @default(DRAFT)
+
+  quickAnswer    String
+  body           String
+  affectedBuilds String @default("[]") // JSON array of strings
+  faq            String @default("[]") // JSON array of { question, answer }
+
+  metaTitle       String
+  metaDescription String
+  featuredImage   String?
+  screenshots     String  @default("[]") // JSON array of { url, alt, width, height }
+  sourceUrls      String  @default("[]") // JSON array of { url, title }
+
+  // Auto-suggested + editor-confirmed internal links, JSON array of post slugs.
+  relatedSlugs String @default("[]")
+
+  qualityScore Int?
+  qualityNotes String?
+
+  generatedBy   GeneratedBy @default(AI)
+  testedOnBuild String?
+  lastVerifiedAt DateTime?
+
+  publishedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status, publishedAt])
+  @@index([categoryId, status, publishedAt])
+  @@index([authorId, status, publishedAt])
+  @@index([slug])
+}
+
+model Keyword {
+  id     String @id @default(cuid())
+  phrase String @unique
+
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  source KeywordSource @default(FEED)
+  status KeywordStatus @default(QUEUED)
+
+  // Verified identifiers lifted from the source feed. The generator may only
+  // use identifiers that appear here — see src/pipeline/quality-gate.ts.
+  kbNumber   String?
+  buildNumber String?
+  errorCode  String?
+  sourceUrl  String?
+
+  createdAt DateTime @default(now())
+
+  @@index([status, createdAt])
+  @@index([categoryId, status])
+}
+
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}

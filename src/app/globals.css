@@ -1,0 +1,181 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light reading surface. Articles are long; the body stays near-white. */
+    --background: 0 0% 100%;
+    --foreground: 240 10% 8%;
+    --muted: 240 12% 96%;
+    --muted-foreground: 240 5% 42%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 8%;
+    --border: 240 10% 90%;
+    --input: 240 10% 90%;
+    --ring: 265 85% 58%;
+
+    --brand: 265 85% 58%;
+    --brand-foreground: 0 0% 100%;
+    --brand-soft: 265 90% 96%;
+
+    --ok: 160 84% 32%;
+    --warn: 38 92% 42%;
+    --danger: 350 82% 48%;
+
+    --radius: 0.75rem;
+
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+
+  .dark {
+    --background: 240 14% 5%;
+    --foreground: 240 20% 97%;
+    --muted: 240 12% 12%;
+    --muted-foreground: 240 8% 66%;
+    --card: 240 13% 9%;
+    --card-foreground: 240 20% 97%;
+    --border: 240 10% 18%;
+    --input: 240 10% 18%;
+    --ring: 265 90% 70%;
+
+    --brand: 265 90% 72%;
+    --brand-foreground: 265 40% 10%;
+    --brand-soft: 265 40% 16%;
+
+    --ok: 160 70% 52%;
+    --warn: 38 95% 62%;
+    --danger: 350 90% 68%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    /* Anchored headings must clear the sticky header. */
+    scroll-padding-top: 6rem;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Anything with a fixed intrinsic ratio reserves its box before paint, so
+     images and embeds cannot shift layout mid-load. */
+  img,
+  video,
+  canvas,
+  svg {
+    @apply block max-w-full;
+  }
+
+  ::selection {
+    background-color: hsl(var(--brand) / 0.25);
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+}
+
+@layer components {
+  /* Shared surface for cards, callouts and the sidebar rail. */
+  .surface {
+    @apply rounded-lg border border-border bg-card;
+  }
+
+  .hairline {
+    background-image: linear-gradient(
+      to right,
+      transparent,
+      hsl(var(--border)),
+      transparent
+    );
+  }
+
+  /* Subtle grid used behind section headers. Purely decorative.
+   *
+   * The pattern and its fade-out mask live on a ::before layer, NOT on the
+   * element itself. `mask-image` applies to an element's entire rendered
+   * subtree — putting it on the section would fade out the heading and body
+   * copy along with the grid, which is exactly what it did before this was
+   * split out. Keep the mask on the pseudo-element. */
+  .grid-bg {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .grid-bg::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image:
+      linear-gradient(to right, hsl(var(--border) / 0.6) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--border) / 0.6) 1px, transparent 1px);
+    background-size: 56px 56px;
+    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 40%, transparent 100%);
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 40%, transparent 100%);
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-pretty {
+    text-wrap: pretty;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Every scroll-driven and physics-driven component in src/components/ui checks
+   this at runtime too, but this kills the residue (marquees, fades, smooth
+   scroll) that would otherwise still move. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Article body refinements that the typography plugin does not cover. */
+.prose :where(h2):not(:where([class~='not-prose'] *)) {
+  scroll-margin-top: 6rem;
+  letter-spacing: -0.02em;
+}
+.prose :where(h3):not(:where([class~='not-prose'] *)) {
+  scroll-margin-top: 6rem;
+}
+.prose :where(pre):not(:where([class~='not-prose'] *)) {
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+}
+.prose :where(a):not(:where([class~='not-prose'] *)) {
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.prose :where(ol > li)::marker {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
