@@ -8,8 +8,12 @@ build
 next-env.d.ts
 prisma/dev.db
 prisma/dev.db-journal
-public/uploads/*
-!public/uploads/.gitkeep
+# public/uploads is versioned deliberately. The featured images are the site's
+# content, not build output — they must exist the moment the container starts or
+# every article renders without a cover. In production this path is also a
+# persistent volume, which Docker seeds from the image on first mount, so these
+# files become the volume's initial contents and later admin uploads land beside
+# them and survive redeploys.
 .DS_Store
 .vercel
 coverage
