@@ -1,16 +1,20 @@
 // FixDesk data model.
 //
-// Local dev runs on SQLite; production runs on Postgres (Supabase). Everything
-// here is deliberately Postgres-compatible: no SQLite-only types, JSON columns
-// are stored as String and parsed through Zod in src/lib/json.ts so the same
-// schema works on both engines without a migration rewrite.
+// Postgres everywhere, development included. It began on SQLite with the
+// intention of switching only in production, but the two engines disagree in
+// ways that bite silently — `contains` is case-insensitive on SQLite and
+// case-sensitive on Postgres, so site search behaves differently in production
+// than it did in dev, with nothing to signal it. One engine, no divergence.
+//
+// JSON columns are stored as String and parsed through Zod in src/lib/json.ts,
+// which is why the move needed no schema rewrite at all.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 

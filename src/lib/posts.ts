@@ -236,12 +236,16 @@ export const searchPosts = cache(async (query: string, take = 30, skip = 0) => {
   const posts = await prisma.post.findMany({
     where: {
       ...publishedWhere,
+      // `mode: 'insensitive'` is required on Postgres and is not a nicety:
+      // SQLite's `contains` is already case-insensitive for ASCII, Postgres's
+      // is not. Without it the migration would silently stop "arsenal" from
+      // matching "Arsenal" — no error, just worse search.
       AND: terms.map((term) => ({
         OR: [
-          { title: { contains: term } },
-          { quickAnswer: { contains: term } },
-          { body: { contains: term } },
-          { affectedBuilds: { contains: term } },
+          { title: { contains: term, mode: 'insensitive' } },
+          { quickAnswer: { contains: term, mode: 'insensitive' } },
+          { body: { contains: term, mode: 'insensitive' } },
+          { affectedBuilds: { contains: term, mode: 'insensitive' } },
         ],
       })),
     },

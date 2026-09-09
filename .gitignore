@@ -20,3 +20,8 @@ coverage
 
 # Per-machine Claude Code permissions, not project configuration.
 .claude/settings.local.json
+
+# Content backups from scripts/export-data.ts. Every article in one file —
+# keep it out of the repo and somewhere off this machine.
+data-export.json
+*-export.json

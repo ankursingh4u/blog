@@ -28,7 +28,14 @@ export default async function AdminPostsPage({ searchParams }: { searchParams: S
       : {}),
     ...(categorySlug ? { category: { slug: categorySlug } } : {}),
     ...(query
-      ? { OR: [{ title: { contains: query } }, { slug: { contains: query } }] }
+      ? {
+          // Case-insensitive explicitly: Postgres's `contains` is case-sensitive
+          // where SQLite's was not.
+          OR: [
+            { title: { contains: query, mode: 'insensitive' as const } },
+            { slug: { contains: query, mode: 'insensitive' as const } },
+          ],
+        }
       : {}),
   };
 
