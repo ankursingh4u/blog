@@ -1,13 +1,14 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ExternalLink, ShieldAlert } from 'lucide-react';
+import { ExternalLink, ShieldCheck } from 'lucide-react';
 import { AdminNav } from '@/components/admin/admin-nav';
 import { hasApiKey } from '@/lib/ai';
+import { signOut } from '@/lib/admin/auth-actions';
 
 export const metadata: Metadata = {
   title: 'Admin',
   // Belt and braces alongside the robots.txt disallow: /admin is
-  // unauthenticated in this phase and must never be indexed.
+  // password-protected but must never be indexed regardless.
   robots: { index: false, follow: false, nocache: true },
 };
 
@@ -22,13 +23,15 @@ const LINKS = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-dvh bg-muted/20">
-      <div className="border-b border-danger/30 bg-danger/10">
-        <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-2 text-xs text-danger sm:px-6">
-          <ShieldAlert className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-          <span>
-            Admin is unauthenticated in this phase. Do not expose this deployment publicly until
-            auth is added.
-          </span>
+      <div className="border-b border-border bg-muted/40">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-2 px-4 py-2 text-xs text-muted-foreground sm:px-6">
+          <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-ok" aria-hidden="true" />
+          <span>Signed in. Sessions last 12 hours.</span>
+          <form action={signOut} className="ml-auto">
+            <button type="submit" className="underline hover:text-foreground">
+              Sign out
+            </button>
+          </form>
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import type { PostStatus } from '@prisma/client';
@@ -14,6 +15,7 @@ import { setSetting, SETTING_DEFAULTS, type SettingKey } from '@/lib/settings';
 import { generateText } from '@/lib/ai';
 import { categoryPath, postPath } from '@/lib/urls';
 import { extractSection } from '@/lib/admin/section';
+import { SESSION_COOKIE, verifySessionToken } from '@/lib/auth';
 import { runPipeline, uniqueSlug, type PipelineRunResult } from '@/pipeline/run';
 import { assignAuthor } from '@/pipeline/select';
 import { research } from '@/pipeline/research';
@@ -37,6 +39,22 @@ export interface ActionState {
   errors?: Record<string, string>;
   /** Set by the upload action. */
   url?: string;
+}
+
+/**
+ * Refuses anything that is not a signed-in admin.
+ *
+ * Middleware already gates /admin, and every action here is invoked from a page
+ * under it, so this is the second of two locks. It is worth having: a server
+ * action is a public HTTP endpoint that happens to be reachable by anyone who
+ * knows its id, and a mutation whose only protection is a route matcher is one
+ * config edit away from being open. Called first in every function that writes.
+ */
+async function requireAdmin(): Promise<void> {
+  const store = await cookies();
+  if (!(await verifySessionToken(store.get(SESSION_COOKIE)?.value))) {
+    throw new Error('Not signed in.');
+  }
 }
 
 const OK = (message: string, extra: Partial<ActionState> = {}): ActionState => ({
@@ -107,6 +125,7 @@ const CreatePostInput = z.object({
  * generated one.
  */
 export async function createPost(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  await requireAdmin();
   const parsed = CreatePostInput.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return FAIL('Fix the highlighted fields.', fieldErrors(parsed.error));
   const { keywordId, title, categoryId } = parsed.data;
@@ -198,6 +217,7 @@ export async function searchCoverImages(
   _prev: ImageSearchState,
   formData: FormData,
 ): Promise<ImageSearchState> {
+  await requireAdmin();
   const parsed = ImageSearchInput.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { ok: false, message: 'Type at least two characters to search.' };
 
@@ -233,6 +253,7 @@ export async function applyCoverImage(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
+  await requireAdmin();
   const parsed = ApplyImageInput.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return FAIL('Could not read the selected image.');
 
@@ -263,6 +284,7 @@ export async function applyCoverImage(
 }
 
 export async function savePost(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  await requireAdmin();
   const parsed = PostInput.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return FAIL('Fix the highlighted fields.', fieldErrors(parsed.error));
   const input = parsed.data;
@@ -331,6 +353,7 @@ const StatusInput = z.object({
 });
 
 export async function setPostStatus(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  await requireAdmin();
   const parsed = StatusInput.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return FAIL('Unknown status.');
   const { id, status } = parsed.data;
@@ -378,6 +401,7 @@ export async function setPostStatus(_prev: ActionState, formData: FormData): Pro
 }
 
 export async function deletePost(formData: FormData): Promise<void> {
+  await requireAdmin();
   const id = String(formData.get('id') ?? '');
   if (!id) return;
   await prisma.post.delete({ where: { id } }).catch(() => undefined);
@@ -405,6 +429,7 @@ export async function regenerateSection(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
+  await requireAdmin();
   const parsed = RegenerateInput.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return FAIL('Pick a section to regenerate.');
   const { postId, heading, instruction } = parsed.data;
@@ -466,6 +491,7 @@ export async function uploadScreenshot(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
+  await requireAdmin();
   const file = formData.get('file');
   if (!(file instanceof File) || file.size === 0) return FAIL('Choose a file first.');
   if (file.size > MAX_UPLOAD_BYTES) {
@@ -499,6 +525,7 @@ const AuthorInput = z.object({
 });
 
 export async function saveAuthor(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  await requireAdmin();
   const parsed = AuthorInput.safeParse({
     ...Object.fromEntries(formData),
     categoryFocus: formData.getAll('categoryFocus').map(String),
@@ -532,6 +559,7 @@ export async function saveAuthor(_prev: ActionState, formData: FormData): Promis
 }
 
 export async function deleteAuthor(formData: FormData): Promise<void> {
+  await requireAdmin();
   const id = String(formData.get('id') ?? '');
   if (!id) return;
   // Authors are Restrict-on-delete; a byline with posts must not vanish.
@@ -551,6 +579,7 @@ const KeywordInput = z.object({
 });
 
 export async function addKeyword(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  await requireAdmin();
   const parsed = KeywordInput.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return FAIL('Fix the highlighted fields.', fieldErrors(parsed.error));
   const input = parsed.data;
@@ -578,6 +607,7 @@ export async function addKeyword(_prev: ActionState, formData: FormData): Promis
 }
 
 export async function setKeywordStatus(formData: FormData): Promise<void> {
+  await requireAdmin();
   const id = String(formData.get('id') ?? '');
   const status = String(formData.get('status') ?? '');
   if (!id || !['QUEUED', 'USED', 'SKIPPED'].includes(status)) return;
@@ -588,6 +618,7 @@ export async function setKeywordStatus(formData: FormData): Promise<void> {
 }
 
 export async function deleteKeyword(formData: FormData): Promise<void> {
+  await requireAdmin();
   const id = String(formData.get('id') ?? '');
   if (!id) return;
   await prisma.keyword.delete({ where: { id } }).catch(() => undefined);
@@ -597,6 +628,7 @@ export async function deleteKeyword(formData: FormData): Promise<void> {
 /* ---------------------------------------------------------------- settings */
 
 export async function saveSettings(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  await requireAdmin();
   const keys = Object.keys(SETTING_DEFAULTS) as SettingKey[];
   for (const key of keys) {
     const raw = formData.get(key);
@@ -611,6 +643,7 @@ export async function saveSettings(_prev: ActionState, formData: FormData): Prom
 /* ------------------------------------------------------------ run pipeline */
 
 export async function triggerPipeline(): Promise<PipelineRunResult> {
+  await requireAdmin();
   const result = await runPipeline();
   revalidatePath('/admin');
   revalidatePath('/admin/posts');

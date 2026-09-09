@@ -7,9 +7,10 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        // /admin is unauthenticated in this phase; keep it out of the index.
-        // This is a crawl hint, not access control — real auth lands at go-live.
-        disallow: ['/admin', '/admin/', '/api/', '/search?'],
+        // /admin is password-protected, but a login page in the index invites
+        // guessing and the URLs have no value to a reader either way.
+        // A crawl hint, not access control — the middleware is what enforces it.
+        disallow: ['/admin', '/admin/', '/login', '/api/', '/search?'],
       },
     ],
     sitemap: absoluteUrl('/sitemap.xml'),
