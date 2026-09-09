@@ -308,12 +308,39 @@ Two things about this host are worth knowing before debugging a failed build:
 
 ### Local database
 
-There is no SQLite fallback any more, and no Postgres is bundled. If you have
-Docker, any Postgres 16 container will do. Otherwise the deployed database can be
-opened to the internet *temporarily* by PATCHing `is_public`/`public_port` on the
-Coolify database resource, and closed again immediately afterwards — but note
-that it holds the live site's content, so anything you change locally is
-published. Prefer a throwaway local Postgres for development work.
+There is no SQLite fallback any more. If you have Docker, any Postgres 16
+container will do.
+
+Without Docker, EnterpriseDB publishes a **binaries-only zip** that needs no
+installer and no administrator rights — this is what the development machine
+uses:
+
+```bash
+# One-off: download and unpack (~290 MB) from
+# https://get.enterprisedb.com/postgresql/postgresql-16.6-1-windows-x64-binaries.zip
+# then initialise a data directory:
+C:/codershive/pgsql/bin/initdb -D C:/codershive/pgdata -U postgres --pwfile=<file> -E UTF8 --locale=C
+```
+
+```bash
+# Start (port 5433, loopback only, so it cannot collide with anything):
+C:/codershive/pgsql/bin/pg_ctl -D C:/codershive/pgdata -l C:/codershive/pgdata/server.log -o "-p 5433 -h 127.0.0.1" start
+
+# Stop:
+C:/codershive/pgsql/bin/pg_ctl -D C:/codershive/pgdata stop
+```
+
+Then `DATABASE_URL="postgresql://postgres:<password>@127.0.0.1:5433/fixdesk"`,
+`npm run db:push`, and either `npm run db:seed` for an empty site or
+`npx tsx scripts/import-data.ts` to load a dump of the live content.
+
+Run `pg_ctl start` through a wrapper that does not hold its stdout open — `-w`
+blocks the caller until the pipe closes, which looks like a hang even though the
+server came up fine.
+
+Do **not** point local development at the production database. It is not
+publicly reachable by design, and anything changed locally would be published
+immediately.
 
 ---
 
