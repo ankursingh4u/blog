@@ -3,6 +3,20 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  eslint: {
+    /**
+     * Lint is not skipped, it is moved. `next build` runs ESLint over the whole
+     * project again, which cost about three minutes of every deploy on this
+     * server and re-checked code that `npm run lint` had already passed before
+     * the commit that triggered the build.
+     *
+     * Type checking is deliberately NOT disabled here — that one catches real
+     * breakage a lint pass would not, and it stays in the build.
+     *
+     * If deploys ever run from a machine that has not linted, put this back.
+     */
+    ignoreDuringBuilds: true,
+  },
   images: {
     // Featured images must be >= 1200px wide for Google Discover.
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
