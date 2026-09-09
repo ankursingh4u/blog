@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
-import { Inter, JetBrains_Mono } from 'next/font/google';
+import localFont from 'next/font/local';
 import './globals.css';
 
 import { SiteHeader } from '@/components/site-header';
@@ -11,22 +11,44 @@ import { getSettings } from '@/lib/settings';
 import { SITE, absoluteUrl } from '@/lib/site';
 import { jsonLdGraph, organisationLd, websiteLd } from '@/lib/seo';
 
-const inter = Inter({
-  subsets: ['latin'],
+/**
+ * The fonts are checked into the repo and loaded from disk rather than through
+ * `next/font/google`.
+ *
+ * `next/font/google` downloads the files during `next build`, which makes the
+ * build depend on fonts.googleapis.com being reachable. The deployment host
+ * cannot reach it — npm works, Google Fonts does not — so the build failed
+ * there while succeeding locally. Self-hosting removes the dependency
+ * altogether: the build needs no network, and no visitor's browser is sent to a
+ * third party to render the page.
+ *
+ * These are the latin-subset variable files, 88 KB for both. `display: swap`
+ * and the `fallback` list keep text visible during load, so replacing a font
+ * costs no layout shift.
+ */
+const inter = localFont({
+  src: './fonts/Inter-variable.woff2',
   variable: '--font-sans',
   display: 'swap',
+  weight: '100 900',
+  fallback: ['system-ui', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
 });
 
-const mono = JetBrains_Mono({
-  subsets: ['latin'],
+const mono = localFont({
+  src: './fonts/JetBrainsMono-variable.woff2',
   variable: '--font-mono',
   display: 'swap',
+  weight: '100 800',
+  fallback: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'],
 });
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
   title: {
-    default: `${SITE.name} — Windows updates, decoded`,
+    // Left over from when the site was Windows-only. The homepage title is the
+    // one Google shows for the domain, so it has to describe all eight
+    // verticals, not the back-catalogue.
+    default: `${SITE.name} — trending stories, explained properly`,
     template: `%s · ${SITE.name}`,
   },
   description: SITE.description,
