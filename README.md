@@ -8,16 +8,24 @@ a human.
 The site started as a Windows-only fix-it blog; that back-catalogue lives on as a
 sub-section at `/tech/windows` and keeps its troubleshooting post structure.
 
-Currently **local only** — SQLite, no auth, no hosting.
+**Live** at `http://fixdesk.91.239.208.85.sslip.io`, self-hosted on Coolify.
+Postgres, password-protected admin, daily Google News ingest on a cron.
 
 ---
 
 ## Quick start
 
+The database is Postgres in every environment, development included. It used to
+be SQLite locally, but the two engines disagree in ways that fail silently —
+`contains` is case-insensitive on SQLite and case-sensitive on Postgres, so site
+search behaved differently in production with nothing to signal it. One engine,
+no divergence. You need a Postgres to run this at all; see
+[Local database](#local-database) if you do not have one.
+
 ```bash
 npm install
-cp .env.example .env          # then add OPENAI_API_KEY
-npm run db:push               # create the SQLite schema
+cp .env.example .env          # then add DATABASE_URL and OPENAI_API_KEY
+npm run db:push               # create the schema
 npm run db:seed               # 8 verticals + windows sub-section, 8 authors, keywords, settings
 npm run dev                   # http://localhost:3000
 ```
@@ -34,11 +42,16 @@ Each guide gets a photograph downloaded from Unsplash and stored in
 If a download fails the script falls back to the branded `/api/og` card. Use
 `--no-images` to skip image work entirely, or `--force` to rewrite existing posts.
 
-These are **development fixtures**, not pipeline output. The Windows guides use
-only real, publicly documented error codes, builds and KBs; the eight-vertical
-articles are evergreen explainers with no dated claims. Every source URL is
-checked by `npx tsx scripts/check-sources.ts`. Each post says so in its quality
-notes. Delete them from `/admin/posts` before launch.
+These are **development fixtures**, not pipeline output, and they are not what is
+on the live site — the fixtures were deleted once real generation worked, and the
+34 articles in production are all pipeline output. Each fixture is stamped
+`Development fixture` in its quality notes, which is what
+`scripts/delete-fixtures.ts` matches on; that marker is the only thing separating
+them from hand-written articles, since both are `generatedBy: HUMAN`.
+
+The Windows guides use only real, publicly documented error codes, builds and
+KBs; the eight-vertical articles are evergreen explainers with no dated claims.
+Every source URL is checked by `npx tsx scripts/check-sources.ts`.
 
 ### Theme
 
@@ -61,7 +74,9 @@ that.
 | `npm test` | Vitest — parser, validator, quality gate, markdown |
 | `npm run generate` | One pipeline run. `--skip-ingest`, `--limit=N` |
 | `npm run scheduler` | Daily run at 09:00 local, spread a few hours apart. `--now` to also run immediately |
-| `npm run db:push` | Push the Prisma schema to SQLite |
+| `npm run db:push` | Push the Prisma schema to whatever `DATABASE_URL` points at |
+| `npx tsx scripts/export-data.ts` | Dump every post, category, author, keyword and setting to `data-export.json` |
+| `npx tsx scripts/import-data.ts` | Restore a dump. Upserts by id, so relations survive and it is safe to re-run |
 | `npm run db:seed` | Seed categories (incl. sub-sections), authors, keywords, settings |
 | `npm run db:content` | 14 sample guides with images. `--no-images`, `--force` |
 | `npm run db:reset` | Drop and re-seed |
@@ -75,12 +90,18 @@ Copy `.env.example` to `.env`.
 
 | Variable | Required | Notes |
 | --- | --- | --- |
-| `DATABASE_URL` | yes | `file:./dev.db` locally. Swap for a Postgres URL at go-live |
-| `NEXT_PUBLIC_SITE_URL` | yes | `http://localhost:3000` locally. Drives canonicals, OG URLs and the sitemap |
+| `DATABASE_URL` | yes | A Postgres URL. Not SQLite — see [Quick start](#quick-start) |
+| `NEXT_PUBLIC_SITE_URL` | yes | `http://localhost:3000` locally. Drives canonicals, OG URLs and the sitemap. Needed at **build** time, not just runtime |
 | `NEXT_PUBLIC_SITE_NAME` | no | Defaults to `FixDesk` |
 | `OPENAI_API_KEY` | for generation | The pipeline refuses to run without it; the rest of the site works fine |
 | `OPENAI_MODEL` | no | Defaults to `gpt-5.5` |
-| `CRON_SECRET` | go-live only | Bearer token for `/api/cron/generate`. Unset ⇒ the route returns 503 |
+| `ADMIN_PASSWORD` | yes in production | The single password for `/admin`. **Unset ⇒ `/admin` is closed entirely**, not open — an unprotected admin on a public host is worse than an unreachable one |
+| `AUTH_SECRET` | recommended | Signs the session cookie. Falls back to `ADMIN_PASSWORD`, which ties session validity to it — changing the password then logs everyone out |
+| `CRON_SECRET` | yes in production | Bearer token for `/api/cron/generate`. Unset ⇒ the route refuses everything |
+
+`DATABASE_URL` and the two `NEXT_PUBLIC_*` values must be available during
+`next build`, because the build pre-renders the article and author pages and
+queries the database to do it. The rest are runtime-only.
 
 Operational settings live in the database, not in env, so they can be changed
 from `/admin/settings` without a deploy: `POSTS_PER_DAY`, `AUTO_PUBLISH`,
@@ -93,19 +114,23 @@ from `/admin/settings` without a deploy: `POSTS_PER_DAY`, `AUTO_PUBLISH`,
 
 `src/pipeline/`, orchestrated by `run.ts`:
 
-1. **Ingest** (`ingest.ts`) — polls Microsoft release-health, Windows Insider and
-   Windows IT Pro feeds. **Still Windows-only**: `discovery.ts` already pulls
-   topic-agnostic Google Trends / News / autocomplete signals, but ingest has not
-   been wired to them, so generation for the other seven verticals is not live
-   yet. `parser.ts` extracts KB numbers, build numbers and error
-   codes and turns them into keyword candidates, deduped on a unique `phrase`.
-2. **Select** (`select.ts`) — takes `POSTS_PER_DAY` queued keywords, newest first,
-   at most two per category per run.
+1. **Ingest** (`ingest.ts`) — Google News section and search feeds for all eight
+   verticals across the India and US editions (India weighted 2:1), plus
+   autocomplete and, for the `windows` sub-section only, the Microsoft
+   release-health and update-history feeds. `parser.ts` turns items into keyword
+   candidates, deduped on a unique `phrase`; only Windows candidates carry KB
+   numbers, build numbers and error codes.
+2. **Select** (`select.ts`) — takes `POSTS_PER_DAY` queued keywords, preferring
+   those that arrived with a source URL, at most two per category per run.
+   Keywords with no sourceable URL are skipped before any paid call.
 3. **Assign author** — an author whose `categoryFocus` covers the category, never
    the same author twice in a row.
-4. **Research** (`research.ts`) — fetches 3–5 sources, Microsoft documentation
-   first, and stores their text.
-5. **Generate** (`generate.ts`) — one Anthropic call using structured outputs, so
+4. **Research** (`research.ts`) — fetches 3–5 sources and stores their text.
+   Windows keywords get Microsoft documentation first; the other seven verticals
+   get publisher RSS and an official-domain allow-list. Google News article links
+   are dropped rather than fetched: they resolve to a JavaScript interstitial that
+   never leaves `news.google.com`, so News is discovery-only.
+5. **Generate** (`generate.ts`) — one OpenAI call using structured outputs, so
    the response shape is enforced server-side. No fence-stripping, no JSON repair.
 6. **Quality gate** (`quality-gate.ts`) — two checks, in order:
    - a **deterministic** scan for identifiers that appear nowhere in the sources;
@@ -235,7 +260,7 @@ Known gaps worth naming:
   featured images. All marked in-file. Replace before launch — real screenshots
   from the machine a fix was tested on are worth far more than stock photos, and
   the editor has a screenshot uploader for exactly that.
-- **Author avatars are initials, not photographs.** Deliberate: the three authors
+- **Author avatars are initials, not photographs.** Deliberate: the eight authors
   are fictional, and putting a real person's face to a fictional byline is
   misrepresentation. Add real photographs when the bylines belong to real people.
 - **Search is a `LIKE` scan.** Fine at this corpus size. `searchPosts` in
@@ -244,25 +269,66 @@ Known gaps worth naming:
   sources are controlled (every image box is reserved, ads reserve height, fonts
   use `next/font`), but no audit has been run against a populated site — do that
   once there is real content.
-- **The pipeline has not been run end-to-end against the live API.** Every step
-  is unit-tested or manually exercised, and the structured-output contract means
-  a malformed response is rejected at the API layer, but no full run has been
-  billed. Start with `npm run generate --limit=1` and read the output.
+- **Generation costs roughly 16k tokens per article** (~7.2k in, ~8.8k out), and
+  about 85% of the spend is output, most of it reasoning. The 34 articles now on
+  the site were produced this way. Budget before running a large batch.
+- **The scheduled run does not generate anything.** `/api/cron/generate` ingests
+  only unless called with `?mode=generate`, deliberately: discovery is free,
+  writing is not, and an unattended job that spends money cannot be supervised.
+  Articles are written on demand from `/admin`.
 - **`revalidatePath` is skipped in CLI runs.** `npm run generate` has no Next.js
   request context, so pages refresh on their own revalidate interval instead of
   immediately. Runs triggered from `/admin` revalidate properly.
 
 ---
 
-## Go-live checklist
+## Deployment
 
-1. Deploy to Vercel; point `DATABASE_URL` at Supabase Postgres and change
-   `provider` in `prisma/schema.prisma` to `postgresql`. No model changes are
-   needed — the JSON columns are already stored as `String`.
-2. Set `NEXT_PUBLIC_SITE_URL` to the real domain.
-3. Set `CRON_SECRET` and add a `vercel.json` cron hitting `/api/cron/generate`.
-4. Add the Search Console token and GA4 ID in `/admin/settings`.
-5. Generate an IndexNow key and paste it into `/admin/settings`; confirm
-   `https://yourdomain/{key}.txt` returns the key.
-6. Submit `/sitemap.xml` in Search Console.
-7. **Add auth to `/admin` before the deployment is publicly reachable.**
+Self-hosted on Coolify at `91.239.208.85`, in its own project (`FixDesk`),
+isolated from everything else on that server.
+
+| Resource | Notes |
+| --- | --- |
+| Application `fixdesk-web` | Nixpacks build from the public GitHub repo, branch `main`, port 3000 |
+| Database `fixdesk-postgres` | Postgres, **not** publicly reachable. The app talks to it over the internal Docker network |
+| Volume `uploads` → `/app/public/uploads` | A *named* volume, so Docker seeds it from the image on first mount and admin uploads survive redeploys |
+| Scheduled task | `0 9 * * *`, calls `/api/cron/generate` over loopback inside the container |
+
+Deploys are triggered by `POST /api/v1/deploy?uuid=<app>` against the Coolify API.
+
+Two things about this host are worth knowing before debugging a failed build:
+
+- **It cannot reach `fonts.googleapis.com`**, although npm and Google News work
+  fine. That is why the fonts are checked into `src/app/fonts/` and loaded with
+  `next/font/local` instead of `next/font/google` — the latter downloads at build
+  time and failed here while succeeding locally.
+- **`public/uploads` is committed to the repo**, unusually for an upload
+  directory. The cover images are content, not build output; without them the
+  container starts with every article missing its cover.
+
+### Local database
+
+There is no SQLite fallback any more, and no Postgres is bundled. If you have
+Docker, any Postgres 16 container will do. Otherwise the deployed database can be
+opened to the internet *temporarily* by PATCHing `is_public`/`public_port` on the
+Coolify database resource, and closed again immediately afterwards — but note
+that it holds the live site's content, so anything you change locally is
+published. Prefer a throwaway local Postgres for development work.
+
+---
+
+## Still to do
+
+- **Point a real domain at it.** Currently on an `sslip.io` hostname over plain
+  HTTP. Set the FQDN on the Coolify application and update `NEXT_PUBLIC_SITE_URL`
+  to match, then redeploy so canonicals, OG URLs and the sitemap follow.
+- **HTTPS.** Comes with the real domain via Let's Encrypt.
+- **Search Console + GA4 + IndexNow.** Add the tokens in `/admin/settings`, then
+  confirm `https://yourdomain/{key}.txt` returns the IndexNow key and submit
+  `/sitemap.xml`.
+- **`next@15.1.3` has a published vulnerability.** The install warns about it on
+  every build. Upgrade to a patched 15.x.
+- **Google Trends and the Windows feeds return nothing from this host** — the
+  daily ingest is carried entirely by Google News and autocomplete
+  (`bySource: {news, suggest}` are non-zero; `trends` and `feeds` are not).
+  Worth checking whether those hosts are blocked from the server.
