@@ -4,6 +4,7 @@ import { ExternalLink, ShieldCheck } from 'lucide-react';
 import { AdminNav } from '@/components/admin/admin-nav';
 import { hasApiKey } from '@/lib/ai';
 import { signOut } from '@/lib/admin/auth-actions';
+import { SITE } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: 'Admin',
@@ -38,7 +39,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
         <header className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">FixDesk admin</h1>
+            <h1 className="text-2xl font-bold tracking-tight">{SITE.name} admin</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               {hasApiKey()
                 ? 'Generation is configured.'

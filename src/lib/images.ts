@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { storage } from '@/lib/storage';
+import { botUserAgent } from '@/lib/site';
 import type { ImageCreditData } from '@/lib/json';
 
 /**
@@ -26,7 +27,7 @@ import type { ImageCreditData } from '@/lib/json';
  */
 
 const ENDPOINT = 'https://api.openverse.org/v1/images/';
-const UA = 'FixDeskBot/0.1 (+https://example.com/about)';
+const UA = botUserAgent();
 const TIMEOUT_MS = 15_000;
 /** Below this, a photo looks soft as a 1200px-wide cover. */
 const MIN_WIDTH = 900;

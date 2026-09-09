@@ -2,6 +2,7 @@ import type { Keyword } from '@prisma/client';
 import { log } from '@/pipeline/log';
 import { decode, type CategorySlug } from '@/pipeline/parser';
 import { findGeneralSources, findSolutionSources } from '@/pipeline/discovery';
+import { botUserAgent } from '@/lib/site';
 
 /**
  * Step 4 — research.
@@ -145,7 +146,7 @@ export async function fetchSource(url: string): Promise<ResearchSource> {
     const response = await fetch(url, {
       signal: controller.signal,
       headers: {
-        'User-Agent': 'FixDeskBot/0.1 (+https://example.com/about)',
+        'User-Agent': botUserAgent(),
         Accept: 'text/html,application/xhtml+xml',
       },
       redirect: 'follow',

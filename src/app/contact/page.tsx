@@ -38,32 +38,28 @@ export default function ContactPage() {
               icon={<MessageSquareWarning className="h-5 w-5 text-brand" aria-hidden="true" />}
               title="Report an error in an article"
               body="Include the URL and which claim is wrong. If you have a source that contradicts it, send that too — it is the quickest way to get the page fixed."
-              href="mailto:corrections@example.com"
-              label="corrections@example.com"
+              href="mailto:corrections@favo.news"
+              label="corrections@favo.news"
             />
             <Row
               icon={<AlertTriangle className="h-5 w-5 text-brand" aria-hidden="true" />}
               title="Suggest a story"
               body="Something happening in tech, entertainment, sport, money, health, gaming, travel or education that is being covered badly or not at all."
-              href="mailto:tips@example.com"
-              label="tips@example.com"
+              href="mailto:tips@favo.news"
+              label="tips@favo.news"
             />
             <Row
               icon={<Mail className="h-5 w-5 text-brand" aria-hidden="true" />}
               title="Everything else"
               body="Advertising, syndication, or anything that does not fit above."
-              href="mailto:hello@example.com"
-              label="hello@example.com"
+              href="mailto:hello@favo.news"
+              label="hello@favo.news"
             />
           </div>
 
-          <Callout tone="warn" title="Placeholder addresses" className="mt-10">
-            These example.com addresses are placeholders from the initial build. Replace them in{' '}
-            <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">
-              src/app/contact/page.tsx
-            </code>{' '}
-            before launch. There is deliberately no contact form yet — a form needs spam handling
-            and a mail transport, neither of which exists while the site runs locally.
+          <Callout tone="brand" title="Why there is no contact form" className="mt-10">
+            A form needs spam handling and a mail transport behind it; an address does not.
+            Email reaches a person either way, and it gives you a copy of what you sent.
           </Callout>
         </div>
       </Container>

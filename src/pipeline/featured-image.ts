@@ -24,7 +24,24 @@ export async function generateFeaturedImage({
   const params = new URLSearchParams({ title, category });
   if (build) params.set('build', build);
 
-  const url = absoluteUrl(`/api/og?${params.toString()}`);
+  /**
+   * Where the renderer *lives* is not the same question as what the card
+   * *says*, and conflating them breaks image generation whenever the public URL
+   * is not the URL that is actually serving.
+   *
+   * The card draws `SITE.url` as its footer, so `NEXT_PUBLIC_SITE_URL` has to be
+   * the real public domain. But fetching from that domain requires it to be
+   * registered, resolving and already serving this build — which is false while
+   * rendering cards for a domain that has not launched, and false again for any
+   * run against a server that is not yet reachable at its final address.
+   *
+   * `OG_RENDER_ORIGIN` overrides only the fetch target. Unset, it falls back to
+   * the public URL and behaves exactly as before.
+   */
+  const origin = (process.env.OG_RENDER_ORIGIN || '').trim().replace(/\/$/, '');
+  const url = origin
+    ? `${origin}/api/og?${params.toString()}`
+    : absoluteUrl(`/api/og?${params.toString()}`);
 
   try {
     const response = await fetch(url, { signal: AbortSignal.timeout(20_000) });

@@ -33,7 +33,10 @@ const DATE_FMT = new Intl.DateTimeFormat('en-GB', {
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSettings();
   return buildMetadata({
-    title: `${SITE.name} — ${SITE.description}`,
+    // The full description here made a 122-character title. Google shows roughly
+    // the first 60, so the tail was cut off in results and the brand was the only
+    // part reliably visible. The description already carries the vertical list.
+    title: `${SITE.name} — trending stories, explained properly`,
     description: settings.SITE_TAGLINE || SITE.description,
     path: '/',
   });

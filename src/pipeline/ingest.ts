@@ -16,6 +16,7 @@ import {
 } from '@/pipeline/discovery';
 import { isNearDuplicate, titleTokens } from '@/lib/similarity';
 import { asBool, getSettings } from '@/lib/settings';
+import { botUserAgent } from '@/lib/site';
 import { log } from '@/pipeline/log';
 
 /**
@@ -324,7 +325,7 @@ async function fetchText(url: string): Promise<string> {
     const response = await fetch(url, {
       signal: controller.signal,
       headers: {
-        'User-Agent': 'FixDeskBot/0.1 (+https://example.com/about)',
+        'User-Agent': botUserAgent(),
         Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml',
       },
     });

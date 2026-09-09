@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { isAuthConfigured } from '@/lib/auth';
 import { LoginForm } from '@/components/admin/login-form';
+import { SITE } from '@/lib/site';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,7 +19,7 @@ export default async function AdminLoginPage({ searchParams }: { searchParams: S
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-4 py-16">
       <div className="surface p-8">
-        <h1 className="text-2xl font-bold tracking-tight">FixDesk admin</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{SITE.name} admin</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           This area manages the site&rsquo;s content. It is not public.
         </p>

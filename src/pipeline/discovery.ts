@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { decode, parseFeed, type CategorySlug, type FeedItem } from '@/pipeline/parser';
 import { log } from '@/pipeline/log';
+import { botUserAgent } from '@/lib/site';
 
 /**
  * Topic discovery: what is trending right now, across all eight verticals.
@@ -35,7 +36,7 @@ import { log } from '@/pipeline/log';
  */
 
 const FETCH_TIMEOUT_MS = 12_000;
-const UA = 'FixDeskBot/0.1 (+https://example.com/about)';
+const UA = botUserAgent();
 
 /* --------------------------------------------------------------- editions */
 
