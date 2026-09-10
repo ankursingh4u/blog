@@ -1,11 +1,19 @@
-'use client';
-
-import { StickyScroll } from '@/components/ui/sticky-scroll-reveal';
-
 /**
  * How an article gets from a source to a published page.
  * This is the public-facing version of the pipeline in src/pipeline — keep the
  * two in step when the pipeline changes.
+ *
+ * This was a sticky-scroll reveal: a fixed-height box with its own scrollbar and
+ * a coloured panel that swapped as you scrolled inside it. Three things were
+ * wrong with it. The nested scroll container trapped the page scroll in a 30rem
+ * box; the panel tracked `scrollYProgress` with an offset that reported
+ * near-complete progress immediately, so it sat on step four while steps one and
+ * two were on screen; and the panel itself only repeated the step title in a
+ * saturated gradient that matched nothing else on the page.
+ *
+ * The component already had a `prefers-reduced-motion` branch that rendered the
+ * steps as a plain grid, and that branch was simply better. It is now the only
+ * one. Four short steps do not need choreography to be read in order.
  */
 const STEPS = [
   {
@@ -31,5 +39,22 @@ const STEPS = [
 ];
 
 export function ProcessSection() {
-  return <StickyScroll content={STEPS} />;
+  return (
+    <ol className="grid gap-4 sm:grid-cols-2">
+      {STEPS.map((step, index) => (
+        <li key={step.title} className="surface flex gap-5 p-6">
+          <span
+            aria-hidden="true"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-muted font-mono text-sm font-semibold text-brand"
+          >
+            {index + 1}
+          </span>
+          <div className="min-w-0">
+            <h3 className="text-lg font-semibold leading-snug tracking-tight">{step.title}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.description}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  );
 }

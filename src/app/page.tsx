@@ -72,11 +72,37 @@ export default async function HomePage() {
   const topRest = following.slice(0, 4);
   const picks = following.slice(4, 10);
 
+  /**
+   * Newest cover photograph per section, for the browse tiles.
+   *
+   * Only photographs qualify — a non-empty `imageCredit` is what distinguishes
+   * one from a generated OG card, and a card would put a full article headline
+   * underneath the tile's own section label.
+   *
+   * A section's own posts sit in that category or in one of its children, which
+   * is how /tech picks up the /tech/windows back-catalogue.
+   */
+  const tileImages = new Map<string, string>();
+  for (const category of categories) {
+    const newest = await prisma.post.findFirst({
+      where: {
+        status: 'PUBLISHED',
+        imageCredit: { not: '' },
+        featuredImage: { not: null },
+        OR: [{ categoryId: category.id }, { category: { parentId: category.id } }],
+      },
+      orderBy: { publishedAt: 'desc' },
+      select: { featuredImage: true },
+    });
+    if (newest?.featuredImage) tileImages.set(category.slug, newest.featuredImage);
+  }
+
   const tiles: CategoryTile[] = categories.map((category) => ({
     slug: category.slug,
     name: category.name,
     description: category.description,
     count: countByCategory.get(category.id) ?? 0,
+    image: tileImages.get(category.slug) ?? null,
   }));
 
   // Chips come from real published guides; if there are none the section is

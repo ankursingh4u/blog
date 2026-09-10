@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 import { DynamicFrameLayout, type Frame } from '@/components/ui/dynamic-frame-layout';
@@ -9,6 +10,8 @@ export interface CategoryTile {
   name: string;
   description: string;
   count: number;
+  /** Newest cover photograph in the section, or null to fall back to a wash. */
+  image: string | null;
 }
 
 /**
@@ -16,25 +19,29 @@ export interface CategoryTile {
  * Cells are plain links — the hover-expand is a flourish on top of a layout
  * that is fully navigable without it.
  *
- * Tiles deliberately carry no photography. They used to show the newest post's
- * featured image, but those are generated OG cards with the headline rendered
- * *into* the PNG, so every tile displayed a full article headline underneath
- * its own section label — two pieces of text stacked on top of each other. A
- * tinted wash keyed to the section's position gives each cell its own identity
- * without competing with the label.
+ * Each tile shows the newest cover photograph from its section. That was not
+ * possible while `featuredImage` held a generated OG card: the headline is drawn
+ * into the PNG, so every tile carried a full article headline underneath its own
+ * section label. Now that covers are photographs with no text in them, the
+ * objection is gone, and nine empty washes in a row read as a broken grid rather
+ * than a restrained one.
+ *
+ * Sections with no photographed article yet keep the tinted wash, keyed to the
+ * cell's position so it stays stable between renders.
  *
  * The layout is a fixed 3x3, so only nine cells fit. Eight sections leaves room
  * for exactly one more; About, the editorial policy and the RSS feed are all
  * reachable from the footer rather than being silently truncated here.
  */
 export function CategoryGrid({ tiles }: { tiles: CategoryTile[] }) {
-  const cells: Array<{ href: string; title: string; sub: string }> = [
+  const cells: Array<{ href: string; title: string; sub: string; image: string | null }> = [
     ...tiles.map((t) => ({
       href: `/${t.slug}`,
       title: t.name,
       sub: `${t.count} ${t.count === 1 ? 'article' : 'articles'}`,
+      image: t.image,
     })),
-    { href: '/search', title: 'Search', sub: 'Every section' },
+    { href: '/search', title: 'Search', sub: 'Every section', image: null },
   ].slice(0, 9);
 
   const frames: Frame[] = cells.map((cell, index) => ({
@@ -43,7 +50,19 @@ export function CategoryGrid({ tiles }: { tiles: CategoryTile[] }) {
     col: (index % 3) as 0 | 1 | 2,
     media: {
       kind: 'node',
-      node: (
+      node: cell.image ? (
+        <div className="relative h-full w-full">
+          <Image
+            src={cell.image}
+            alt=""
+            fill
+            sizes="(min-width: 768px) 33vw, 100vw"
+            className="object-cover"
+          />
+          {/* Darkened so the label stays legible over any photograph. */}
+          <div className="absolute inset-0 bg-background/35" />
+        </div>
+      ) : (
         <div
           className="h-full w-full"
           // Hue is derived from the cell's position so each section keeps the
