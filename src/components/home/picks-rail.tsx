@@ -1,4 +1,4 @@
-import { CoverArt } from '@/components/ui/cover-art';
+import { Cover } from '@/components/ui/cover-art';
 import Link from 'next/link';
 
 import type { PostCard } from '@/lib/posts';
@@ -52,7 +52,7 @@ export function PicksRail({
 
             <Link href={post.href} className="shrink-0">
               <div className="relative h-14 w-14 overflow-hidden rounded-md border border-border bg-muted">
-                <CoverArt seed={post.category.slug} />
+                <Cover post={post} sizes="56px" />
               </div>
             </Link>
 

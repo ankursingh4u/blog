@@ -1,4 +1,4 @@
-import { CoverArt } from '@/components/ui/cover-art';
+import { Cover } from '@/components/ui/cover-art';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 
@@ -35,8 +35,9 @@ export function TopStories({ lead, rest }: { lead: PostCard; rest: PostCard[] })
         <article className="min-w-0">
           <Link href={lead.href} className="group block">
             <div className="relative aspect-[16/10] overflow-hidden rounded-lg border border-border bg-muted">
-              <CoverArt
-                seed={lead.category.slug}
+              <Cover
+                post={lead}
+                sizes="(min-width: 1024px) 620px, 100vw"
                 className="transition-transform duration-500 group-hover:scale-[1.02]"
               />
             </div>
@@ -76,7 +77,7 @@ export function TopStories({ lead, rest }: { lead: PostCard; rest: PostCard[] })
 
               <Link href={post.href} className="shrink-0">
                 <div className="relative h-[72px] w-[104px] overflow-hidden rounded-md border border-border bg-muted">
-                  <CoverArt seed={post.category.slug} />
+                  <Cover post={post} sizes="104px" />
                 </div>
               </Link>
 

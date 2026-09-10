@@ -1,4 +1,4 @@
-import { CoverArt } from '@/components/ui/cover-art';
+import { Cover } from '@/components/ui/cover-art';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 
@@ -40,8 +40,9 @@ export function SectionCluster({
       <article className="mt-4">
         <Link href={lead.href} className="group block">
           <div className="relative aspect-[16/9] overflow-hidden rounded-lg border border-border bg-muted">
-            <CoverArt
-              seed={lead.category.slug}
+            <Cover
+              post={lead}
+              sizes="(min-width: 1024px) 380px, 100vw"
               className="transition-transform duration-500 group-hover:scale-[1.02]"
             />
           </div>

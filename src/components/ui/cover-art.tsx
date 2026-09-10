@@ -1,3 +1,6 @@
+import Image from 'next/image';
+import { cn } from '@/lib/utils';
+
 /**
  * Abstract cover art for in-page article cards.
  *
@@ -62,6 +65,48 @@ export function CoverArt({ seed, className }: { seed: string; className?: string
           `linear-gradient(135deg, hsl(${hue} 60% 20% / 0.85) 0%, hsl(${hue} 45% 10% / 0.95) 100%)`,
         ].join(', '),
       }}
+    />
+  );
+}
+
+/**
+ * The cover for a card: the article's photograph if it has one, drawn cover art
+ * if it does not.
+ *
+ * This exists because the choice was originally made at each call site, and only
+ * `post-card` ever made it. Every homepage component — the lead story, the picks
+ * rail, each section cluster — rendered `CoverArt` unconditionally, so when the
+ * articles finally got photographs the homepage carried on showing gradients and
+ * nothing looked broken enough to notice. Putting the decision in one place
+ * means a caller cannot forget it.
+ *
+ * Fills its parent, so the parent needs `position: relative` and a size.
+ * `sizes` should describe the rendered width, otherwise the browser downloads a
+ * far larger file than the box needs.
+ */
+export function Cover({
+  post,
+  sizes,
+  className,
+}: {
+  post: {
+    featuredImage: string | null;
+    imageCredit?: { license: string };
+    category: { slug: string };
+  };
+  sizes: string;
+  className?: string;
+}) {
+  const photo = coverPhoto(post);
+  if (!photo) return <CoverArt seed={post.category.slug} className={className} />;
+
+  return (
+    <Image
+      src={photo}
+      alt=""
+      fill
+      sizes={sizes}
+      className={cn('object-cover', className)}
     />
   );
 }
