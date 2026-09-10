@@ -8,8 +8,8 @@ a human.
 The site started as a Windows-only fix-it blog; that back-catalogue lives on as a
 sub-section at `/tech/windows` and keeps its troubleshooting post structure.
 
-**Live** at `http://fixdesk.91.239.208.85.sslip.io`, self-hosted on Coolify.
-Postgres, password-protected admin, daily Google News ingest on a cron.
+**Live** at **https://favo.news**, self-hosted on Coolify. Postgres,
+password-protected admin, daily Google News ingest on a cron.
 
 ---
 
@@ -346,13 +346,19 @@ immediately.
 
 ## Still to do
 
-- **Point a real domain at it.** Currently on an `sslip.io` hostname over plain
-  HTTP. Set the FQDN on the Coolify application and update `NEXT_PUBLIC_SITE_URL`
-  to match, then redeploy so canonicals, OG URLs and the sitemap follow.
-- **HTTPS.** Comes with the real domain via Let's Encrypt.
 - **Search Console + GA4 + IndexNow.** Add the tokens in `/admin/settings`, then
-  confirm `https://yourdomain/{key}.txt` returns the IndexNow key and submit
+  confirm `https://favo.news/{key}.txt` returns the IndexNow key and submit
   `/sitemap.xml`.
+- **Mail for the contact addresses.** `corrections@`, `tips@` and `hello@favo.news`
+  are published on /contact but no mailbox or forwarding exists yet, so anything
+  sent there is currently lost. Namecheap's free email forwarding is enough.
+- **`www` does not redirect.** Both `favo.news` and `www.favo.news` serve 200.
+  Coolify's application `redirect: non-www` was set but the proxy did not pick it
+  up on restart. Not urgent — every page served from `www` carries a canonical
+  pointing at the apex, which is what search engines act on.
+- **The old `sslip.io` hostname still resolves** and serves the same site. Kept
+  deliberately as a way in if the domain or certificate ever breaks; its pages
+  canonicalise to `favo.news`, so it will not be indexed separately.
 - **`next@15.1.3` has a published vulnerability.** The install warns about it on
   every build. Upgrade to a patched 15.x.
 - **Google Trends and the Windows feeds return nothing from this host** — the
