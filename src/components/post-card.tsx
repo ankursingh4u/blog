@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import { CoverArt, coverPhoto } from '@/components/ui/cover-art';
 import Link from 'next/link';
-import { CheckCircle2, Clock } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import type { PostCard as PostCardData } from '@/lib/posts';
 import { Badge } from '@/components/ui/primitives';
 import { cn, formatDate, isoDate } from '@/lib/utils';
@@ -146,17 +146,13 @@ export function PostCard({
               <time dateTime={isoDate(post.publishedAt)}>{published}</time>
             </>
           ) : null}
+          {/* No "verification pending" counterpart — see article-meta.tsx. */}
           {verified ? (
             <span className="inline-flex items-center gap-1 text-ok">
               <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
               Tested on {post.testedOnBuild}
             </span>
-          ) : (
-            <span className="inline-flex items-center gap-1">
-              <Clock className="h-3.5 w-3.5" aria-hidden="true" />
-              Verification pending
-            </span>
-          )}
+          ) : null}
         </div>
       </div>
     </article>

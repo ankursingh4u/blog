@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { CalendarCheck2, Clock, MonitorCheck, ShieldQuestion } from 'lucide-react';
+import { CalendarCheck2, Clock, MonitorCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/primitives';
 import { formatDate, isoDate } from '@/lib/utils';
 
@@ -68,17 +68,23 @@ export function ArticleMeta({
         {readingMinutes} min read
       </span>
 
+      {/*
+        "Tested on <build>" is a troubleshooting claim: someone ran the steps on
+        a machine on that build. It appears only once that has happened.
+
+        There is deliberately no "verification pending" counterpart any more. It
+        rendered on every article without a build recorded, which is every
+        general-interest story on the site — a match report cannot be run on a
+        Windows build, so the label warned readers about a check that was never
+        going to apply and made finished articles look unfinished. The editorial
+        policy already scoped this to the Windows pages; the code did not.
+      */}
       {testedOnBuild ? (
         <Badge tone="ok">
           <MonitorCheck className="h-3 w-3" aria-hidden="true" />
           Tested on {testedOnBuild}
         </Badge>
-      ) : (
-        <Badge tone="warn">
-          <ShieldQuestion className="h-3 w-3" aria-hidden="true" />
-          Verification pending
-        </Badge>
-      )}
+      ) : null}
 
       {verified ? (
         <span className="inline-flex items-center gap-1.5 text-muted-foreground">
