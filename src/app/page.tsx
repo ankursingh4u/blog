@@ -158,8 +158,15 @@ export default async function HomePage() {
         </div>
       </div>
 
-      {/* Per-section clusters, the way an aggregator lays out its front page. */}
-      <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {/*
+        Per-section clusters, the way an aggregator lays out its front page.
+
+        `items-start` matters: grid items stretch to the tallest in their row by
+        default, so a section holding a single article — Entertainment, today —
+        was drawn as a card the height of a three-article neighbour with the
+        remainder left empty. Each cluster sizes to its own content instead.
+      */}
+      <div className="mt-6 grid items-start gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {sections.map((section) => (
           <SectionCluster
             key={section.href}
