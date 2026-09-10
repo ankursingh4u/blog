@@ -29,3 +29,6 @@ coverage
 # keep it out of the repo and somewhere off this machine.
 data-export.json
 *-export.json
+
+# Scratch output from the cover-photo picker.
+*.tmp

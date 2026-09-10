@@ -28,7 +28,12 @@ import type { ImageCreditData } from '@/lib/json';
 
 const ENDPOINT = 'https://api.openverse.org/v1/images/';
 const UA = botUserAgent();
-const TIMEOUT_MS = 15_000;
+/**
+ * Openverse regularly takes well over 15 seconds for a cold query, and an
+ * aborted search is indistinguishable from "no results" to the caller — which
+ * silently produced empty picks for half a batch.
+ */
+const TIMEOUT_MS = 45_000;
 /** Below this, a photo looks soft as a 1200px-wide cover. */
 const MIN_WIDTH = 900;
 const MAX_BYTES = 8 * 1024 * 1024;
@@ -84,7 +89,19 @@ export function licenceLabel(license: string, version?: string | null): string {
   return `CC ${name}${version ? ` ${version}` : ''}`.trim();
 }
 
-export async function searchImages(query: string, limit = 12): Promise<ImageCandidate[]> {
+export async function searchImages(
+  query: string,
+  limit = 12,
+  /**
+   * Restrict to particular Openverse providers, e.g. `['wikimedia']`.
+   *
+   * Worth having because providers differ in whether they will serve the file to
+   * a non-browser client: Flickr answers 403, Wikimedia does not. The licence
+   * permits the copy either way, so when a result set turns out to be entirely
+   * unfetchable the fix is to ask a provider that will actually serve it.
+   */
+  sources?: string[],
+): Promise<ImageCandidate[]> {
   const trimmed = query.trim();
   if (trimmed.length < 2) return [];
 
@@ -95,6 +112,7 @@ export async function searchImages(query: string, limit = 12): Promise<ImageCand
     license_type: 'commercial',
     mature: 'false',
   });
+  if (sources?.length) params.set('source', sources.join(','));
 
   const response = await fetch(`${ENDPOINT}?${params}`, {
     signal: AbortSignal.timeout(TIMEOUT_MS),
@@ -128,6 +146,52 @@ export interface StoredImage {
   credit: ImageCreditData;
 }
 
+/** Widest we ever render a cover, so anything larger is bytes nobody sees. */
+const STORE_WIDTH = 1600;
+
+/**
+ * Re-encodes an original down to something sane to serve.
+ *
+ * Openverse returns archive masters — 4000px and 5 MB is normal, and one run
+ * left 53 MB of covers on disk for 34 articles. That weight is not harmless
+ * here: `public/uploads` is committed to the repo and baked into the deployment
+ * image, and `next/image` has to read the full file before it can resize it on
+ * first request.
+ *
+ * WebP at 1600px keeps a cover sharp on a 2x display while cutting a typical
+ * file by well over 90%. Failure is non-fatal — if sharp cannot decode
+ * something, the original is stored as it was rather than losing the image.
+ */
+async function downscale(
+  buffer: Buffer,
+  contentType: string,
+): Promise<{ body: Buffer; contentType: string; extension: string }> {
+  const original = {
+    body: buffer,
+    contentType,
+    extension: contentType.split('/')[1]?.split(';')[0]?.replace('jpeg', 'jpg') ?? 'jpg',
+  };
+
+  try {
+    const sharp = (await import('sharp')).default;
+    const image = sharp(buffer, { failOn: 'none' });
+    const meta = await image.metadata();
+    if (!meta.width) return original;
+
+    const body = await image
+      .rotate() // honour EXIF orientation before resizing
+      .resize({ width: Math.min(meta.width, STORE_WIDTH), withoutEnlargement: true })
+      .webp({ quality: 82 })
+      .toBuffer();
+
+    // Only keep the re-encode if it actually helped.
+    if (body.byteLength >= buffer.byteLength) return original;
+    return { body, contentType: 'image/webp', extension: 'webp' };
+  } catch {
+    return original;
+  }
+}
+
 /**
  * Copies a chosen image into local storage and returns it with its credit.
  *
@@ -152,11 +216,11 @@ export async function storeImage(candidate: ImageCandidate, slug: string): Promi
     throw new Error(`That image is ${(buffer.byteLength / 1024 / 1024).toFixed(1)} MB; the limit is 8 MB.`);
   }
 
-  const extension = contentType.split('/')[1]?.split(';')[0]?.replace('jpeg', 'jpg') ?? 'jpg';
+  const { body, contentType: storedType, extension } = await downscale(buffer, contentType);
   const stored = await storage.put({
-    body: buffer,
+    body,
     filename: `${slug}-cover.${extension}`,
-    contentType,
+    contentType: storedType,
     prefix: 'covers',
   });
 
