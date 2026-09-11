@@ -33,8 +33,20 @@ export const metadata: Metadata = {
   alternates: { canonical: undefined },
 };
 
-// The ingest runs once a morning; an hour is plenty and keeps the page cheap.
-export const revalidate = 3600;
+/**
+ * Rendered per request rather than cached.
+ *
+ * An hourly `revalidate` looked like the frugal choice and was wrong twice over.
+ * The page was first built during a deploy that ran before the morning ingest,
+ * so it cached an empty list and served it for an hour with no way to force a
+ * refresh short of another deploy. More generally, a briefing that can be an
+ * hour behind the data it summarises is not a briefing.
+ *
+ * The cost is one indexed query returning a few dozen rows, on a page that is
+ * noindex and linked only from the footer — far cheaper than the article pages
+ * that legitimately are cached.
+ */
+export const dynamic = 'force-dynamic';
 
 /** How many links to show per section before it stops being skimmable. */
 const PER_SECTION = 8;
