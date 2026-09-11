@@ -123,7 +123,17 @@ const TROUBLESHOOTING_STRUCTURE = `This is a troubleshooting guide, so additiona
 const HARD_RULES = `Absolute rules:
 
 - You may only state facts that appear in the SOURCES below. If the sources do not
-  answer something, leave it out or say plainly that it is not confirmed.
+  answer something, leave it out. Write about the subject, not about what your
+  research did or did not contain.
+- Never refer to the source material as an object. The reader cannot see it and
+  does not know it exists. Banned outright: "the supplied sources", "the sources
+  provided", "this source pack", "the supplied record", "based on the material
+  provided", "not confirmed in the sources", and any "Status:" line reporting
+  whether something could be verified. Nothing in the article may describe the
+  process by which it was written.
+- If the headline's central claim is not supported by the SOURCES, do not write an
+  article explaining that. Cover what the sources *do* establish, under a title
+  that matches it.
 - Never write a specific figure, date, price, statistic, name or identifier that
   does not appear in the SOURCES or in the VERIFIED IDENTIFIERS list. This is
   checked automatically after you finish and a draft that breaks it is discarded.

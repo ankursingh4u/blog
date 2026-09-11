@@ -93,6 +93,28 @@ const SELF_REFERENCE = [
   'in this article', 'this article will', 'we will explore', 'let us',
 ];
 
+/**
+ * References to the research material itself — the strongest tell of the lot,
+ * and the one the vocabulary lists missed completely.
+ *
+ * 24 of the first 34 articles contained one. They read like an audit of their own
+ * inputs rather than a piece of writing: "the supplied sources", "this source
+ * pack", "Status: not confirmed in the supplied sources". A human writer has
+ * sources too and never mentions them this way, because the reader cannot see
+ * them and does not know they exist.
+ *
+ * The cause was an instruction permitting the model to "say plainly that it is
+ * not confirmed" when the research did not support the headline. It took that as
+ * licence to make the verification status the subject of the article. The prompt
+ * no longer allows it; this catches any that slip through.
+ */
+const RESEARCH_META = [
+  'supplied source', 'supplied sources', 'supplied record', 'supplied material',
+  'source pack', 'sources provided', 'provided sources', 'the provided material',
+  'material provided', 'not confirmed in the', 'in the supplied',
+  'based on this source', 'from the supplied',
+];
+
 function escape(term: string): string {
   return term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -133,6 +155,13 @@ export function checkStyle(markdown: string): StyleReport {
   push(hit('copula-avoidance', findAll(text, COPULA_AVOIDANCE), 'Prefer "is" to "serves as".'));
   push(hit('weasel-words', findAll(text, WEASEL), 'Vague attribution. Name the source or drop the claim.'));
   push(hit('self-reference', findAll(text, SELF_REFERENCE), 'Do not refer to the article from inside it.'));
+  push(
+    hit(
+      'research-meta',
+      findAll(text, RESEARCH_META),
+      'Do not mention the research material. The reader cannot see it and does not know it exists.',
+    ),
+  );
 
   // "Not just X, but Y" / "It is not X, it is Y" — negative parallelism.
   const negParallel =

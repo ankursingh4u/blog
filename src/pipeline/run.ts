@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/db';
 import { asBool, asInt, getSettings } from '@/lib/settings';
-import { hasApiKey, readUsage, resetUsage } from '@/lib/ai';
+import { GenerationError, hasApiKey, readUsage, resetUsage } from '@/lib/ai';
 import { toJson } from '@/lib/json';
 import { slugify } from '@/lib/utils';
 import { notifyPublished } from '@/lib/indexing';
@@ -229,6 +229,27 @@ async function produceOne({
   // is recorded in the quality notes for the editor to judge.
   const style = checkStyle(`${draft.quickAnswer}\n\n${draft.body}`);
   log.info(`style: ${describeStyle(style)}`);
+
+  /**
+   * `research-meta` is the exception: it blocks.
+   *
+   * Every other style rule flags a word that can be legitimate in context. This
+   * one flags the draft talking about its own research — "the supplied sources",
+   * "not confirmed in the supplied material" — and there is no context in which
+   * that belongs in a published article. The reader cannot see the research and
+   * does not know it exists.
+   *
+   * It is not a hypothetical: 24 of the first 34 articles shipped with it, 22 of
+   * them in the Quick answer box, two in the title. Left advisory, it was
+   * recorded in the notes and published anyway.
+   */
+  const researchMeta = style.hits.find((h) => h.rule === 'research-meta');
+  if (researchMeta) {
+    throw new GenerationError(
+      `Draft refers to its own research material (${researchMeta.matches.slice(0, 3).join(', ')}). ` +
+        'Write about the subject, not about what the sources did or did not contain.',
+    );
+  }
 
   const slug = await uniqueSlug(draft.slug);
 
