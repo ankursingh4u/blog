@@ -104,6 +104,14 @@ export async function SiteFooter() {
                   </Link>
                 </li>
                 <li>
+                  <Link
+                    href="/write"
+                    className="text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    Write for us
+                  </Link>
+                </li>
+                <li>
                   <a
                     href="/feed.xml"
                     className="inline-flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground"

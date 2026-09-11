@@ -21,6 +21,7 @@ import { assignAuthor } from '@/pipeline/select';
 import { research } from '@/pipeline/research';
 import { generateFeaturedImage } from '@/pipeline/featured-image';
 import { searchImages, storeImage, type ImageCandidate } from '@/lib/images';
+import { guestAuthorFor } from '@/lib/submissions';
 import type { CategorySlug } from '@/pipeline/parser';
 
 /**
@@ -649,4 +650,92 @@ export async function triggerPipeline(): Promise<PipelineRunResult> {
   revalidatePath('/admin/posts');
   revalidatePath('/');
   return result;
+}
+
+/* ---------------------------------------------------- reader submissions */
+
+/**
+ * Accepts a reader submission and turns it into a draft post.
+ *
+ * Deliberately creates the post as DRAFT, never PUBLISHED. Accepting means "this
+ * is worth editing", not "put it on the site" — the editor then works on it in
+ * the normal post editor and publishes from there, which is the same path every
+ * other article takes and the same place the structure and style checks live.
+ *
+ * The byline is a guest Author matched on the contributor's email, so a repeat
+ * contributor keeps one profile and one author page instead of collecting a new
+ * one per article.
+ */
+export async function acceptSubmission(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  await requireAdmin();
+
+  const id = String(formData.get('id') ?? '');
+  const categoryId = String(formData.get('categoryId') ?? '');
+  if (!id) return FAIL('Missing submission id.');
+
+  const submission = await prisma.submission.findUnique({ where: { id } });
+  if (!submission) return FAIL('That submission no longer exists.');
+  if (submission.status === 'APPROVED') return FAIL('That submission has already been accepted.');
+
+  // The editor's choice wins; the contributor's is only a suggestion, and may
+  // have been left blank.
+  const category = await prisma.category.findUnique({
+    where: { id: categoryId || submission.categoryId || '' },
+    select: { id: true },
+  });
+  if (!category) return FAIL('Choose a section before accepting.');
+
+  const author = await guestAuthorFor(submission.authorName, submission.authorEmail);
+  const slug = await uniqueSlug(slugify(submission.title));
+
+  const post = await prisma.post.create({
+    data: {
+      title: submission.title,
+      slug,
+      categoryId: category.id,
+      authorId: author.id,
+      status: 'DRAFT',
+      // The contributor wrote prose, not our post structure. Leaving these
+      // empty is honest — the editor fills them in, and the structure check
+      // will say what is missing.
+      quickAnswer: '',
+      body: submission.body,
+      metaTitle: submission.title.slice(0, 110),
+      metaDescription: '',
+      screenshots: submission.images,
+      generatedBy: 'HUMAN',
+      qualityNotes: `Reader submission from ${submission.authorName} <${submission.authorEmail}>.`,
+    },
+    select: { id: true },
+  });
+
+  await prisma.submission.update({
+    where: { id },
+    data: { status: 'APPROVED', reviewedAt: new Date(), postId: post.id },
+  });
+
+  revalidatePath('/admin/submissions');
+  redirect(`/admin/posts/${post.id}`);
+}
+
+export async function rejectSubmission(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  await requireAdmin();
+
+  const id = String(formData.get('id') ?? '');
+  const note = String(formData.get('note') ?? '').trim();
+  if (!id) return FAIL('Missing submission id.');
+
+  await prisma.submission.update({
+    where: { id },
+    data: { status: 'REJECTED', reviewedAt: new Date(), note: note || null },
+  });
+
+  revalidatePath('/admin/submissions');
+  return OK('Submission rejected.');
 }

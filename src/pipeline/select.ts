@@ -89,7 +89,15 @@ export async function assignAuthor(
   categorySlug: string,
   previousAuthorId: string | null,
 ): Promise<Author | null> {
-  const authors = await prisma.author.findMany();
+  /**
+   * House bylines only.
+   *
+   * Guests are readers whose submitted article was accepted. The fallback below
+   * widens the pool to every author when none matches the category, so without
+   * this filter a contributor's name would eventually appear on a generated
+   * article they never wrote — which is a lie about a real, named person.
+   */
+  const authors = await prisma.author.findMany({ where: { isGuest: false } });
   if (authors.length === 0) return null;
 
   const matching = authors.filter((author) =>

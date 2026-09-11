@@ -2,7 +2,6 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 
 import { ArticleView } from '@/components/article/article-view';
-import { prisma } from '@/lib/db';
 import { getPublishedPost } from '@/lib/posts';
 import { buildMetadata } from '@/lib/seo';
 

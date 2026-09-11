@@ -52,19 +52,72 @@ model Author {
   stylePrompt   String
   createdAt     DateTime @default(now())
 
+  // A reader whose submitted article was accepted, as opposed to one of the
+  // house bylines. Guests are excluded from the generation pool: assignAuthor
+  // falls back to every author when none matches a category, which would
+  // otherwise put a contributor's name on an article they did not write.
+  isGuest Boolean @default(false)
+  // Contact address for a guest, used to recognise a repeat contributor rather
+  // than creating a second byline for the same person. Never shown publicly.
+  email   String?
+
   posts Post[]
 
   @@index([slug])
+  @@index([email])
+}
+
+enum SubmissionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+/// An article sent in through the public form at /write.
+///
+/// Deliberately a separate table rather than a Post with an extra status.
+/// Anyone on the internet can create one of these, so nothing here has been
+/// read by a human yet: keeping it out of Post means unreviewed text can never
+/// be reached by a query that forgot to filter on status, and the public site
+/// cannot render it by accident.
+model Submission {
+  id    String @id @default(cuid())
+  title String
+  body  String
+
+  /// Contributor's own name, shown as the byline if it is published.
+  authorName  String
+  /// Contact address. Stored for replies, never rendered on the public site.
+  authorEmail String
+
+  /// Where the contributor thinks it belongs. Advisory — the editor decides.
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  /// JSON array of { url, alt, width, height } already written to storage.
+  images String @default("[]")
+
+  status SubmissionStatus @default(PENDING)
+  /// Editor's note, e.g. why it was rejected. Internal only.
+  note   String?
+
+  /// Set once accepted, so the queue links through to what it became.
+  postId String?
+
+  createdAt  DateTime  @default(now())
+  reviewedAt DateTime?
+
+  @@index([status, createdAt])
 }
 
 model Category {
-  id          String  @id @default(cuid())
+  id          String @id @default(cuid())
   name        String
-  slug        String  @unique
+  slug        String @unique
   description String
   // Ordering on the homepage / nav. Lower sorts first.
-  position    Int     @default(0)
-  accent      String  @default("violet")
+  position    Int    @default(0)
+  accent      String @default("violet")
 
   // Optional parent, for sub-sections such as /tech/windows. One level only —
   // a child may not itself have children. Posts may live in either a top-level
@@ -73,17 +126,18 @@ model Category {
   parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
   children Category[] @relation("CategoryTree")
 
-  posts    Post[]
-  keywords Keyword[]
+  posts       Post[]
+  keywords    Keyword[]
+  submissions Submission[]
 
   @@index([slug])
   @@index([parentId, position])
 }
 
 model Post {
-  id     String @id @default(cuid())
-  title  String
-  slug   String @unique
+  id    String @id @default(cuid())
+  title String
+  slug  String @unique
 
   categoryId String
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
@@ -116,13 +170,13 @@ model Post {
   qualityScore Int?
   qualityNotes String?
 
-  generatedBy   GeneratedBy @default(AI)
-  testedOnBuild String?
+  generatedBy    GeneratedBy @default(AI)
+  testedOnBuild  String?
   lastVerifiedAt DateTime?
 
   publishedAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@index([status, publishedAt])
   @@index([categoryId, status, publishedAt])
@@ -142,16 +196,16 @@ model Keyword {
 
   // Verified identifiers lifted from the source feed. The generator may only
   // use identifiers that appear here — see src/pipeline/quality-gate.ts.
-  kbNumber   String?
+  kbNumber    String?
   buildNumber String?
-  errorCode  String?
-  sourceUrl  String?
+  errorCode   String?
+  sourceUrl   String?
 
   // Masthead taken off the Google News headline ("Headline - Publisher").
   // Kept because over half of News links point at news.google.com rather than
   // the publisher, so the destination host cannot attribute the story and
   // showing a reader "news.google.com" as the source is worse than nothing.
-  publisher  String?
+  publisher String?
 
   createdAt DateTime @default(now())
 
