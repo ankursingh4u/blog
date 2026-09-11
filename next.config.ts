@@ -3,6 +3,19 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  /**
+   * Emit a self-contained server bundle with only the traced dependencies.
+   *
+   * The deployment image previously carried the whole of node_modules — several
+   * hundred megabytes, exported and pushed on every deploy. Standalone traces
+   * what the server actually imports and writes a `server.js` beside it, which
+   * makes the image small enough that the export and container start stop being
+   * a measurable part of the deploy.
+   *
+   * It also makes a cached-dependency Dockerfile possible: the runtime stage
+   * copies the traced output instead of reinstalling.
+   */
+  output: 'standalone',
   eslint: {
     /**
      * Lint is not skipped, it is moved. `next build` runs ESLint over the whole

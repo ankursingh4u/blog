@@ -1,0 +1,33 @@
+# Keeping the build context small matters here: everything listed gets shipped
+# to the daemon before the build starts, and node_modules and .next alone are
+# over half a gigabyte.
+node_modules
+.next
+out
+build
+coverage
+
+# Secrets never belong in a build context. The real values arrive as build args
+# and runtime environment variables.
+.env
+.env*.local
+
+# Local Postgres data, logs and scratch files.
+*.log
+*.tmp
+prisma/dev.db
+prisma/dev.db-journal
+data-export.json
+*-export.json
+
+.git
+.github
+.vscode
+.claude
+.DS_Store
+README.md
+CLAUDE.md
+
+# Tests do not run in the image.
+tests
+vitest.config.ts

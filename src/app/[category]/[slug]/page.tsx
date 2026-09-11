@@ -34,24 +34,31 @@ async function resolve(categorySlug: string, slug: string) {
   return null;
 }
 
+/**
+ * Sub-section landing pages only — the articles themselves are not prerendered.
+ *
+ * Building every published article was the largest single cost in a deploy:
+ * rendering each one means a database round trip, the full article body, the
+ * related-posts query and four JSON-LD blocks, and on the deployment host that
+ * was minutes of a build that already takes too long.
+ *
+ * `dynamicParams` is true above, so an article not listed here still resolves —
+ * it renders on the first request and is then cached for its `revalidate`
+ * window like any other page. The cost moves from every deploy to the first
+ * visitor of each article, once.
+ *
+ * The child-category pages stay: there are a handful of them, they are cheap,
+ * and they are navigation rather than content.
+ */
 export async function generateStaticParams() {
-  const [posts, children] = await Promise.all([
-    prisma.post.findMany({
-      where: { status: 'PUBLISHED', category: { parentId: null } },
-      select: { slug: true, category: { select: { slug: true } } },
-    }),
-    prisma.category.findMany({
-      where: { parentId: { not: null } },
-      select: { slug: true, parent: { select: { slug: true } } },
-    }),
-  ]);
+  const children = await prisma.category.findMany({
+    where: { parentId: { not: null } },
+    select: { slug: true, parent: { select: { slug: true } } },
+  });
 
-  return [
-    ...posts.map((post) => ({ category: post.category.slug, slug: post.slug })),
-    ...children.flatMap((child) =>
-      child.parent ? [{ category: child.parent.slug, slug: child.slug }] : [],
-    ),
-  ];
+  return children.flatMap((child) =>
+    child.parent ? [{ category: child.parent.slug, slug: child.slug }] : [],
+  );
 }
 
 type Params = Promise<{ category: string; slug: string }>;

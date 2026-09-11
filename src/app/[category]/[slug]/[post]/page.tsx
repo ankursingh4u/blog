@@ -26,17 +26,14 @@ async function resolve(category: string, sub: string, slug: string) {
   return post;
 }
 
+/**
+ * Nothing is prerendered here, for the same reason as the two-segment route:
+ * building every article was the bulk of the deploy. `dynamicParams` is true
+ * above, so these render on first request and then cache for their `revalidate`
+ * window.
+ */
 export async function generateStaticParams() {
-  const posts = await prisma.post.findMany({
-    where: { status: 'PUBLISHED', category: { parentId: { not: null } } },
-    select: { slug: true, category: { select: { slug: true, parent: { select: { slug: true } } } } },
-  });
-
-  return posts.flatMap((post) =>
-    post.category.parent
-      ? [{ category: post.category.parent.slug, slug: post.category.slug, post: post.slug }]
-      : [],
-  );
+  return [];
 }
 
 type Params = Promise<{ category: string; slug: string; post: string }>;
