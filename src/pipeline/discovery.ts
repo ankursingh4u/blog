@@ -848,3 +848,55 @@ export async function findSolutionSources(query: string, limit = 4): Promise<Sol
 function describe(error: unknown) {
   return error instanceof Error ? error.message : String(error);
 }
+
+/**
+ * Headlines straight from publisher RSS, for the briefing.
+ *
+ * Google News is the better discovery channel — more sections, more editions,
+ * far more volume — but its links are opaque redirects. The article id is a
+ * token (`AU_yqLPk…`) that Google resolves server-side, not an encoded URL, so
+ * there is no way to turn one into the publisher's own address offline. A
+ * briefing built on them would send every reader to google.com and credit
+ * Google for someone else's reporting.
+ *
+ * These feeds publish real article URLs and real mastheads, which is exactly
+ * what a list of outbound links needs. Lower volume, but every item is usable.
+ *
+ * Feeds are read sequentially for the same reason as the news sweep: these are
+ * unauthenticated endpoints and a daily job is in no hurry.
+ */
+export async function fetchPublisherHeadlines(perFeed = 10): Promise<TrendingItem[]> {
+  const out: TrendingItem[] = [];
+
+  for (const [slug, feeds] of Object.entries(VERTICAL_FEEDS) as Array<
+    [CategorySlug, readonly string[]]
+  >) {
+    for (const feed of feeds) {
+      let items: FeedItem[];
+      try {
+        const xml = await fetchText(feed, 'application/rss+xml, application/xml, text/xml');
+        items = parseFeed(xml);
+      } catch (error) {
+        log.warn(`discovery: publisher feed ${feed} failed — ${describe(error)}`);
+        continue;
+      }
+
+      let host = feed;
+      try {
+        host = new URL(feed).hostname.replace(/^www\./, '');
+      } catch {
+        /* keep the raw string for the log */
+      }
+
+      for (const item of items.slice(0, perFeed)) {
+        // The feed is the publisher, so anything it serves from another host is
+        // syndicated or an advert rather than its own reporting.
+        if (!isTrustedGeneralHost(item.link)) continue;
+        out.push({ item, slug, origin: `publisher:${host}` });
+      }
+    }
+  }
+
+  log.info(`discovery: publisher feeds → ${out.length} item(s) with direct article links`);
+  return out;
+}

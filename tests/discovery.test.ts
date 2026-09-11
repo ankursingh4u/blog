@@ -10,7 +10,12 @@ import {
   isUsefulSolutionUrl,
   stripPublisher,
 } from '@/pipeline/discovery';
-import { CATEGORY_SLUGS, newsItemToCandidate, stripNewsPublisher } from '@/pipeline/parser';
+import {
+  CATEGORY_SLUGS,
+  newsItemToCandidate,
+  newsPublisher,
+  stripNewsPublisher,
+} from '@/pipeline/parser';
 import { phraseToCandidate } from '@/pipeline/ingest';
 
 describe('solution source filtering', () => {
@@ -198,6 +203,32 @@ describe('stripNewsPublisher', () => {
     expect(stripNewsPublisher('Samsung India begins job cuts')).toBe(
       'Samsung India begins job cuts',
     );
+  });
+});
+
+describe('newsPublisher', () => {
+  it('returns the masthead the stripper removes', () => {
+    expect(newsPublisher('Eiffel Tower shuts after strike - The Times of India')).toBe(
+      'The Times of India',
+    );
+  });
+
+  it('returns null when the headline carries no publisher', () => {
+    expect(newsPublisher('Samsung India begins job cuts')).toBeNull();
+  });
+
+  it('does not mistake a trailing sentence for a masthead', () => {
+    // Same guard the stripper uses: a tail ending in sentence punctuation is
+    // part of the headline, so neither function may touch it.
+    const title = 'The rate decision is close - nobody knows which way it goes.';
+    expect(newsPublisher(title)).toBeNull();
+    expect(stripNewsPublisher(title)).toBe(title);
+  });
+
+  it('agrees with the stripper on what was removed', () => {
+    const title = 'Liverpool target Frankfurt sporting director - BBC Sport';
+    expect(stripNewsPublisher(title)).toBe('Liverpool target Frankfurt sporting director');
+    expect(newsPublisher(title)).toBe('BBC Sport');
   });
 });
 

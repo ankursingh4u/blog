@@ -147,6 +147,12 @@ model Keyword {
   errorCode  String?
   sourceUrl  String?
 
+  // Masthead taken off the Google News headline ("Headline - Publisher").
+  // Kept because over half of News links point at news.google.com rather than
+  // the publisher, so the destination host cannot attribute the story and
+  // showing a reader "news.google.com" as the source is worse than nothing.
+  publisher  String?
+
   createdAt DateTime @default(now())
 
   @@index([status, createdAt])

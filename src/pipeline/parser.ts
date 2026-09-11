@@ -188,6 +188,8 @@ export interface KeywordCandidate {
   buildNumber: string | null;
   errorCode: string | null;
   sourceUrl: string;
+  /** Masthead taken off the headline, used to attribute the link. */
+  publisher?: string | null;
 }
 
 const PROBLEM_WORDS = /\b(fail|failing|error|issue|problem|known issue|broken|not install|stuck|rollback|blocked)\b/i;
@@ -303,6 +305,7 @@ export function newsItemToCandidate(
     buildNumber: null,
     errorCode: null,
     sourceUrl: item.link,
+    publisher: newsPublisher(item.title),
   };
 }
 
@@ -319,6 +322,26 @@ export function stripNewsPublisher(title: string): string {
       /[.!?]$/.test(publisher.trim()) ? match : '',
     )
     .trim();
+}
+
+/**
+ * The publisher name the above strips off, or null when the headline carries
+ * none.
+ *
+ * Worth keeping rather than discarding. Over half of Google News links point at
+ * `news.google.com` rather than the publisher, so the destination host cannot be
+ * used to say where a story came from — and showing a reader "news.google.com"
+ * as the source of an article is worse than showing nothing. The name in the
+ * headline is the only reliable attribution available at ingest time.
+ */
+export function newsPublisher(title: string): string | null {
+  const match = decode(title).match(/\s+[-–—]\s+([^-–—,;:]{2,40})$/);
+  if (!match) return null;
+  const publisher = match[1].trim();
+  // Same guard as the stripper: a trailing clause that ends in sentence
+  // punctuation is part of the headline, not a masthead.
+  if (/[.!?]$/.test(publisher)) return null;
+  return publisher;
 }
 
 function titleCase(value: string) {

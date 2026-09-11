@@ -90,6 +90,19 @@ export async function SiteFooter() {
                     Search
                   </Link>
                 </li>
+                {/*
+                  Footer rather than header on purpose: the briefing links out to
+                  other publications, and the main navigation should point at our
+                  own reporting.
+                */}
+                <li>
+                  <Link
+                    href="/briefing"
+                    className="text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    Briefing
+                  </Link>
+                </li>
                 <li>
                   <a
                     href="/feed.xml"

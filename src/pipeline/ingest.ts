@@ -12,6 +12,7 @@ import {
   classifyVertical,
   fetchAllSuggestions,
   fetchGoogleTrends,
+  fetchPublisherHeadlines,
   fetchTrendingByVertical,
 } from '@/pipeline/discovery';
 import { isNearDuplicate, titleTokens } from '@/lib/similarity';
@@ -124,7 +125,17 @@ export async function ingest(): Promise<IngestResult> {
 
   /* --------------------------------------------------- 2. Google News RSS */
   if (useNews) {
-    const trending = await fetchTrendingByVertical();
+    /**
+     * Publisher feeds are read first, deliberately.
+     *
+     * Ingest keeps the first writer for a duplicate phrase, so whichever channel
+     * runs first wins a tie. A publisher item carries the article's real URL;
+     * the Google News version of the same story carries an opaque redirect that
+     * cannot be fetched, cited or linked out to. When both have the story, the
+     * usable link should be the one that survives.
+     */
+    const fromPublishers = await fetchPublisherHeadlines();
+    const trending = [...fromPublishers, ...(await fetchTrendingByVertical())];
     result.itemsSeen += trending.length;
 
     const perVertical = new Map<CategorySlug, number>();
@@ -237,6 +248,7 @@ export async function ingest(): Promise<IngestResult> {
         buildNumber: candidate.buildNumber,
         errorCode: candidate.errorCode,
         sourceUrl: candidate.sourceUrl,
+        publisher: candidate.publisher ?? null,
       },
     });
     result.inserted += 1;
