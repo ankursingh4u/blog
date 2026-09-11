@@ -22,9 +22,12 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
-# Only the manifests, so this layer is invalidated by a dependency change and
-# nothing else.
+# The manifests, plus the Prisma schema: `npm ci` runs `prisma generate` as a
+# postinstall and it reads schema.prisma, so a manifests-only context fails the
+# install outright. Both change rarely, which is what keeps this layer cached
+# across an application-code deploy.
 COPY package.json package-lock.json ./
+COPY prisma ./prisma
 RUN npm ci --no-audit --no-fund
 
 # ---------------------------------------------------------------- build
