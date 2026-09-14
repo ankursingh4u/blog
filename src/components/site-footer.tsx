@@ -113,10 +113,10 @@ export async function SiteFooter() {
                 </li>
                 <li>
                   <Link
-                    href="/sitemaps"
+                    href="/archive"
                     className="text-muted-foreground transition-colors hover:text-foreground"
                   >
-                    Sitemap
+                    All articles
                   </Link>
                 </li>
                 <li>

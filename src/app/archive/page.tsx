@@ -8,9 +8,9 @@ import { categoryPath, postPath } from '@/lib/urls';
 import { formatDate } from '@/lib/utils';
 
 export const metadata: Metadata = buildMetadata({
-  title: 'Sitemap',
+  title: 'All articles',
   description: 'Every section, article and contributor on Favo News, on one page.',
-  path: '/sitemaps',
+  path: '/archive',
 });
 
 /**
@@ -78,7 +78,7 @@ export default async function SitemapPage() {
     <Container className="py-10 sm:py-14">
       <SectionHeading
         eyebrow="Index"
-        title="Sitemap"
+        title="Everything we have published"
         description={`Every section, all ${posts.length} published articles, and everyone who has written for us.`}
       />
 

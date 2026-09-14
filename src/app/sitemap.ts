@@ -88,9 +88,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: absoluteUrl('/about'), changeFrequency: 'monthly', priority: 0.5 },
     { url: absoluteUrl('/editorial-policy'), changeFrequency: 'monthly', priority: 0.5 },
     { url: absoluteUrl('/contact'), changeFrequency: 'yearly', priority: 0.3 },
-    // The readable index, and the page inviting contributions. Both are real
-    // destinations a reader might land on, so they belong here.
-    { url: absoluteUrl('/sitemaps'), lastModified: newest, changeFrequency: 'daily', priority: 0.3 },
+    // The browsable archive, and the page inviting contributions. Both are real
+    // destinations a reader can land on. /sitemaps is deliberately absent: it is
+    // a redirect to this file, and a sitemap must not list redirects.
+    { url: absoluteUrl('/archive'), lastModified: newest, changeFrequency: 'daily', priority: 0.3 },
     { url: absoluteUrl('/write'), changeFrequency: 'monthly', priority: 0.5 },
   ];
 
