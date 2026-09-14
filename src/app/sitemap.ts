@@ -23,7 +23,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       orderBy: { position: 'asc' },
       select: { slug: true, parent: { select: { slug: true } } },
     }),
-    prisma.author.findMany({ select: { slug: true } }),
+    /**
+     * Only authors with something published.
+     *
+     * Guest contributors get an author profile the moment their submission is
+     * accepted, which is before the draft is published — and a profile listing
+     * no articles is a thin page. Listing it invites a crawl of a page with
+     * nothing on it and, at scale, is the sort of empty-profile sprawl that
+     * drags a site's quality signals down.
+     */
+    prisma.author.findMany({
+      where: { posts: { some: { status: 'PUBLISHED', publishedAt: { not: null } } } },
+      select: { slug: true },
+    }),
   ]);
 
   const staticPages: MetadataRoute.Sitemap = [
@@ -31,6 +43,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: absoluteUrl('/about'), changeFrequency: 'monthly', priority: 0.5 },
     { url: absoluteUrl('/editorial-policy'), changeFrequency: 'monthly', priority: 0.5 },
     { url: absoluteUrl('/contact'), changeFrequency: 'yearly', priority: 0.3 },
+    // The readable index, and the page inviting contributions. Both are real
+    // destinations a reader might land on, so they belong here.
+    { url: absoluteUrl('/sitemaps'), changeFrequency: 'daily', priority: 0.3 },
+    { url: absoluteUrl('/write'), changeFrequency: 'monthly', priority: 0.5 },
   ];
 
   return [
