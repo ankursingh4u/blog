@@ -199,3 +199,32 @@ export async function guestAuthorFor(name: string, email: string, bio = '') {
     },
   });
 }
+
+/**
+ * Converts stored submission images into a Post's `screenshots` shape.
+ *
+ * The two differ in one field and it matters: a submission keeps the
+ * contributor's caption in `title`, while a post keeps it in `alt`, which is
+ * what the article template renders as the figcaption. Passing the raw JSON
+ * straight through parses cleanly — `alt` simply defaults to an empty string —
+ * so every caption would vanish with nothing to indicate it had.
+ *
+ * Using the caption as the alt text is deliberate. It describes the picture,
+ * which is exactly what a screen reader needs, and an empty alt on a
+ * content image is worse than an imperfect one.
+ */
+export function toScreenshots(imagesJson: string): string {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(imagesJson || '[]');
+  } catch {
+    return '[]';
+  }
+  if (!Array.isArray(parsed)) return '[]';
+
+  const shots = parsed
+    .filter((i): i is { url: string; title?: string } => Boolean(i) && typeof i === 'object' && 'url' in i)
+    .map((i) => ({ url: String(i.url), alt: String(i.title ?? '').trim() }));
+
+  return JSON.stringify(shots);
+}

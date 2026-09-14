@@ -21,7 +21,7 @@ import { assignAuthor } from '@/pipeline/select';
 import { research } from '@/pipeline/research';
 import { generateFeaturedImage } from '@/pipeline/featured-image';
 import { searchImages, storeImage, type ImageCandidate } from '@/lib/images';
-import { guestAuthorFor } from '@/lib/submissions';
+import { guestAuthorFor, toScreenshots } from '@/lib/submissions';
 import type { CategorySlug } from '@/pipeline/parser';
 
 /**
@@ -721,7 +721,11 @@ export async function acceptSubmission(
       // Their hero becomes the cover, so the article looks like every other one
       // in its section rather than falling back to drawn cover art.
       featuredImage: submission.heroImage,
-      screenshots: submission.images,
+      // Submissions store a caption as `title`; a post's screenshots store it as
+      // `alt`, and the article renders `alt`. Without this translation every
+      // caption a contributor typed would be parsed away and the images would
+      // publish bare — silently, because the Zod schema defaults alt to "".
+      screenshots: toScreenshots(submission.images),
       generatedBy: 'HUMAN',
       qualityNotes:
         `Reader submission from ${submission.authorName} <${submission.authorEmail}>.` +

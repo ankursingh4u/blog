@@ -20,8 +20,20 @@ import {
 const INITIAL: SubmitState = { ok: false, message: '' };
 
 const ACCEPT = 'image/png,image/jpeg,image/webp,image/avif,image/gif';
+
+/**
+ * `file:text-foreground` is the important part.
+ *
+ * The file button inherits the input's colour unless told otherwise, so with
+ * `text-muted-foreground` on the input the word "Browse…" came out light grey
+ * on the light grey `bg-muted` button — invisible in light mode, which is the
+ * default theme. The surrounding "No file selected" text is meant to be muted;
+ * the button label is not.
+ */
 const fileClass =
-  'block w-full text-sm text-muted-foreground file:mr-4 file:rounded-md file:border file:border-input file:bg-muted file:px-3 file:py-2 file:text-sm file:font-medium hover:file:bg-muted/70';
+  'block w-full text-sm text-muted-foreground file:mr-4 file:cursor-pointer file:rounded-md ' +
+  'file:border file:border-input file:bg-muted file:px-3 file:py-2 file:text-sm ' +
+  'file:font-medium file:text-foreground hover:file:bg-muted/70';
 
 export interface CategoryOption {
   id: string;

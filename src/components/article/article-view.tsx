@@ -50,6 +50,13 @@ export async function ArticleView({ post }: { post: FullPost }) {
   // card lives under /uploads/og/ and has no credit, so it is excluded here and
   // the drawn cover is used instead.
   const credit = parseJson(post.imageCredit, ImageCreditSchema, EMPTY_CREDIT);
+
+  /**
+   * Troubleshooting content is the /tech/windows back-catalogue, and it is the
+   * only place where the images really are screenshots of the steps. Everywhere
+   * else they are photographs that belong in the flow of the article.
+   */
+  const isTroubleshooting = post.category.slug === 'windows';
   const photo = credit.license && post.featuredImage ? post.featuredImage : null;
 
   // A post in a child category gets both rungs, so the trail reads
@@ -193,31 +200,44 @@ export async function ArticleView({ post }: { post: FullPost }) {
               dangerouslySetInnerHTML={{ __html: html }}
             />
 
+            {/*
+              The article's other pictures, stacked down the middle at the same
+              width as the cover rather than tiled two-up at the end.
+              A contributor's photographs are part of the piece and should read
+              like it; a two-column grid under a heading made them look like an
+              appendix.
+
+              The "Screenshots" heading is kept only for the troubleshooting
+              back-catalogue, where the images genuinely are screenshots of the
+              steps. On a news article it was Windows vocabulary showing through.
+            */}
             {post.screenshots.length > 0 ? (
-              <section aria-labelledby="screenshots-heading" className="mt-12">
-                <h2 id="screenshots-heading" className="text-2xl font-bold tracking-tight">
-                  Screenshots
-                </h2>
-                <div className="mt-6 grid gap-6 sm:grid-cols-2">
-                  {post.screenshots.map((shot) => (
-                    <figure key={shot.url}>
-                      <div className="relative aspect-[16/10] overflow-hidden rounded-lg border border-border bg-muted">
-                        <Image
-                          src={shot.url}
-                          alt={shot.alt}
-                          fill
-                          sizes="(max-width: 640px) 100vw, 380px"
-                          className="object-cover"
-                        />
-                      </div>
-                      {shot.alt ? (
-                        <figcaption className="mt-2 text-xs text-muted-foreground">
-                          {shot.alt}
-                        </figcaption>
-                      ) : null}
-                    </figure>
-                  ))}
-                </div>
+              <section
+                aria-label={isTroubleshooting ? 'Screenshots' : 'Images'}
+                className="mt-12 space-y-8"
+              >
+                {isTroubleshooting ? (
+                  <h2 className="text-2xl font-bold tracking-tight">Screenshots</h2>
+                ) : null}
+
+                {post.screenshots.map((shot) => (
+                  <figure key={shot.url} className="mx-auto">
+                    <div className="relative aspect-[16/9] overflow-hidden rounded-lg border border-border bg-muted">
+                      <Image
+                        src={shot.url}
+                        alt={shot.alt}
+                        fill
+                        sizes="(max-width: 1024px) 100vw, 832px"
+                        className="object-cover"
+                      />
+                    </div>
+                    {shot.alt ? (
+                      <figcaption className="mt-2 text-center text-sm text-muted-foreground">
+                        {shot.alt}
+                      </figcaption>
+                    ) : null}
+                  </figure>
+                ))}
               </section>
             ) : null}
 
