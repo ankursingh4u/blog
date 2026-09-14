@@ -6,6 +6,7 @@ import {
   SubmissionInput,
   rateLimitMessage,
   recentSubmissionCount,
+  pairCaptions,
   storeSubmissionImages,
 } from '@/lib/submissions';
 
@@ -46,6 +47,8 @@ export async function submitArticle(
     body: formData.get('body') ?? '',
     authorName: formData.get('authorName') ?? '',
     authorEmail: formData.get('authorEmail') ?? '',
+    authorBio: formData.get('authorBio') ?? '',
+    authorUrl: formData.get('authorUrl') ?? '',
     categoryId: (formData.get('categoryId') as string) || null,
   });
 
@@ -75,8 +78,19 @@ export async function submitArticle(
     categoryId = category?.id ?? null;
   }
 
+  // The cover is stored separately from the in-body pictures: it is the one
+  // that ends up on every card, in the sitemap and in a social preview.
+  const heroFile = formData.get('heroImage');
+  const hero =
+    heroFile instanceof File && heroFile.size > 0
+      ? await storeSubmissionImages([heroFile], `${input.title}-hero`)
+      : { images: [], skipped: [] as string[] };
+
   const files = formData.getAll('images').filter((f): f is File => f instanceof File);
   const { images, skipped } = await storeSubmissionImages(files, input.title);
+
+  // Captions arrive as a parallel list, paired by position with the files.
+  const captions = formData.getAll('imageTitles').map((c) => String(c ?? ''));
 
   await prisma.submission.create({
     data: {
@@ -84,8 +98,11 @@ export async function submitArticle(
       body: input.body,
       authorName: input.authorName,
       authorEmail: input.authorEmail.toLowerCase(),
+      authorBio: input.authorBio,
+      authorUrl: input.authorUrl || null,
+      heroImage: hero.images[0]?.url ?? null,
       categoryId,
-      images: JSON.stringify(images),
+      images: JSON.stringify(pairCaptions(images, captions)),
     },
   });
 
@@ -93,6 +110,6 @@ export async function submitArticle(
     ok: true,
     message:
       'Thanks — your article is with the editors. If it runs, it will be published under your name.',
-    warnings: skipped.length > 0 ? skipped : undefined,
+    warnings: [...hero.skipped, ...skipped].length > 0 ? [...hero.skipped, ...skipped] : undefined,
   };
 }

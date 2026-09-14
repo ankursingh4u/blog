@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { storage, UploadError } from '@/lib/storage';
 import { slugify } from '@/lib/utils';
 import {
+  MAX_BIO_CHARS,
   MAX_BODY_CHARS,
   MAX_EMAIL_CHARS,
   MAX_IMAGES,
@@ -55,14 +56,41 @@ export const SubmissionInput = z.object({
     .trim()
     .email('That email address does not look right — we need it to reply to you.')
     .max(MAX_EMAIL_CHARS),
+  authorBio: z
+    .string()
+    .trim()
+    .max(MAX_BIO_CHARS, `Keep it under ${MAX_BIO_CHARS} characters.`)
+    .default(''),
+  authorUrl: z
+    .string()
+    .trim()
+    .url('That link does not look like a URL. Include https://.')
+    .max(200)
+    .or(z.literal(''))
+    .default(''),
   categoryId: z.string().trim().min(1).nullable().catch(null),
 });
+
+/**
+ * A caption belongs to the image it was typed beside.
+ *
+ * The form sends them as parallel `images` and `imageTitles` lists, so they are
+ * paired by index. Anything stored without a caption keeps an empty string
+ * rather than being dropped — a picture with no caption is still a picture.
+ */
+export function pairCaptions(images: SubmissionImage[], captions: string[]): SubmissionImage[] {
+  return images.map((image, index) => ({
+    url: image.url,
+    title: (captions[index] ?? '').trim().slice(0, 160),
+  }));
+}
 
 export type SubmissionInput = z.infer<typeof SubmissionInput>;
 
 export interface SubmissionImage {
   url: string;
-  alt: string;
+  /** Caption the contributor gave this picture. */
+  title: string;
 }
 
 /**
@@ -110,7 +138,7 @@ export async function storeSubmissionImages(
         contentType: file.type,
         prefix: 'submissions',
       });
-      images.push({ url: stored.url, alt: '' });
+      images.push({ url: stored.url, title: '' });
     } catch (error) {
       skipped.push(
         error instanceof UploadError
@@ -136,10 +164,19 @@ export async function storeSubmissionImages(
  * derived from the name and de-duplicated, because two contributors called
  * Alex Kumar are not the same person.
  */
-export async function guestAuthorFor(name: string, email: string) {
+export async function guestAuthorFor(name: string, email: string, bio = '') {
   const normalised = email.trim().toLowerCase();
   const existing = await prisma.author.findFirst({ where: { email: normalised, isGuest: true } });
-  if (existing) return existing;
+  if (existing) {
+    // A returning contributor may have written a better description of
+    // themselves since last time. Only fill a gap or replace the placeholder —
+    // never overwrite a bio an editor has since rewritten.
+    const placeholder = existing.bio.endsWith('contributed this article to Favo News.');
+    if (bio.trim() && (!existing.bio.trim() || placeholder)) {
+      return prisma.author.update({ where: { id: existing.id }, data: { bio: bio.trim() } });
+    }
+    return existing;
+  }
 
   const base = slugify(name) || 'contributor';
   let slug = base;
@@ -153,10 +190,10 @@ export async function guestAuthorFor(name: string, email: string) {
       slug,
       email: normalised,
       isGuest: true,
-      // Honest and minimal. Inventing credentials for someone who sent in one
-      // article is exactly the kind of fake authority the editorial policy
-      // rules out.
-      bio: `${name.trim()} contributed this article to Favo News.`,
+      // Their own words if they gave any, otherwise a plain statement of fact.
+      // Inventing credentials for someone who sent in one article is exactly
+      // the fake authority the editorial policy rules out.
+      bio: bio.trim() || `${name.trim()} contributed this article to Favo News.`,
       categoryFocus: '[]',
       stylePrompt: '',
     },

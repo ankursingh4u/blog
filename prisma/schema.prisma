@@ -89,12 +89,24 @@ model Submission {
   authorName  String
   /// Contact address. Stored for replies, never rendered on the public site.
   authorEmail String
+  /// A line or two about themselves, used as the bio on their author page.
+  /// Read-only in the admin: an editor may rewrite the article, but putting
+  /// words into a named person's biography is a different thing entirely.
+  authorBio   String  @default("")
+  /// Optional link they gave for themselves — a site, or a profile.
+  authorUrl   String?
+
+  /// The lead image, shown as the article's cover. Separate from `images`
+  /// because a cover has a job the in-body pictures do not: it is what appears
+  /// on every card, in the sitemap and in a social preview.
+  heroImage String?
 
   /// Where the contributor thinks it belongs. Advisory — the editor decides.
   categoryId String?
   category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
-  /// JSON array of { url, alt, width, height } already written to storage.
+  /// JSON array of { url, title } already written to storage — the pictures
+  /// that go in the body, each with the caption the contributor gave it.
   images String @default("[]")
 
   status SubmissionStatus @default(PENDING)

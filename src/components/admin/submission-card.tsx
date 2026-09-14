@@ -18,7 +18,10 @@ export interface SubmissionView {
   authorName: string;
   authorEmail: string;
   /** JSON array of { url, alt } as stored. */
+  heroImage: string | null;
   images: string;
+  authorBio: string;
+  authorUrl: string | null;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   note: string | null;
   postId: string | null;
@@ -39,10 +42,10 @@ export function SubmissionCard({
   const [acceptState, accept] = useActionState(acceptSubmission, INITIAL);
   const [rejectState, reject] = useActionState(rejectSubmission, INITIAL);
 
-  let images: Array<{ url: string; alt?: string }> = [];
+  let images: Array<{ url: string; title?: string }> = [];
   try {
     const parsed: unknown = JSON.parse(submission.images || '[]');
-    if (Array.isArray(parsed)) images = parsed as Array<{ url: string; alt?: string }>;
+    if (Array.isArray(parsed)) images = parsed as Array<{ url: string; title?: string }>;
   } catch {
     // A malformed images column must not take down the queue.
   }
@@ -111,18 +114,59 @@ export function SubmissionCard({
         </button>
       </div>
 
+      {submission.heroImage ? (
+        <figure className="mt-4">
+          <div className="relative aspect-[16/9] w-full max-w-md overflow-hidden rounded-md border border-border bg-muted">
+            <Image
+              src={submission.heroImage}
+              alt=""
+              fill
+              sizes="(min-width: 640px) 28rem, 100vw"
+              className="object-cover"
+            />
+          </div>
+          <figcaption className="mt-1 text-xs text-muted-foreground">Hero image — becomes the cover</figcaption>
+        </figure>
+      ) : null}
+
       {images.length > 0 ? (
         <div className="mt-4 flex flex-wrap gap-3">
           {images.map((img) => (
-            <div
-              key={img.url}
-              className="relative h-20 w-28 overflow-hidden rounded-md border border-border bg-muted"
-            >
-              <Image src={img.url} alt={img.alt || ''} fill sizes="112px" className="object-cover" />
-            </div>
+            <figure key={img.url} className="w-28">
+              <div className="relative h-20 w-28 overflow-hidden rounded-md border border-border bg-muted">
+                <Image src={img.url} alt="" fill sizes="112px" className="object-cover" />
+              </div>
+              {img.title ? (
+                <figcaption className="mt-1 line-clamp-2 text-[11px] text-muted-foreground">{img.title}</figcaption>
+              ) : null}
+            </figure>
           ))}
         </div>
       ) : null}
+
+      {/*
+        Read-only on purpose. An editor may rewrite the article freely, but the
+        contributor's own description of themselves is not ours to edit — it
+        becomes the bio on a page carrying their name.
+      */}
+      <dl className="mt-4 rounded-md border border-dashed border-border p-3 text-xs">
+        <dt className="font-medium">About the contributor (review only)</dt>
+        <dd className="mt-1 text-muted-foreground">
+          {submission.authorBio || <span className="italic">No bio given.</span>}
+        </dd>
+        {submission.authorUrl ? (
+          <dd className="mt-1">
+            <a
+              href={submission.authorUrl}
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+              className="underline hover:text-foreground"
+            >
+              {submission.authorUrl}
+            </a>
+          </dd>
+        ) : null}
+      </dl>
 
       {submission.status === 'PENDING' ? (
         <div className="mt-5 border-t border-border pt-4">

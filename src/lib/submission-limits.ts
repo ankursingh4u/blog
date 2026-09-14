@@ -17,6 +17,9 @@ export const MAX_BODY_CHARS = 40_000;
 export const MAX_TITLE_CHARS = 140;
 export const MAX_NAME_CHARS = 60;
 export const MAX_EMAIL_CHARS = 160;
+export const MAX_BIO_CHARS = 300;
+/** Caption length for an in-body image. */
+export const MAX_CAPTION_CHARS = 160;
 
 export const MAX_IMAGES = 4;
 export const MAX_IMAGE_BYTES = 8 * 1024 * 1024;

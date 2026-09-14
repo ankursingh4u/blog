@@ -688,8 +688,21 @@ export async function acceptSubmission(
   });
   if (!category) return FAIL('Choose a section before accepting.');
 
-  const author = await guestAuthorFor(submission.authorName, submission.authorEmail);
+  const author = await guestAuthorFor(
+    submission.authorName,
+    submission.authorEmail,
+    submission.authorBio,
+  );
   const slug = await uniqueSlug(slugify(submission.title));
+
+  /**
+   * A card shows `metaDescription`, falling back to the quick answer. A
+   * contributor wrote neither, so without this the article would sit in its
+   * section with a blank summary while every neighbour has one — the same
+   * listing, visibly inconsistent. The opening of their own text is the honest
+   * stand-in until an editor writes a better one.
+   */
+  const excerpt = submission.body.replace(/\s+/g, ' ').trim().slice(0, 155);
 
   const post = await prisma.post.create({
     data: {
@@ -698,16 +711,21 @@ export async function acceptSubmission(
       categoryId: category.id,
       authorId: author.id,
       status: 'DRAFT',
-      // The contributor wrote prose, not our post structure. Leaving these
-      // empty is honest — the editor fills them in, and the structure check
-      // will say what is missing.
+      // The contributor wrote prose, not our post structure. Leaving the quick
+      // answer empty is honest — the editor writes it, and the structure check
+      // says what is missing.
       quickAnswer: '',
       body: submission.body,
       metaTitle: submission.title.slice(0, 110),
-      metaDescription: '',
+      metaDescription: excerpt,
+      // Their hero becomes the cover, so the article looks like every other one
+      // in its section rather than falling back to drawn cover art.
+      featuredImage: submission.heroImage,
       screenshots: submission.images,
       generatedBy: 'HUMAN',
-      qualityNotes: `Reader submission from ${submission.authorName} <${submission.authorEmail}>.`,
+      qualityNotes:
+        `Reader submission from ${submission.authorName} <${submission.authorEmail}>.` +
+        (submission.authorUrl ? ` Link given: ${submission.authorUrl}` : ''),
     },
     select: { id: true },
   });

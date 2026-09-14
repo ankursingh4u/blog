@@ -7,9 +7,21 @@ import { Loader2, Send } from 'lucide-react';
 import { submitArticle, type SubmitState } from '@/lib/submit-action';
 import { Field, inputClass } from '@/components/admin/form-controls';
 import { Callout, buttonClass } from '@/components/ui/primitives';
-import { MAX_IMAGES, MAX_IMAGE_BYTES, MAX_TITLE_CHARS, MAX_NAME_CHARS, MAX_EMAIL_CHARS } from '@/lib/submission-limits';
+import {
+  MAX_BIO_CHARS,
+  MAX_CAPTION_CHARS,
+  MAX_EMAIL_CHARS,
+  MAX_IMAGES,
+  MAX_IMAGE_BYTES,
+  MAX_NAME_CHARS,
+  MAX_TITLE_CHARS,
+} from '@/lib/submission-limits';
 
 const INITIAL: SubmitState = { ok: false, message: '' };
+
+const ACCEPT = 'image/png,image/jpeg,image/webp,image/avif,image/gif';
+const fileClass =
+  'block w-full text-sm text-muted-foreground file:mr-4 file:rounded-md file:border file:border-input file:bg-muted file:px-3 file:py-2 file:text-sm file:font-medium hover:file:bg-muted/70';
 
 export interface CategoryOption {
   id: string;
@@ -83,21 +95,52 @@ export function SubmitForm({ categories }: { categories: CategoryOption[] }) {
       </Field>
 
       <Field
-        label="Images"
-        htmlFor="images"
-        hint={`Optional. Up to ${MAX_IMAGES}, ${Math.round(
-          MAX_IMAGE_BYTES / 1024 / 1024,
-        )}MB each. Only send images you have the right to publish.`}
+        label="Hero image"
+        htmlFor="heroImage"
+        hint="The main picture. This is what appears on cards and when the article is shared."
       >
         <input
-          id="images"
-          name="images"
+          id="heroImage"
+          name="heroImage"
           type="file"
-          multiple
-          accept="image/png,image/jpeg,image/webp,image/avif,image/gif"
-          className="block w-full text-sm text-muted-foreground file:mr-4 file:rounded-md file:border file:border-input file:bg-muted file:px-3 file:py-2 file:text-sm file:font-medium hover:file:bg-muted/70"
+          accept={ACCEPT}
+          className={fileClass}
         />
       </Field>
+
+      <fieldset className="space-y-3">
+        <legend className="text-sm font-medium">Other images</legend>
+        <p className="text-xs text-muted-foreground">
+          Optional, up to {MAX_IMAGES}, {Math.round(MAX_IMAGE_BYTES / 1024 / 1024)}MB each. Give each
+          one a caption so we know what it shows. Only send images you have the right to publish.
+        </p>
+
+        {Array.from({ length: MAX_IMAGES }, (_, i) => (
+          <div key={i} className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+            <input
+              name="images"
+              type="file"
+              accept={ACCEPT}
+              aria-label={`Image ${i + 1}`}
+              className={fileClass}
+            />
+            {/*
+              One caption input per file input, in the same order. The action
+              pairs them by position, so these must stay one-to-one — a single
+              multi-file picker would give no way to tell which caption belongs
+              to which picture.
+            */}
+            <input
+              name="imageTitles"
+              type="text"
+              maxLength={MAX_CAPTION_CHARS}
+              placeholder={`Caption for image ${i + 1}`}
+              aria-label={`Caption for image ${i + 1}`}
+              className={inputClass}
+            />
+          </div>
+        ))}
+      </fieldset>
 
       <Field
         label="Your article"
@@ -115,27 +158,69 @@ export function SubmitForm({ categories }: { categories: CategoryOption[] }) {
         />
       </Field>
 
-      <div className="grid gap-6 sm:grid-cols-2">
-        <Field label="Your name" htmlFor="authorName" hint="This is the byline." error={state.errors?.authorName}>
-          <input id="authorName" name="authorName" required maxLength={MAX_NAME_CHARS} className={inputClass} />
+      <fieldset className="space-y-6 border-t border-border pt-6">
+        <legend className="sr-only">About you</legend>
+        <h2 className="text-sm font-semibold">About you</h2>
+
+        <div className="grid gap-6 sm:grid-cols-2">
+          <Field
+            label="Your name"
+            htmlFor="authorName"
+            hint="This is the byline."
+            error={state.errors?.authorName}
+          >
+            <input id="authorName" name="authorName" required maxLength={MAX_NAME_CHARS} className={inputClass} />
+          </Field>
+
+          <Field
+            label="Your email"
+            htmlFor="authorEmail"
+            hint="So we can reply. Never published."
+            error={state.errors?.authorEmail}
+          >
+            <input
+              id="authorEmail"
+              name="authorEmail"
+              type="email"
+              required
+              maxLength={MAX_EMAIL_CHARS}
+              className={inputClass}
+            />
+          </Field>
+        </div>
+
+        <Field
+          label="About you"
+          htmlFor="authorBio"
+          hint="A line or two, in your own words. This becomes the bio on your author page."
+          error={state.errors?.authorBio}
+        >
+          <textarea
+            id="authorBio"
+            name="authorBio"
+            rows={3}
+            maxLength={MAX_BIO_CHARS}
+            className={inputClass}
+            placeholder="What you do, and why you know about this."
+          />
         </Field>
 
         <Field
-          label="Your email"
-          htmlFor="authorEmail"
-          hint="So we can reply. Never published."
-          error={state.errors?.authorEmail}
+          label="A link (optional)"
+          htmlFor="authorUrl"
+          hint="Your site or a profile, if you want one shown."
+          error={state.errors?.authorUrl}
         >
           <input
-            id="authorEmail"
-            name="authorEmail"
-            type="email"
-            required
-            maxLength={MAX_EMAIL_CHARS}
+            id="authorUrl"
+            name="authorUrl"
+            type="url"
+            maxLength={200}
+            placeholder="https://"
             className={inputClass}
           />
         </Field>
-      </div>
+      </fieldset>
 
       {/*
         Honeypot. Hidden from people by position rather than `display:none`,
