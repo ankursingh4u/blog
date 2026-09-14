@@ -13,7 +13,14 @@ export const metadata: Metadata = buildMetadata({
   path: '/sitemaps',
 });
 
-export const revalidate = 3600;
+/**
+ * Built per request, like /sitemap.xml.
+ *
+ * An index of everything the site holds is only useful if it holds everything;
+ * an hour-old copy quietly omits whatever was published in that hour, and the
+ * omission is invisible.
+ */
+export const dynamic = 'force-dynamic';
 
 /**
  * The readable sitemap.
