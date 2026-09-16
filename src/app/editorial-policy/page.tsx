@@ -123,6 +123,36 @@ export default function EditorialPolicyPage() {
               make a page look more authoritative than it is.
             </p>
 
+            <h2>An open publication</h2>
+            <p>
+              Three things follow from running the site this way, and they are commitments rather
+              than descriptions.
+            </p>
+            <ul>
+              <li>
+                <strong>The software is open source.</strong> The publishing system, the templates
+                and the pipeline described above can be read, copied and run by anyone. The checks
+                on this page are verifiable rather than merely asserted.
+              </li>
+              <li>
+                <strong>Anyone can write here.</strong> There is no application and no account —
+                send a piece through <Link href="/write">/write</Link> and an editor reads it. It is
+                held to exactly the standards above, and if it runs it carries your byline.
+              </li>
+              <li>
+                <strong>The writer keeps their work.</strong> Copyright in a contributed article
+                stays with whoever wrote it; we take permission to publish, nothing more, and it can
+                be withdrawn.
+              </li>
+            </ul>
+            <p>
+              Research draws only on openly published material — official documentation and
+              announcements, public data, and freely readable reporting — and every source an
+              article used is listed at the bottom of it. We do not get past paywalls. The full
+              position on ownership, quotation and reuse is on the{' '}
+              <Link href="/terms">terms and content rights</Link> page.
+            </p>
+
             <h2>Corrections</h2>
             <p>
               When an article turns out to be wrong, the page is updated in place and its

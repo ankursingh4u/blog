@@ -34,6 +34,8 @@ export function botUserAgent(): string {
 export const NAV_FOOTER = [
   { href: '/about', label: 'About' },
   { href: '/editorial-policy', label: 'Editorial policy' },
+  { href: '/terms', label: 'Terms & content rights' },
+  { href: '/privacy', label: 'Privacy' },
   { href: '/contact', label: 'Contact' },
   { href: '/feed.xml', label: 'RSS' },
 ] as const;

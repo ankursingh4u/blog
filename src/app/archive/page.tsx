@@ -157,6 +157,8 @@ export default async function SitemapPage() {
               { href: '/briefing', label: 'Briefing' },
               { href: '/about', label: 'About' },
               { href: '/editorial-policy', label: 'Editorial policy' },
+              { href: '/terms', label: 'Terms & content rights' },
+              { href: '/privacy', label: 'Privacy policy' },
               { href: '/contact', label: 'Contact' },
             ].map((page) => (
               <li key={page.href}>

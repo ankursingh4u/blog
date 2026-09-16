@@ -37,6 +37,13 @@ export async function SiteFooter() {
                 Articles are drafted with AI assistance and approved by a person before publishing —
                 see the <Link href="/editorial-policy" className="underline hover:text-foreground">editorial policy</Link>.
               </p>
+              <p className="mt-3 max-w-sm text-xs text-muted-foreground">
+                An open publication: the software is open source, anyone can{' '}
+                <Link href="/write" className="underline hover:text-foreground">submit an article</Link>,
+                and every contributor keeps the rights to their own work. Sources are openly
+                published and cited on the page —{' '}
+                <Link href="/terms" className="underline hover:text-foreground">terms &amp; content rights</Link>.
+              </p>
             </div>
 
             <div>
@@ -117,6 +124,22 @@ export async function SiteFooter() {
                     className="text-muted-foreground transition-colors hover:text-foreground"
                   >
                     All articles
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/terms"
+                    className="text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    Terms &amp; content rights
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/privacy"
+                    className="text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    Privacy policy
                   </Link>
                 </li>
                 <li>
