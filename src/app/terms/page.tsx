@@ -11,7 +11,7 @@ const LAST_UPDATED = '15 September 2026';
 export const metadata: Metadata = buildMetadata({
   title: 'Terms and content rights',
   description:
-    'An open publication: open-source software, open submissions, and articles that stay the property of whoever wrote them. What that means in practice.',
+    'An open publication: free to read, open to anyone who wants to write, and articles that stay the property of whoever wrote them. What that means in practice.',
   path: '/terms',
 });
 
@@ -32,10 +32,10 @@ export default function TermsPage() {
           <p className="font-mono text-xs uppercase tracking-[0.22em] text-brand">Legal</p>
           <h1 className="mt-3 text-4xl font-bold tracking-tight">Terms and content rights</h1>
           <p className="mt-5 text-lg text-muted-foreground">
-            {SITE.name} is run as an open publication. The software is open source, the doors are
-            open to anyone who wants to write, the writer keeps their work, and the material
-            articles are built from is openly published and linked so you can go and check it. This
-            page sets out what each of those actually commits us to.
+            {SITE.name} is run as an open publication: open to read and open to write. Every
+            article is free with no account and no paywall, anyone can submit one, the writer keeps
+            their work, and the material articles are built from is openly published and linked so
+            you can go and check it. This page sets out what each of those actually commits us to.
           </p>
           <p className="mt-3 text-sm text-muted-foreground">Last updated: {LAST_UPDATED}</p>
 
@@ -47,21 +47,19 @@ export default function TermsPage() {
           </Callout>
 
           <div className="prose prose-lg mt-12 max-w-none dark:prose-invert">
-            <h2>Open source</h2>
+            <h2>Open to read</h2>
             <p>
-              The software that runs this site — the publishing system, the templates, the pipeline
-              that finds and researches stories — is open source. You are welcome to read it, learn
-              from it, run your own copy, and take it apart to see exactly how a page here was put
-              together. That is deliberate: a site that tells you how its articles are checked
-              should let you verify the claim rather than ask you to trust it.
+              Everything published here is free to read. There is no paywall, no metered limit, no
+              account to create and no email address to hand over first. Nothing is held back for
+              subscribers, because there are no subscribers.
             </p>
             <p>
-              Open source covers the <em>code</em>. It does not transfer the <em>articles</em> — see
-              &ldquo;Who owns what you read&rdquo; below, because those two are commonly and
-              wrongly treated as one thing.
+              Open to read does not mean unowned. The articles belong to the people who wrote them —
+              see &ldquo;Who owns what you read&rdquo; below, because free access and free
+              republication are commonly and wrongly treated as the same thing.
             </p>
 
-            <h2>Anyone can publish here</h2>
+            <h2>Open to write — anyone can publish here</h2>
             <p>
               There is no application, no pitch letter and no account to create. Send an article
               through <Link href="/write">/write</Link> and an editor reads it. If we run it, it

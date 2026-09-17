@@ -38,10 +38,10 @@ export default function PrivacyPage() {
           <p className="font-mono text-xs uppercase tracking-[0.22em] text-brand">Legal</p>
           <h1 className="mt-3 text-4xl font-bold tracking-tight">Privacy policy</h1>
           <p className="mt-5 text-lg text-muted-foreground">
-            {SITE.name} is an open publication: the software behind it is open source, anyone can
-            submit an article, and everything published here is credited to the person who wrote it.
-            Running it that way means we need very little from you, so this page is mostly a list of
-            things we do not do.
+            {SITE.name} is an open publication: free to read with no account or paywall, open to
+            anyone who wants to submit an article, and everything published here is credited to the
+            person who wrote it. Running it that way means we need very little from you, so this
+            page is mostly a list of things we do not do.
           </p>
           <p className="mt-3 text-sm text-muted-foreground">Last updated: {LAST_UPDATED}</p>
 

@@ -130,9 +130,10 @@ export default function EditorialPolicyPage() {
             </p>
             <ul>
               <li>
-                <strong>The software is open source.</strong> The publishing system, the templates
-                and the pipeline described above can be read, copied and run by anyone. The checks
-                on this page are verifiable rather than merely asserted.
+                <strong>Everything here is free to read.</strong> No paywall, no metered limit, no
+                account and no email wall. An article nobody can reach is not journalism, and a
+                policy page like this one is worth nothing if the reporting it describes sits behind
+                a payment form.
               </li>
               <li>
                 <strong>Anyone can write here.</strong> There is no application and no account —

@@ -38,7 +38,7 @@ export async function SiteFooter() {
                 see the <Link href="/editorial-policy" className="underline hover:text-foreground">editorial policy</Link>.
               </p>
               <p className="mt-3 max-w-sm text-xs text-muted-foreground">
-                An open publication: the software is open source, anyone can{' '}
+                An open publication: free to read with no account or paywall, anyone can{' '}
                 <Link href="/write" className="underline hover:text-foreground">submit an article</Link>,
                 and every contributor keeps the rights to their own work. Sources are openly
                 published and cited on the page —{' '}
