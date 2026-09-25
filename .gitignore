@@ -30,5 +30,10 @@ coverage
 data-export.json
 *-export.json
 
-# Scratch output from the cover-photo picker.
+# Scratch output from the cover-photo picker, and the throwaway files the
+# Coolify helper scripts write. The bare `*.tmp` here used to be the whole rule,
+# which quietly failed to match `db.tmp.json` — that file reached the public
+# repo carrying a live production database URL. Match the stem, not just the
+# extension, so a scratch file cannot be committed by having a real suffix.
 *.tmp
+*.tmp.*

@@ -1,0 +1,14 @@
+#!/bin/sh
+#
+# Scans the staged set for credentials before letting a commit through.
+#
+# Hooks are not cloned with a repository, so this only runs once git has been
+# pointed at the directory:
+#
+#     git config core.hooksPath .githooks
+#
+# That command is in the README under "Working on this". A hook nobody enabled
+# is why `db.tmp.json` reached a public repo with the production database
+# password in it.
+
+exec npx tsx scripts/check-secrets.ts --staged

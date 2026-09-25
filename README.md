@@ -25,6 +25,7 @@ no divergence. You need a Postgres to run this at all; see
 ```bash
 npm install
 cp .env.example .env          # then add DATABASE_URL and OPENAI_API_KEY
+npm run db:start              # start the local Postgres (nothing starts it at boot)
 npm run db:push               # create the schema
 npm run db:seed               # 8 verticals + windows sub-section, 8 authors, keywords, settings
 npm run dev                   # http://localhost:3000
@@ -72,8 +73,12 @@ that.
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run lint` | ESLint via `next lint` |
 | `npm test` | Vitest — parser, validator, quality gate, markdown |
+| `npm run check:secrets` | Scan every tracked file for credentials. `-- --staged` for just the staged set |
 | `npm run generate` | One pipeline run. `--skip-ingest`, `--limit=N` |
 | `npm run scheduler` | Daily run at 09:00 local, spread a few hours apart. `--now` to also run immediately |
+| `npm run db:start` | Start the local Postgres on the port in `DATABASE_URL`. Returns once it accepts connections |
+| `npm run db:stop` | Stop it |
+| `npm run db:status` | Whether it is running, and on what |
 | `npm run db:push` | Push the Prisma schema to whatever `DATABASE_URL` points at |
 | `npx tsx scripts/export-data.ts` | Dump every post, category, author, keyword and setting to `data-export.json` |
 | `npx tsx scripts/import-data.ts` | Restore a dump. Upserts by id, so relations survive and it is safe to re-run |
@@ -81,6 +86,35 @@ that.
 | `npm run db:content` | 14 sample guides with images. `--no-images`, `--force` |
 | `npm run db:reset` | Drop and re-seed |
 | `npm run db:studio` | Prisma Studio |
+
+---
+
+## Secrets
+
+Run this once per clone:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+It points git at `.githooks/pre-commit`, which runs `scripts/check-secrets.ts`
+over the staged set and refuses the commit if it finds a database URL with a
+password in it, an API key, or a private key. Placeholders are recognised and
+skipped, so `.env.example` and the docs still commit normally.
+
+This exists because it already went wrong. `db.tmp.json` — four lines of scratch
+output from a Coolify API call, containing the production database URL, password
+and all — was committed to a public repository on 9 Sep 2026 and sat there for
+sixteen days. `.gitignore` had `*.tmp`, which does not match `db.tmp.json`. The
+rule looked correct and matched nothing, and nothing checked that it had worked.
+
+Two things to take from it. Ignore rules fail silently, so verify what is
+actually tracked (`git ls-files`) rather than trusting a pattern. And a secret
+that has been pushed is public from that moment: removing the file, or even
+rewriting history, does not unpublish it. Rotate the credential as well.
+
+Real values live in `.env`, which is ignored. Production values are set in the
+Coolify UI and are deliberately different from the local ones.
 
 ---
 
@@ -322,21 +356,27 @@ uses:
 C:/codershive/pgsql/bin/initdb -D C:/codershive/pgdata -U postgres --pwfile=<file> -E UTF8 --locale=C
 ```
 
-```bash
-# Start (port 5433, loopback only, so it cannot collide with anything):
-C:/codershive/pgsql/bin/pg_ctl -D C:/codershive/pgdata -l C:/codershive/pgdata/server.log -o "-p 5433 -h 127.0.0.1" start
+Nothing starts that server at boot, so after a reboot every page of the site
+returns 500 from the root layout and the only clue is `Can't reach database
+server at 127.0.0.1:5433` — which reads like a configuration problem rather than
+a stopped service. `npm run db:start` is the answer to that:
 
-# Stop:
-C:/codershive/pgsql/bin/pg_ctl -D C:/codershive/pgdata stop
+```bash
+npm run db:start     # port and host come from DATABASE_URL
+npm run db:status
+npm run db:stop
 ```
+
+It wraps `pg_ctl` in `scripts/pg.ts`, which reads `PG_BIN` and `PGDATA` from the
+environment (defaults above) so it is not tied to one machine. It starts the
+server detached and then waits for the port to accept a connection: `pg_ctl
+start` inherits stdout and on Windows will not return while anything holds that
+pipe open, so the server ends up running while the command that started it
+appears to hang forever. Success is decided by the port, not by `pg_ctl`.
 
 Then `DATABASE_URL="postgresql://postgres:<password>@127.0.0.1:5433/fixdesk"`,
 `npm run db:push`, and either `npm run db:seed` for an empty site or
 `npx tsx scripts/import-data.ts` to load a dump of the live content.
-
-Run `pg_ctl start` through a wrapper that does not hold its stdout open — `-w`
-blocks the caller until the pipe closes, which looks like a hang even though the
-server came up fine.
 
 Do **not** point local development at the production database. It is not
 publicly reachable by design, and anything changed locally would be published
