@@ -5,6 +5,7 @@ import { slugify } from '@/lib/utils';
 import {
   MAX_BIO_CHARS,
   MAX_BODY_CHARS,
+  MAX_CAPTION_CHARS,
   MAX_EMAIL_CHARS,
   MAX_IMAGES,
   MAX_NAME_CHARS,
@@ -71,18 +72,10 @@ export const SubmissionInput = z.object({
   categoryId: z.string().trim().min(1).nullable().catch(null),
 });
 
-/**
- * A caption belongs to the image it was typed beside.
- *
- * The form sends them as parallel `images` and `imageTitles` lists, so they are
- * paired by index. Anything stored without a caption keeps an empty string
- * rather than being dropped — a picture with no caption is still a picture.
- */
-export function pairCaptions(images: SubmissionImage[], captions: string[]): SubmissionImage[] {
-  return images.map((image, index) => ({
-    url: image.url,
-    title: (captions[index] ?? '').trim().slice(0, 160),
-  }));
+/** A caption is trimmed and bounded, never dropped — a picture with no caption
+ * is still a picture. */
+function cleanCaption(caption: string | undefined): string {
+  return (caption ?? '').trim().slice(0, MAX_CAPTION_CHARS);
 }
 
 export type SubmissionInput = z.infer<typeof SubmissionInput>;
@@ -115,21 +108,30 @@ export function rateLimitMessage(): string {
 export const RATE_LIMIT_MAX = RATE_LIMIT;
 
 /**
- * Stores images that came in with a submission.
+ * Stores images that came in with a submission, each keeping the caption it was
+ * sent with.
  *
  * Type and size are already enforced by `storage.put`; this only bounds the
  * count and turns a rejected file into a message rather than a failed
  * submission — losing a whole article because the fourth image was a PDF would
  * be a poor trade.
+ *
+ * Captions are matched against the position of the file *as submitted*, before
+ * anything is dropped, and then carried on the stored record. Pairing them
+ * afterwards is what broke: a skipped file — an empty slot, an oversized
+ * picture, a failed write — shortened the stored list without shortening the
+ * caption list, and every caption after the gap slid onto the wrong image.
  */
 export async function storeSubmissionImages(
   files: File[],
   slugHint: string,
+  captions: string[] = [],
 ): Promise<{ images: SubmissionImage[]; skipped: string[] }> {
   const images: SubmissionImage[] = [];
   const skipped: string[] = [];
 
-  for (const file of files.slice(0, MAX_IMAGES)) {
+  const considered = files.slice(0, MAX_IMAGES);
+  for (const [index, file] of considered.entries()) {
     if (file.size === 0) continue;
     try {
       const stored = await storage.put({
@@ -138,7 +140,7 @@ export async function storeSubmissionImages(
         contentType: file.type,
         prefix: 'submissions',
       });
-      images.push({ url: stored.url, title: '' });
+      images.push({ url: stored.url, title: cleanCaption(captions[index]) });
     } catch (error) {
       skipped.push(
         error instanceof UploadError

@@ -6,7 +6,6 @@ import {
   SubmissionInput,
   rateLimitMessage,
   recentSubmissionCount,
-  pairCaptions,
   storeSubmissionImages,
 } from '@/lib/submissions';
 
@@ -86,11 +85,13 @@ export async function submitArticle(
       ? await storeSubmissionImages([heroFile], `${input.title}-hero`)
       : { images: [], skipped: [] as string[] };
 
+  // Pictures and their descriptions arrive as two parallel lists, in the order
+  // the contributor arranged the cards. They are paired inside the store, by
+  // position as submitted, so a file that gets dropped takes its own caption
+  // with it instead of handing it to the next picture along.
   const files = formData.getAll('images').filter((f): f is File => f instanceof File);
-  const { images, skipped } = await storeSubmissionImages(files, input.title);
-
-  // Captions arrive as a parallel list, paired by position with the files.
   const captions = formData.getAll('imageTitles').map((c) => String(c ?? ''));
+  const { images, skipped } = await storeSubmissionImages(files, input.title, captions);
 
   await prisma.submission.create({
     data: {
@@ -102,7 +103,7 @@ export async function submitArticle(
       authorUrl: input.authorUrl || null,
       heroImage: hero.images[0]?.url ?? null,
       categoryId,
-      images: JSON.stringify(pairCaptions(images, captions)),
+      images: JSON.stringify(images),
     },
   });
 
