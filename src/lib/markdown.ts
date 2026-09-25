@@ -55,6 +55,32 @@ export async function renderMarkdown(markdown: string): Promise<string> {
   return String(file);
 }
 
+/**
+ * The same pipeline for content a stranger typed, which the note above requires
+ * be treated differently from our own.
+ *
+ * Two deliberate changes. `rehype-slug` is gone, because a preview has no table
+ * of contents to drive and therefore no reason to mint ids at all. And the
+ * sanitiser keeps its default `clobberPrefix`, so any id that does survive is
+ * namespaced and cannot collide with the ids of the page hosting the preview.
+ */
+const submissionProcessor = unified()
+  .use(remarkParse)
+  .use(remarkGfm)
+  .use(remarkRehype)
+  .use(rehypeSanitize, {
+    ...defaultSchema,
+    tagNames: (defaultSchema.tagNames ?? []).filter(
+      (tag) => !['img', 'iframe', 'script', 'style', 'object', 'embed'].includes(tag),
+    ),
+  })
+  .use(rehypeStringify);
+
+export async function renderSubmissionMarkdown(markdown: string): Promise<string> {
+  const file = await submissionProcessor.process(markdown ?? '');
+  return String(file);
+}
+
 export interface TocEntry {
   id: string;
   text: string;

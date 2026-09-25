@@ -6,34 +6,17 @@ import { Loader2, Send } from 'lucide-react';
 
 import { submitArticle, type SubmitState } from '@/lib/submit-action';
 import { Field, inputClass } from '@/components/admin/form-controls';
+import { MarkdownEditor } from '@/components/markdown-editor';
+import { HeroImageField, SubmissionImages } from '@/components/submission-images';
 import { Callout, buttonClass } from '@/components/ui/primitives';
 import {
   MAX_BIO_CHARS,
-  MAX_CAPTION_CHARS,
   MAX_EMAIL_CHARS,
-  MAX_IMAGES,
-  MAX_IMAGE_BYTES,
   MAX_NAME_CHARS,
   MAX_TITLE_CHARS,
 } from '@/lib/submission-limits';
 
 const INITIAL: SubmitState = { ok: false, message: '' };
-
-const ACCEPT = 'image/png,image/jpeg,image/webp,image/avif,image/gif';
-
-/**
- * `file:text-foreground` is the important part.
- *
- * The file button inherits the input's colour unless told otherwise, so with
- * `text-muted-foreground` on the input the word "Browse…" came out light grey
- * on the light grey `bg-muted` button — invisible in light mode, which is the
- * default theme. The surrounding "No file selected" text is meant to be muted;
- * the button label is not.
- */
-const fileClass =
-  'block w-full text-sm text-muted-foreground file:mr-4 file:cursor-pointer file:rounded-md ' +
-  'file:border file:border-input file:bg-muted file:px-3 file:py-2 file:text-sm ' +
-  'file:font-medium file:text-foreground hover:file:bg-muted/70';
 
 export interface CategoryOption {
   id: string;
@@ -111,62 +94,21 @@ export function SubmitForm({ categories }: { categories: CategoryOption[] }) {
         htmlFor="heroImage"
         hint="The main picture. This is what appears on cards and when the article is shared."
       >
-        <input
-          id="heroImage"
-          name="heroImage"
-          type="file"
-          accept={ACCEPT}
-          className={fileClass}
-        />
+        <HeroImageField />
       </Field>
 
-      <fieldset className="space-y-3">
-        <legend className="text-sm font-medium">Other images</legend>
-        <p className="text-xs text-muted-foreground">
-          Optional, up to {MAX_IMAGES}, {Math.round(MAX_IMAGE_BYTES / 1024 / 1024)}MB each. Give each
-          one a caption so we know what it shows. Only send images you have the right to publish.
-        </p>
-
-        {Array.from({ length: MAX_IMAGES }, (_, i) => (
-          <div key={i} className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
-            <input
-              name="images"
-              type="file"
-              accept={ACCEPT}
-              aria-label={`Image ${i + 1}`}
-              className={fileClass}
-            />
-            {/*
-              One caption input per file input, in the same order. The action
-              pairs them by position, so these must stay one-to-one — a single
-              multi-file picker would give no way to tell which caption belongs
-              to which picture.
-            */}
-            <input
-              name="imageTitles"
-              type="text"
-              maxLength={MAX_CAPTION_CHARS}
-              placeholder={`Caption for image ${i + 1}`}
-              aria-label={`Caption for image ${i + 1}`}
-              className={inputClass}
-            />
-          </div>
-        ))}
-      </fieldset>
+      <SubmissionImages />
 
       <Field
         label="Your article"
         htmlFor="body"
-        hint="Write it here. Plain text is fine — an editor will format it."
+        hint="Use the toolbar to add headings, emphasis, quotes and links. Preview shows it laid out exactly as it would publish."
         error={state.errors?.body}
       >
-        <textarea
+        <MarkdownEditor
           id="body"
           name="body"
-          required
-          rows={18}
-          className={`${inputClass} min-h-[26rem] leading-relaxed`}
-          placeholder="Write your article here."
+          placeholder="Write your article here. Start with what happened, then explain why it matters."
         />
       </Field>
 
