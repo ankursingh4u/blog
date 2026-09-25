@@ -102,7 +102,7 @@ export function SubmitForm({ categories }: { categories: CategoryOption[] }) {
       <Field
         label="Your article"
         htmlFor="body"
-        hint="Up to 500 words. Use the toolbar for headings, emphasis, quotes and links — Preview shows the article exactly as it would appear on the site."
+        hint="Write as long a piece as it needs to be. Use the toolbar for headings, emphasis, quotes and links — Preview shows the article exactly as it would appear on the site."
         error={state.errors?.body}
       >
         <MarkdownEditor

@@ -15,19 +15,16 @@ export const MIN_BODY_CHARS = 400;
 export const MAX_BODY_CHARS = 40_000;
 
 /**
- * The length a contributor is actually held to. `MAX_BODY_CHARS` stays as a
- * cheap outer bound — it is checked before anything is parsed — but 500 words
- * is the limit that gets shown and enforced.
- */
-export const MAX_BODY_WORDS = 500;
-
-/**
  * Counts words the way a writer counts them.
  *
  * Markdown syntax is stripped first, so `## A heading` is two words rather than
- * three and a link counts its label rather than its URL. The editor's counter
- * and the server's validator both call this, because a form that says 500 and a
- * server that disagrees is worse than having no counter at all.
+ * three and a link counts its label rather than its URL.
+ *
+ * There is deliberately no word limit to check this against. A long piece is an
+ * editorial question, not a validation one, and a writer who has finished
+ * should not be told to cut it by a form. `MAX_BODY_CHARS` remains the only
+ * ceiling, and it is there to bound abuse rather than length — this count is
+ * shown so a writer knows where they are, not to gate them.
  */
 export function countWords(markdown: string): number {
   const text = (markdown ?? '')

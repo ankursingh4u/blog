@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { MAX_BODY_WORDS, countWords } from '@/lib/submission-limits';
+import { countWords } from '@/lib/submission-limits';
 
 /**
- * The counter in the write box and the validator on the server both call
- * countWords. A form that says 500 and a server that disagrees is worse than
- * showing no count at all, so the two must never drift — which is what these
- * tests hold in place.
+ * The word count shown under the write box.
+ *
+ * It gates nothing — there is no word limit — but it is the number a writer
+ * checks their piece against, so it has to match what they would get from
+ * anywhere else. Chiefly that means markdown syntax is not words.
  */
 
 describe('countWords', () => {
@@ -48,25 +49,17 @@ describe('countWords', () => {
   });
 });
 
-describe('the 500-word limit', () => {
+describe('counting a whole article', () => {
   const words = (n: number) => Array.from({ length: n }, (_, i) => `w${i}`).join(' ');
 
-  it('counts exactly at the boundary', () => {
-    expect(countWords(words(MAX_BODY_WORDS))).toBe(MAX_BODY_WORDS);
+  it('counts a long piece accurately', () => {
+    expect(countWords(words(1533))).toBe(1533);
   });
 
-  it('accepts a body of exactly the limit', () => {
-    expect(countWords(words(MAX_BODY_WORDS)) <= MAX_BODY_WORDS).toBe(true);
-  });
-
-  it('rejects one word past it', () => {
-    expect(countWords(words(MAX_BODY_WORDS + 1)) > MAX_BODY_WORDS).toBe(true);
-  });
-
-  it('does not let markdown formatting push a valid article over', () => {
-    // 500 words of prose dressed up as a structured article must still pass:
-    // the markers are syntax, not content.
+  it('does not let markdown structure inflate the total', () => {
+    // A structured article and the same prose as a flat block are the same
+    // length — the markers are syntax, not content.
     const dressed = `## ${words(10)}\n\n> ${words(10)}\n\n- ${words(480)}`;
-    expect(countWords(dressed)).toBe(MAX_BODY_WORDS);
+    expect(countWords(dressed)).toBe(500);
   });
 });

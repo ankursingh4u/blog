@@ -20,7 +20,7 @@ import {
 import { previewSubmission } from '@/lib/preview-action';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/primitives';
-import { MAX_BODY_WORDS, MIN_BODY_CHARS, countWords } from '@/lib/submission-limits';
+import { MIN_BODY_CHARS, countWords } from '@/lib/submission-limits';
 import {
   type Edit,
   insertLink,
@@ -82,22 +82,9 @@ export function MarkdownEditor({
   const [article, setArticle] = useState<ArticleShell | null>(null);
   const [pending, startTransition] = useTransition();
 
+  // Shown so a writer knows where they are. There is no upper limit to enforce
+  // — see the note on countWords.
   const words = countWords(value);
-  const over = words > MAX_BODY_WORDS;
-
-  /*
-   * Blocks the send natively rather than by disabling the button.
-   *
-   * setCustomValidity means the browser refuses the submit and points at this
-   * field with the reason, which also keeps the check honest when the editor is
-   * not the thing that has focus. The server enforces the same limit through
-   * the same countWords, so a client with JavaScript off is no way around it.
-   */
-  useEffect(() => {
-    ref.current?.setCustomValidity(
-      over ? `Articles are limited to ${MAX_BODY_WORDS} words — this one is ${words}.` : '',
-    );
-  }, [over, words]);
 
   const apply = useCallback((tool: ToolId) => {
     const textarea = ref.current;
@@ -272,14 +259,9 @@ export function MarkdownEditor({
       ) : null}
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-border px-4 py-2 text-xs text-muted-foreground">
-        <span className={cn('tabular-nums', over && 'font-medium text-danger')}>
-          {words.toLocaleString()} / {MAX_BODY_WORDS} words
+        <span className="tabular-nums">
+          {words.toLocaleString()} {words === 1 ? 'word' : 'words'}
         </span>
-        {over ? (
-          <span className="text-danger">
-            {(words - MAX_BODY_WORDS).toLocaleString()} over — trim before sending
-          </span>
-        ) : null}
         {short ? <span className="text-warn">At least {MIN_BODY_CHARS} characters to send</span> : null}
         <span className="ml-auto hidden sm:inline">Select text, then use the toolbar</span>
       </div>
