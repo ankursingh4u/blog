@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef, useState, useTransition } from 'react';
+import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
 import {
   Bold,
   Code,
@@ -19,7 +19,8 @@ import {
 
 import { previewSubmission } from '@/lib/preview-action';
 import { cn } from '@/lib/utils';
-import { MAX_BODY_CHARS, MIN_BODY_CHARS } from '@/lib/submission-limits';
+import { Badge } from '@/components/ui/primitives';
+import { MAX_BODY_WORDS, MIN_BODY_CHARS, countWords } from '@/lib/submission-limits';
 import {
   type Edit,
   insertLink,
@@ -78,7 +79,25 @@ export function MarkdownEditor({
   const [value, setValue] = useState(defaultValue);
   const [mode, setMode] = useState<'write' | 'preview'>('write');
   const [html, setHtml] = useState('');
+  const [article, setArticle] = useState<ArticleShell | null>(null);
   const [pending, startTransition] = useTransition();
+
+  const words = countWords(value);
+  const over = words > MAX_BODY_WORDS;
+
+  /*
+   * Blocks the send natively rather than by disabling the button.
+   *
+   * setCustomValidity means the browser refuses the submit and points at this
+   * field with the reason, which also keeps the check honest when the editor is
+   * not the thing that has focus. The server enforces the same limit through
+   * the same countWords, so a client with JavaScript off is no way around it.
+   */
+  useEffect(() => {
+    ref.current?.setCustomValidity(
+      over ? `Articles are limited to ${MAX_BODY_WORDS} words — this one is ${words}.` : '',
+    );
+  }, [over, words]);
 
   const apply = useCallback((tool: ToolId) => {
     const textarea = ref.current;
@@ -138,14 +157,60 @@ export function MarkdownEditor({
     apply(shortcut);
   }
 
+  /**
+   * Reads the rest of the form so the preview is the article, not just the body.
+   *
+   * The headline, section, byline and pictures live in sibling fields, and a
+   * preview that showed the prose alone answered the wrong question — a writer
+   * wants to know how the piece will look on the site, cover and all. Reading
+   * them off the form element at preview time avoids lifting four more pieces
+   * of state into the parent for something that is only needed on a click.
+   *
+   * Object URLs are created here and revoked when the shell is replaced, so
+   * flipping between Write and Preview does not leak a blob per press.
+   */
   function showPreview() {
     setMode('preview');
+
+    const form = ref.current?.form;
+    if (form) {
+      const data = new FormData(form);
+      const heroFile = data.get('heroImage');
+      const section = form.querySelector<HTMLSelectElement>('select[name="categoryId"]');
+
+      setArticle({
+        title: String(data.get('title') ?? '').trim(),
+        section: section?.selectedOptions[0]?.value ? section.selectedOptions[0].text : '',
+        author: String(data.get('authorName') ?? '').trim(),
+        hero: heroFile instanceof File && heroFile.size > 0 ? URL.createObjectURL(heroFile) : null,
+        images: data
+          .getAll('images')
+          .map((file, i) =>
+            file instanceof File && file.size > 0
+              ? {
+                  url: URL.createObjectURL(file),
+                  caption: String(data.getAll('imageTitles')[i] ?? '').trim(),
+                }
+              : null,
+          )
+          .filter((image): image is PreviewImage => image !== null),
+      });
+    }
+
     startTransition(async () => setHtml(await previewSubmission(value)));
   }
 
-  const words = value.trim() ? value.trim().split(/\s+/).length : 0;
+  // Revoking on unmount as well as on replacement — a form that is submitted
+  // successfully unmounts this whole subtree without ever leaving preview.
+  useEffect(() => {
+    if (!article) return;
+    return () => {
+      if (article.hero) URL.revokeObjectURL(article.hero);
+      for (const image of article.images) URL.revokeObjectURL(image.url);
+    };
+  }, [article]);
+
   const short = value.length > 0 && value.length < MIN_BODY_CHARS;
-  const over = value.length > MAX_BODY_CHARS;
 
   return (
     <div className="overflow-hidden rounded-md border border-input bg-background">
@@ -197,37 +262,115 @@ export function MarkdownEditor({
       </div>
 
       {mode === 'preview' ? (
-        <div className="min-h-[30rem] px-5 py-5 sm:px-8 sm:py-7">
+        <div className="bg-muted/20 px-5 py-8 sm:px-8 sm:py-10">
           {pending ? (
             <p className="text-sm text-muted-foreground">Laying it out…</p>
-          ) : html ? (
-            <div
-              className="prose prose-sm max-w-prose dark:prose-invert"
-              // Rendered by `previewSubmission`, which runs the same
-              // rehype-sanitize allow-list the published article goes through.
-              dangerouslySetInnerHTML={{ __html: html }}
-            />
           ) : (
-            <p className="text-sm text-muted-foreground">Nothing written yet.</p>
+            <ArticlePreview article={article} html={html} />
           )}
         </div>
       ) : null}
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-border px-4 py-2 text-xs text-muted-foreground">
-        <span className="tabular-nums">{words.toLocaleString()} words</span>
-        <span
-          className={cn(
-            'tabular-nums',
-            over && 'text-danger',
-            short && 'text-warn',
-          )}
-        >
-          {value.length.toLocaleString()} / {MAX_BODY_CHARS.toLocaleString()} characters
+        <span className={cn('tabular-nums', over && 'font-medium text-danger')}>
+          {words.toLocaleString()} / {MAX_BODY_WORDS} words
         </span>
+        {over ? (
+          <span className="text-danger">
+            {(words - MAX_BODY_WORDS).toLocaleString()} over — trim before sending
+          </span>
+        ) : null}
         {short ? <span className="text-warn">At least {MIN_BODY_CHARS} characters to send</span> : null}
         <span className="ml-auto hidden sm:inline">Select text, then use the toolbar</span>
       </div>
     </div>
+  );
+}
+
+interface PreviewImage {
+  url: string;
+  caption: string;
+}
+
+interface ArticleShell {
+  title: string;
+  section: string;
+  author: string;
+  hero: string | null;
+  images: PreviewImage[];
+}
+
+/**
+ * The submission as it would run on the site.
+ *
+ * Deliberately mirrors `article/article-view.tsx` — section badge, headline,
+ * byline, then the cover at 1200x630, then the prose — because the point of the
+ * preview is to answer "where does my headline sit, and how is my picture
+ * cropped", which a bare block of rendered markdown cannot.
+ *
+ * Plain <img> rather than next/image: these are object URLs for files that have
+ * not been uploaded yet, so there is nothing for the optimiser to fetch.
+ */
+function ArticlePreview({ article, html }: { article: ArticleShell | null; html: string }) {
+  if (!html && !article?.title) {
+    return <p className="text-sm text-muted-foreground">Nothing written yet.</p>;
+  }
+
+  return (
+    <article className="mx-auto max-w-prose">
+      {article?.section ? <Badge tone="brand">{article.section}</Badge> : null}
+
+      <h1 className="mt-4 text-balance text-3xl font-bold tracking-tight sm:text-4xl">
+        {article?.title || 'Your headline goes here'}
+      </h1>
+
+      <p className="mt-3 text-sm text-muted-foreground">
+        By {article?.author || 'your name'} · not published yet
+      </p>
+
+      <figure className="mt-8">
+        <div className="relative aspect-[1200/630] overflow-hidden rounded-lg border border-border bg-muted">
+          {article?.hero ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={article.hero}
+              alt={article.title || 'Cover image'}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center px-6 text-center text-xs text-muted-foreground">
+              No cover chosen — this is the space it would fill, on cards and
+              when the article is shared.
+            </div>
+          )}
+        </div>
+      </figure>
+
+      <div
+        className="prose prose-lg mt-10 max-w-none dark:prose-invert"
+        // Rendered by `previewSubmission`, which runs the same rehype-sanitize
+        // allow-list the published article goes through.
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+
+      {article?.images.length ? (
+        <section aria-label="Images" className="mt-12 space-y-8">
+          {article.images.map((image) => (
+            <figure key={image.url}>
+              <div className="overflow-hidden rounded-lg border border-border bg-muted">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={image.url} alt={image.caption} className="w-full" />
+              </div>
+              {image.caption ? (
+                <figcaption className="mt-2 text-sm text-muted-foreground">
+                  {image.caption}
+                </figcaption>
+              ) : null}
+            </figure>
+          ))}
+        </section>
+      ) : null}
+    </article>
   );
 }
 

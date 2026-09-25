@@ -5,6 +5,7 @@ import { slugify } from '@/lib/utils';
 import {
   MAX_BIO_CHARS,
   MAX_BODY_CHARS,
+  MAX_BODY_WORDS,
   MAX_CAPTION_CHARS,
   MAX_EMAIL_CHARS,
   MAX_IMAGES,
@@ -13,6 +14,7 @@ import {
   MIN_BODY_CHARS,
   RATE_LIMIT,
   RATE_WINDOW_HOURS,
+  countWords,
 } from '@/lib/submission-limits';
 
 /**
@@ -46,7 +48,20 @@ export const SubmissionInput = z.object({
     .string()
     .trim()
     .min(MIN_BODY_CHARS, `Articles need at least ${MIN_BODY_CHARS} characters — roughly a short page.`)
-    .max(MAX_BODY_CHARS, 'That is longer than we can accept in one submission.'),
+    // Checked before the word count so a megabyte of text is rejected without
+    // being walked through a dozen regexes first.
+    .max(MAX_BODY_CHARS, 'That is longer than we can accept in one submission.')
+    .superRefine((body, ctx) => {
+      const words = countWords(body);
+      if (words > MAX_BODY_WORDS) {
+        ctx.addIssue({
+          code: 'custom',
+          // Naming the actual count turns "too long" into something a writer
+          // can act on without pasting the piece into a word counter.
+          message: `Articles are limited to ${MAX_BODY_WORDS} words — this one is ${words}.`,
+        });
+      }
+    }),
   authorName: z
     .string()
     .trim()

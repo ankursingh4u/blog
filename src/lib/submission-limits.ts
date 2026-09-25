@@ -14,6 +14,35 @@
 export const MIN_BODY_CHARS = 400;
 export const MAX_BODY_CHARS = 40_000;
 
+/**
+ * The length a contributor is actually held to. `MAX_BODY_CHARS` stays as a
+ * cheap outer bound — it is checked before anything is parsed — but 500 words
+ * is the limit that gets shown and enforced.
+ */
+export const MAX_BODY_WORDS = 500;
+
+/**
+ * Counts words the way a writer counts them.
+ *
+ * Markdown syntax is stripped first, so `## A heading` is two words rather than
+ * three and a link counts its label rather than its URL. The editor's counter
+ * and the server's validator both call this, because a form that says 500 and a
+ * server that disagrees is worse than having no counter at all.
+ */
+export function countWords(markdown: string): number {
+  const text = (markdown ?? '')
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/`[^`]*`/g, ' ')
+    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/^\s{0,3}#{1,6}\s+/gm, '')
+    .replace(/^\s{0,3}>\s?/gm, '')
+    .replace(/^\s{0,3}(?:[-*+]|\d+\.)\s+/gm, '')
+    .replace(/[*_~]/g, '')
+    .trim();
+
+  return text ? text.split(/\s+/).length : 0;
+}
+
 export const MAX_TITLE_CHARS = 140;
 export const MAX_NAME_CHARS = 60;
 export const MAX_EMAIL_CHARS = 160;
