@@ -16,6 +16,25 @@ const nextConfig: NextConfig = {
    * copies the traced output instead of reinstalling.
    */
   output: 'standalone',
+  experimental: {
+    serverActions: {
+      /**
+       * A submission carries its pictures, and the default is 1 MB.
+       *
+       * /write offers a cover plus four pictures at MAX_IMAGE_BYTES (8 MB)
+       * each, so the form was promising forty megabytes to a server action
+       * that would refuse anything over one. Any real photograph broke it: the
+       * request died before `submitArticle` ran, and the client showed
+       * "Application error: a client-side exception has occurred" with nothing
+       * in it to suggest the size was the problem. A 95 KB test image passed,
+       * which is how it survived review.
+       *
+       * Keep this above MAX_IMAGES * MAX_IMAGE_BYTES plus the cover, or the
+       * limit the form states stops being the limit it enforces.
+       */
+      bodySizeLimit: '48mb',
+    },
+  },
   eslint: {
     /**
      * Lint is not skipped, it is moved. `next build` runs ESLint over the whole
