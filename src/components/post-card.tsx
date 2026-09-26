@@ -41,7 +41,7 @@ export function PostCard({
                 alt=""
                 fill
                 sizes="96px"
-                className="object-cover transition-transform duration-300 group-hover:scale-105"
+                className="object-contain transition-transform duration-300 group-hover:scale-105"
               />
             ) : (
               <CoverArt
@@ -89,7 +89,7 @@ export function PostCard({
             alt=""
             fill
             sizes={isFeatured ? '(max-width: 1024px) 100vw, 50vw' : '(max-width: 768px) 100vw, 33vw'}
-            className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+            className="object-contain transition-transform duration-500 group-hover:scale-[1.03]"
           />
         ) : (
           <>

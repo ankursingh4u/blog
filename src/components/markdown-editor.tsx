@@ -317,7 +317,9 @@ function ArticlePreview({ article, html }: { article: ArticleShell | null; html:
             <img
               src={article.hero}
               alt={article.title || 'Cover image'}
-              className="h-full w-full object-cover"
+              // Matches how the published article frames it, or the preview
+              // would promise a crop the live page does not make.
+              className="h-full w-full object-contain"
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center px-6 text-center text-xs text-muted-foreground">

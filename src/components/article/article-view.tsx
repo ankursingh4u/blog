@@ -165,7 +165,8 @@ export async function ArticleView({ post }: { post: FullPost }) {
                     fill
                     priority
                     sizes="(max-width: 1024px) 100vw, 832px"
-                    className="object-cover"
+                    // Whole image, never a crop — see the note in cover-art.
+                    className="object-contain"
                   />
                 ) : (
                   <CoverArt seed={post.category.slug} />
@@ -227,7 +228,9 @@ export async function ArticleView({ post }: { post: FullPost }) {
                         alt={shot.alt}
                         fill
                         sizes="(max-width: 1024px) 100vw, 832px"
-                        className="object-cover"
+                        // A contributor's picture is part of the piece; cutting
+                        // it to a 16/9 box is editing it without being asked.
+                        className="object-contain"
                       />
                     </div>
                     {shot.alt ? (

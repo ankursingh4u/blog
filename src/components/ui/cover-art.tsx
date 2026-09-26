@@ -111,7 +111,16 @@ export function Cover({
       alt=""
       fill
       sizes={sizes}
-      className={cn('object-cover', className)}
+      /*
+       * `contain`, not `cover`. The cover boxes are 16/9, 16/10 and 4/3 while
+       * a cover is whatever shape the contributor uploaded — usually a 1200x630
+       * banner with the headline set into it. `cover` filled the box by slicing
+       * the sides off, which on a banner means cutting through the artwork.
+       *
+       * The cost is letterboxing when the ratios differ, which the muted box
+       * behind it absorbs. Showing the whole image beats cropping one.
+       */
+      className={cn('object-contain', className)}
     />
   );
 }

@@ -122,7 +122,9 @@ export function SubmissionCard({
               alt=""
               fill
               sizes="(min-width: 640px) 28rem, 100vw"
-              className="object-cover"
+              // The whole picture, framed as the article will frame it, so an
+              // editor judges the cover they are actually going to publish.
+              className="object-contain"
             />
           </div>
           <figcaption className="mt-1 text-xs text-muted-foreground">Hero image — becomes the cover</figcaption>

@@ -677,7 +677,7 @@ function MediaEditor({
           {featuredImage ? (
             <div className="mt-3">
               <div className="relative aspect-[1200/630] overflow-hidden rounded-md border border-border bg-muted">
-                <Image src={featuredImage} alt="" fill sizes="480px" className="object-cover" />
+                <Image src={featuredImage} alt="" fill sizes="480px" className="object-contain" />
               </div>
               <div className="mt-2 flex items-center gap-2">
                 <p className="flex-1 truncate font-mono text-xs text-muted-foreground">
