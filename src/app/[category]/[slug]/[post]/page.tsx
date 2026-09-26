@@ -1,8 +1,8 @@
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import type { Metadata } from 'next';
 
 import { ArticleView } from '@/components/article/article-view';
-import { getPublishedPost } from '@/lib/posts';
+import { findCurrentPathForFormerSlug, getPublishedPost } from '@/lib/posts';
 import { buildMetadata } from '@/lib/seo';
 
 export const revalidate = 3600;
@@ -58,7 +58,15 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 export default async function NestedPostPage({ params }: { params: Params }) {
   const { category, slug, post: postSlug } = await params;
   const post = await resolve(category, slug, postSlug);
-  if (!post) notFound();
+
+  // Same rescue as the two-segment route: a slug the article has moved away
+  // from redirects to wherever it lives now, rather than 404ing and discarding
+  // everything the old URL had earned.
+  if (!post) {
+    const moved = await findCurrentPathForFormerSlug(postSlug);
+    if (moved && moved !== `/${category}/${slug}/${postSlug}`) permanentRedirect(moved);
+    notFound();
+  }
 
   return <ArticleView post={post} />;
 }

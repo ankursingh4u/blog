@@ -122,6 +122,25 @@ model Submission {
   @@index([status, createdAt])
 }
 
+/// Every slug a post has previously lived at.
+///
+/// Editing a headline regenerates the slug, and the old URL is the one Google
+/// has indexed and other sites have linked to. Without a record of it the page
+/// simply 404s and loses its ranking history — which for a site built on
+/// organic search is the most expensive possible outcome of a typo fix.
+///
+/// The slug is the primary key because it is what a request arrives with, and
+/// only one post can own a given path at a time. Rows cascade with the post:
+/// once the article is gone there is nothing to redirect to.
+model PostSlug {
+  slug      String   @id
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([postId])
+}
+
 model Category {
   id          String @id @default(cuid())
   name        String
@@ -150,6 +169,9 @@ model Post {
   id    String @id @default(cuid())
   title String
   slug  String @unique
+
+  /// Slugs this post used to live at; each one 301s to the current URL.
+  formerSlugs PostSlug[]
 
   categoryId String
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)

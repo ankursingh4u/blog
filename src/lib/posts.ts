@@ -256,3 +256,36 @@ export const searchPosts = cache(async (query: string, take = 30, skip = 0) => {
   });
   return posts.map(toCard);
 });
+
+/**
+ * Finds where a retired slug should now point.
+ *
+ * Called only when the normal lookup has already missed, so it costs nothing on
+ * the path that matters. Returns the post's *current* URL rather than just its
+ * slug, because the category can move too — a post reassigned from /tech to
+ * /gaming needs the whole path rebuilt, not the last segment swapped.
+ *
+ * Drafts are excluded: a URL that is not live has nothing to redirect to, and
+ * quietly revealing an unpublished post through an old link would be worse than
+ * a 404.
+ */
+export const findCurrentPathForFormerSlug = cache(async (slug: string) => {
+  const former = await prisma.postSlug.findUnique({
+    where: { slug },
+    select: {
+      post: {
+        select: {
+          status: true,
+          slug: true,
+          category: { select: { slug: true, parent: { select: { slug: true } } } },
+        },
+      },
+    },
+  });
+
+  if (!former || former.post.status !== 'PUBLISHED') return null;
+
+  const { category } = former.post;
+  const base = category.parent ? `/${category.parent.slug}/${category.slug}` : `/${category.slug}`;
+  return `${base}/${former.post.slug}`;
+});

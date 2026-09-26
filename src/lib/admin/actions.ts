@@ -297,6 +297,14 @@ export async function savePost(_prev: ActionState, formData: FormData): Promise<
   });
   if (clash) return FAIL('Another post already uses that slug.', { slug: 'Slug is taken.' });
 
+  // Read the slug before the update so the old URL can be kept. Fixing a typo
+  // in a headline regenerates the slug, and the old one is what Google has
+  // indexed — losing it costs the page its ranking history.
+  const before = await prisma.post.findUnique({
+    where: { id: input.id },
+    select: { slug: true },
+  });
+
   let faq: unknown;
   let screenshots: unknown;
   let relatedSlugs: unknown;
@@ -337,12 +345,40 @@ export async function savePost(_prev: ActionState, formData: FormData): Promise<
     include: { category: { include: { parent: { select: { slug: true } } } } },
   });
 
+  /*
+   * Keep the URL the post used to answer on.
+   *
+   * `upsert` rather than `create` because a slug can be retired more than once
+   * — rename A to B, then back to A, then to C — and the second retirement of A
+   * must not collide with the first. The row is simply repointed at the post
+   * that owns it now.
+   *
+   * The new slug is dropped from the history in the same breath: if a post
+   * returns to a name it used before, that name is live again and a redirect
+   * from it to itself would be a loop.
+   */
+  if (before && before.slug !== slug) {
+    await prisma.$transaction([
+      prisma.postSlug.deleteMany({ where: { slug } }),
+      prisma.postSlug.upsert({
+        where: { slug: before.slug },
+        create: { slug: before.slug, postId: post.id },
+        update: { postId: post.id },
+      }),
+    ]);
+  }
+
   revalidatePath('/admin/posts');
   revalidatePath(`/admin/posts/${post.id}`);
   if (post.status === 'PUBLISHED') {
     revalidatePath(postPath(post));
     revalidatePath(categoryPath(post.category));
     revalidatePath('/');
+    // The old path now redirects; its cached 200 has to go or the stale copy
+    // keeps being served alongside the new URL as duplicate content.
+    if (before && before.slug !== slug) {
+      revalidatePath(`${categoryPath(post.category)}/${before.slug}`);
+    }
   }
 
   return OK('Saved.');

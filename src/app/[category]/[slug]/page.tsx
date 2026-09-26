@@ -1,11 +1,15 @@
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import type { Metadata } from 'next';
 
 import { ArticleView } from '@/components/article/article-view';
 import { CategoryView } from '@/components/category/category-view';
 
 import { prisma } from '@/lib/db';
-import { getCategoryBySlug, getPublishedPost } from '@/lib/posts';
+import {
+  findCurrentPathForFormerSlug,
+  getCategoryBySlug,
+  getPublishedPost,
+} from '@/lib/posts';
 import { buildMetadata } from '@/lib/seo';
 
 export const revalidate = 3600;
@@ -100,7 +104,21 @@ export default async function CategoryOrPostPage({
 }) {
   const { category, slug } = await params;
   const found = await resolve(category, slug);
-  if (!found) notFound();
+
+  /*
+   * Before giving up, check whether this URL is one the post has moved away
+   * from. Editing a headline regenerates the slug, and the old path is the one
+   * already indexed and linked to — a 404 there throws away the page's ranking
+   * history for what is usually a typo fix.
+   *
+   * 308 rather than 307: the move is permanent, so Google should transfer the
+   * signals to the new URL instead of re-checking the old one forever.
+   */
+  if (!found) {
+    const moved = await findCurrentPathForFormerSlug(slug);
+    if (moved && moved !== `/${category}/${slug}`) permanentRedirect(moved);
+    notFound();
+  }
 
   if (found.kind === 'category') {
     const { page } = await searchParams;
