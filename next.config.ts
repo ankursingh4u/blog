@@ -64,6 +64,17 @@ const nextConfig: NextConfig = {
       // IndexNow verification file. Runs after filesystem routes, so
       // /robots.txt and /sitemap.xml are unaffected.
       { source: '/:key.txt', destination: '/api/indexnow-key?key=:key' },
+
+      /**
+       * Uploads written after the server booted.
+       *
+       * Next.js lists the public directory once at start-up and serves from
+       * that list, so a picture uploaded at runtime 404s until a deploy
+       * restarts the container. These rewrites run after filesystem routes,
+       * which means anything in the boot-time list is still served statically
+       * and only the misses fall through to the handler.
+       */
+      { source: '/uploads/:path*', destination: '/api/uploads/:path*' },
     ];
   },
   async headers() {
