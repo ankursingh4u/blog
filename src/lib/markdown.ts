@@ -120,12 +120,26 @@ export function extractToc(markdown: string): TocEntry[] {
 }
 
 function githubSlug(text: string) {
-  return text
-    .toLowerCase()
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^\p{L}\p{N}\s-]/gu, '')
-    .trim()
-    .replace(/\s+/g, '-');
+  return (
+    text
+      .toLowerCase()
+      .replace(/[̀-ͯ]/g, '')
+      .replace(/[^\p{L}\p{N}\s-]/gu, '')
+      .trim()
+      /*
+       * Each space becomes its own dash — runs are NOT collapsed.
+       *
+       * This has to match github-slugger, which rehype-slug uses to mint the
+       * real heading ids, and it strips punctuation before replacing spaces.
+       * So "Brightness & Outdoor" loses the ampersand and keeps both spaces
+       * around it, giving "brightness--outdoor" with two dashes.
+       *
+       * Collapsing them here produced a table of contents whose links pointed
+       * at ids that did not exist: every heading containing "&" was silently
+       * unclickable, while the ones without it worked fine.
+       */
+      .replace(/ /g, '-')
+  );
 }
 
 /** Strips markdown to plain text for meta descriptions and search snippets. */

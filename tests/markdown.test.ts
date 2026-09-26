@@ -83,3 +83,34 @@ describe('table of contents anchors', () => {
     expect(extractToc(source).map((e) => e.id)).toEqual(renderedIds);
   });
 });
+
+/**
+ * The table of contents is derived from the markdown source while the heading
+ * ids are minted by rehype-slug from the rendered HTML. Two implementations of
+ * the same slug rule, which is exactly the arrangement that drifts — and did:
+ * every heading containing "&" produced a link to an id that did not exist.
+ */
+describe('toc ids match the ids rehype-slug actually generates', () => {
+  const cases = [
+    '## 6. Brightness & Outdoor Visibility: Defeating the Midday Sun',
+    '## 1. Subtle Shifts: New Dimensions & Everyday Ergonomics',
+    '## 7. The Evolved Dynamic Island & Under-Display Face ID',
+    '## 9. Durability: Ceramic Shield 2 & Reinforced Framing',
+    '## Plain heading with no punctuation',
+    '## Colons: and — dashes',
+    '### A nested subheading & more',
+  ];
+
+  for (const source of cases) {
+    it(`anchors ${JSON.stringify(source)}`, async () => {
+      const html = await renderMarkdown(source);
+      const rendered = html.match(/<h[23] id="([^"]+)"/);
+      const [entry] = extractToc(source);
+
+      expect(rendered, 'rehype-slug produced no id').not.toBeNull();
+      expect(entry, 'extractToc produced no entry').toBeDefined();
+      // If these differ the link is dead, which is the whole bug.
+      expect(entry.id).toBe(rendered![1]);
+    });
+  }
+});

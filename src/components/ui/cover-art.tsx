@@ -25,16 +25,21 @@ import { cn } from '@/lib/utils';
 /**
  * The photograph to show for a post, or null to fall back to drawn cover art.
  *
- * A licence is what distinguishes a real photo from the generated OG card:
- * the card is stored in `featuredImage` too, but carries no credit. Checking
- * the licence rather than the path means the rule holds wherever the file
- * happens to live.
+ * The one image that must never be used is the generated OG card: it has the
+ * headline rendered into the PNG, so beside the headline it reads as a
+ * stuttering duplicate. It is stored under `/uploads/og/`, which is the whole
+ * rule.
+ *
+ * This used to ask whether the image carried a licence, on the assumption that
+ * a real photograph always does. Stock photos do. A picture a contributor
+ * uploaded with their own article does not — so every reader submission showed
+ * a gradient on every card and on the article itself, while the file sat in
+ * storage and the row pointed straight at it.
  */
-export function coverPhoto(post: {
-  featuredImage: string | null;
-  imageCredit?: { license: string };
-}): string | null {
-  return post.imageCredit?.license && post.featuredImage ? post.featuredImage : null;
+export function coverPhoto(post: { featuredImage: string | null }): string | null {
+  return post.featuredImage && !post.featuredImage.startsWith('/uploads/og/')
+    ? post.featuredImage
+    : null;
 }
 
 /** Stable small hash so a given seed always maps to the same hue. */

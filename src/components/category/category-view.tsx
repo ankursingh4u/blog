@@ -64,8 +64,14 @@ export async function CategoryView({
     <>
       <JsonLd data={structuredData} />
 
+      {/*
+        The masthead was py-20 over a content block that opens with py-12 —
+        about 130px of nothing between the section name and the first story it
+        is introducing, on a page whose job is to show articles. Tightened so
+        the first row of cards is visible without scrolling.
+      */}
       <section className="grid-bg border-b border-border">
-        <Container className="py-14 sm:py-20">
+        <Container className="py-10 sm:py-12">
           <p className="font-mono text-xs uppercase tracking-[0.22em] text-brand">
             {category.parent ? `${category.parent.name} · Section` : 'Category'}
           </p>
@@ -93,7 +99,7 @@ export async function CategoryView({
         </Container>
       </section>
 
-      <Container className="py-12">
+      <Container className="py-8">
         <AdSlot placement="AD_SLOT_HEADER" size="leaderboard" className="mb-10" />
 
         {posts.length === 0 ? (

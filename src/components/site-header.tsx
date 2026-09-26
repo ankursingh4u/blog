@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -41,12 +42,20 @@ export function SiteHeader({ categories, siteName }: { categories: NavItem[]; si
       <Container className="flex h-16 items-center justify-between gap-4">
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2 font-bold tracking-tight">
-            <span
-              aria-hidden="true"
-              className="grid h-7 w-7 place-items-center rounded-md bg-brand text-sm text-brand-foreground"
-            >
-              F
-            </span>
+            {/*
+              The site icon, not a drawn letter. `icon.png` is already the
+              favicon and the touch icon, so the header, the browser tab and a
+              bookmark all show the same mark — which is the whole point of
+              having one.
+            */}
+            <Image
+              src="/icon.png"
+              alt=""
+              width={28}
+              height={28}
+              priority
+              className="h-7 w-7 rounded-md object-cover"
+            />
             <span className="text-base">{siteName}</span>
           </Link>
 

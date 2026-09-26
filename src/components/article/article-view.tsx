@@ -1,4 +1,4 @@
-import { CoverArt } from '@/components/ui/cover-art';
+import { CoverArt, coverPhoto } from '@/components/ui/cover-art';
 import { ImageCreditLine } from '@/components/admin/cover-picker';
 import { ImageCreditSchema, EMPTY_CREDIT, parseJson } from '@/lib/json';
 import Image from 'next/image';
@@ -46,15 +46,6 @@ export async function ArticleView({ post }: { post: FullPost }) {
 
   const toc = extractToc(post.body);
 
-  // The generated OG card is the one cover that must never be shown here: it
-  // has the headline rendered into the PNG, and directly beneath the same
-  // headline as an H1 it reads as a stuttering duplicate. It lives under
-  // /uploads/og/, so excluding that prefix is the whole rule.
-  //
-  // This used to test for a licence instead, on the assumption that a real
-  // photograph always carries one. Stock photos do. A picture a contributor
-  // uploaded with their own article does not, so every reader submission had
-  // its cover silently replaced by the drawn one.
   const credit = parseJson(post.imageCredit, ImageCreditSchema, EMPTY_CREDIT);
 
   /**
@@ -63,10 +54,9 @@ export async function ArticleView({ post }: { post: FullPost }) {
    * else they are photographs that belong in the flow of the article.
    */
   const isTroubleshooting = post.category.slug === 'windows';
-  const photo =
-    post.featuredImage && !post.featuredImage.startsWith('/uploads/og/')
-      ? post.featuredImage
-      : null;
+  // Same helper the cards use, so the article and its own thumbnail can never
+  // disagree about whether the post has a photograph.
+  const photo = coverPhoto(post);
 
   // A post in a child category gets both rungs, so the trail reads
   // Home > Tech > Windows > title.
