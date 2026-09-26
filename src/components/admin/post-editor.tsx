@@ -111,6 +111,9 @@ export function PostEditor({
   const sections = useMemo(() => listSections(body), [body]);
   const errors = saveState.errors ?? {};
   const blocked = post.qualityNotes.startsWith('BLOCKED');
+  // Same rule the article template uses: the /tech/windows back-catalogue is
+  // the only content where "tested on a build" means anything.
+  const isTroubleshooting = post.categoryPath.endsWith('/windows');
 
   return (
     <div className="space-y-6">
@@ -124,11 +127,19 @@ export function PostEditor({
               </Badge>
             ) : null}
             {blocked ? <Badge tone="danger">Identifier check failed</Badge> : null}
+            {/*
+              "Tested on" is a troubleshooting idea: it means someone ran the
+              fix on that Windows build. There is nothing to test an iPhone
+              story against, so a news post was showing a permanent orange
+              "Verification pending" that no editor could ever clear. The badge
+              now appears only where the field means something — which is what
+              the field itself is documented to do.
+            */}
             {post.testedOnBuild ? (
               <Badge tone="ok">Tested on {post.testedOnBuild}</Badge>
-            ) : (
+            ) : isTroubleshooting ? (
               <Badge tone="warn">Verification pending</Badge>
-            )}
+            ) : null}
           </div>
           <p className="mt-2 font-mono text-xs text-muted-foreground">
             {post.categoryPath}/{slug}
