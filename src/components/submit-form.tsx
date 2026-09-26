@@ -1,10 +1,11 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useRef } from 'react';
 import { useFormStatus } from 'react-dom';
-import { Loader2, Send } from 'lucide-react';
+import { Loader2, RotateCcw, Send } from 'lucide-react';
 
 import { submitArticle, type SubmitState } from '@/lib/submit-action';
+import { useWriteDraft } from '@/lib/use-write-draft';
 import { Field, inputClass } from '@/components/admin/form-controls';
 import { MarkdownEditor } from '@/components/markdown-editor';
 import { HeroImageField, SubmissionImages } from '@/components/submission-images';
@@ -25,6 +26,8 @@ export interface CategoryOption {
 
 export function SubmitForm({ categories }: { categories: CategoryOption[] }) {
   const [state, action] = useActionState(submitArticle, INITIAL);
+  const form = useRef<HTMLFormElement>(null);
+  const { restored, discard } = useWriteDraft(form, state.ok);
 
   // On success the form is replaced rather than reset. Leaving a filled-in
   // article on screen beside "thanks, we got it" invites a second send of the
@@ -51,10 +54,32 @@ export function SubmitForm({ categories }: { categories: CategoryOption[] }) {
   }
 
   return (
-    <form action={action} className="surface space-y-6 p-6 sm:p-8">
+    <form ref={form} action={action} className="surface space-y-6 p-6 sm:p-8">
       {state.message ? (
         <Callout tone="danger" title="Not sent">
           {state.message}
+        </Callout>
+      ) : null}
+
+      {/*
+        Only shown when there was something to bring back. The button is the
+        way out: a draft that reappears with no way to clear it is its own
+        small trap for someone starting a second article.
+      */}
+      {restored ? (
+        <Callout tone="brand" title="Your draft is back">
+          <p>
+            This browser had an unsent article saved, so we have put it back. Pictures are
+            not kept — attach those again.
+          </p>
+          <button
+            type="button"
+            onClick={discard}
+            className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium underline underline-offset-4"
+          >
+            <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+            Clear it and start fresh
+          </button>
         </Callout>
       ) : null}
 
