@@ -27,7 +27,7 @@ export interface CategoryOption {
 export function SubmitForm({ categories }: { categories: CategoryOption[] }) {
   const [state, action] = useActionState(submitArticle, INITIAL);
   const form = useRef<HTMLFormElement>(null);
-  const { restored, discard } = useWriteDraft(form, state.ok);
+  const { restored, discard } = useWriteDraft(form, state);
 
   // On success the form is replaced rather than reset. Leaving a filled-in
   // article on screen beside "thanks, we got it" invites a second send of the

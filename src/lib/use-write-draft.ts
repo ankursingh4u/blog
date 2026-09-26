@@ -68,9 +68,13 @@ function field(form: HTMLFormElement, name: string) {
     : null;
 }
 
-export function useWriteDraft(form: React.RefObject<HTMLFormElement | null>, submitted: boolean) {
+export function useWriteDraft(
+  form: React.RefObject<HTMLFormElement | null>,
+  result: { ok: boolean; message: string },
+) {
   const [restored, setRestored] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const beforeSubmit = useRef<Draft | null>(null);
 
   const clear = useCallback(() => {
     try {
@@ -157,10 +161,64 @@ export function useWriteDraft(form: React.RefObject<HTMLFormElement | null>, sub
     };
   }, [form]);
 
-  // The article is with the editors; the local copy has done its job.
+  /*
+   * Snapshots the form the instant it is submitted.
+   *
+   * React resets an uncontrolled field once a form action returns, so a
+   * submission the server rejects comes back with the headline, name and email
+   * blank — and worse, that reset fires input events, so the debounced save
+   * then writes the emptied form over a perfectly good draft. The body escapes
+   * only because the editor holds it in React state.
+   *
+   * Capturing on `submit` gets in before any of that, and writes through
+   * immediately rather than on the timer, which the reset would otherwise win.
+   */
   useEffect(() => {
-    if (submitted) clear();
-  }, [submitted, clear]);
+    const element = form.current;
+    if (!element) return;
+
+    function capture() {
+      const current = form.current;
+      if (!current) return;
+      const snapshot: Draft = {};
+      for (const name of FIELDS) {
+        const input = field(current, name);
+        if (input && input.value) snapshot[name] = input.value;
+      }
+      beforeSubmit.current = snapshot;
+      try {
+        if (snapshot.body) localStorage.setItem(KEY, JSON.stringify(snapshot));
+      } catch {
+        // See save(): nothing useful to do here.
+      }
+    }
+
+    element.addEventListener('submit', capture);
+    return () => element.removeEventListener('submit', capture);
+  }, [form]);
+
+  // Runs on every action result, because useActionState hands back a new object
+  // each time — two rejections in a row are two separate restores.
+  useEffect(() => {
+    if (result.ok) {
+      // The article is with the editors; the local copy has done its job.
+      clear();
+      return;
+    }
+    if (!result.message) return;
+
+    const snapshot = beforeSubmit.current;
+    const element = form.current;
+    if (!snapshot || !element) return;
+
+    // Only put back what the reset actually took. Writing over a field the
+    // contributor has already started fixing would be its own bug.
+    for (const name of FIELDS) {
+      const value = snapshot[name];
+      const input = field(element, name);
+      if (value && input && input.value === '') setValueLikeAUser(input, value);
+    }
+  }, [result, clear, form]);
 
   return { restored, discard };
 }
