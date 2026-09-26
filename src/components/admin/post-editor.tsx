@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useMemo, useState } from 'react';
+import { useActionState, useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Eye, Plus, Sparkles, Trash2, Upload } from 'lucide-react';
@@ -84,10 +84,17 @@ export function PostEditor({
   relatedOptions: RelatedOption[];
 }) {
   const [saveState, saveAction] = useActionState<ActionState, FormData>(savePost, EMPTY_STATE);
-  const [statusState, statusAction] = useActionState<ActionState, FormData>(
-    setPostStatus,
-    EMPTY_STATE,
-  );
+
+  // Status changes go straight to the action with arguments; there is no form
+  // and therefore nothing for a stale page to mis-address.
+  const [statusState, setStatusState] = useState<ActionState>(EMPTY_STATE);
+  const [statusPending, startStatusTransition] = useTransition();
+
+  function changeStatus(next: EditorPost['status']) {
+    startStatusTransition(async () => {
+      setStatusState(await setPostStatus(post.id, next));
+    });
+  }
 
   const [title, setTitle] = useState(post.title);
   const [slug, setSlug] = useState(post.slug);
@@ -140,28 +147,43 @@ export function PostEditor({
             </Link>
           ) : null}
 
-          <form action={statusAction} className="flex flex-wrap items-center gap-2">
-            <input type="hidden" name="id" value={post.id} />
+          {/*
+            Plain buttons calling the action with arguments, not a form whose
+            submitter has to carry the value. See setPostStatus for why.
+          */}
+          <div className="flex flex-wrap items-center gap-2">
             {post.status !== 'PUBLISHED' ? (
-              <SubmitButton size="sm" name="status" value="PUBLISHED">
+              <StatusButton onClick={() => changeStatus('PUBLISHED')} pending={statusPending}>
                 Publish
-              </SubmitButton>
+              </StatusButton>
             ) : (
-              <SubmitButton size="sm" variant="outline" name="status" value="DRAFT">
+              <StatusButton
+                variant="outline"
+                onClick={() => changeStatus('DRAFT')}
+                pending={statusPending}
+              >
                 Unpublish
-              </SubmitButton>
+              </StatusButton>
             )}
             {post.status !== 'REVIEW' ? (
-              <SubmitButton size="sm" variant="outline" name="status" value="REVIEW">
+              <StatusButton
+                variant="outline"
+                onClick={() => changeStatus('REVIEW')}
+                pending={statusPending}
+              >
                 Send to review
-              </SubmitButton>
+              </StatusButton>
             ) : null}
             {post.status !== 'ARCHIVED' ? (
-              <SubmitButton size="sm" variant="ghost" name="status" value="ARCHIVED">
+              <StatusButton
+                variant="ghost"
+                onClick={() => changeStatus('ARCHIVED')}
+                pending={statusPending}
+              >
                 Archive
-              </SubmitButton>
+              </StatusButton>
             ) : null}
-          </form>
+          </div>
         </div>
       </header>
 
@@ -425,6 +447,33 @@ export function PostEditor({
 }
 
 /* ------------------------------------------------------------------ pieces */
+
+/**
+ * A status control. Deliberately `type="button"` — it must never submit
+ * anything, because submitting is exactly how the status went missing before.
+ */
+function StatusButton({
+  children,
+  onClick,
+  pending,
+  variant = 'primary',
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+  pending: boolean;
+  variant?: 'primary' | 'outline' | 'ghost';
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={pending}
+      className={buttonClass(variant, 'sm')}
+    >
+      {children}
+    </button>
+  );
+}
 
 function MarkdownPreview({ source }: { source: string }) {
   // Deliberately minimal: headings, lists, code fences, bold and links.

@@ -353,11 +353,26 @@ const StatusInput = z.object({
   status: z.enum(['DRAFT', 'REVIEW', 'APPROVED', 'PUBLISHED', 'ARCHIVED']),
 });
 
-export async function setPostStatus(_prev: ActionState, formData: FormData): Promise<ActionState> {
+/**
+ * Takes the id and status as arguments rather than reading them off a FormData.
+ *
+ * The buttons used to submit a shared form and rely on the browser adding the
+ * pressed button's name and value. That works right up until the form the
+ * action receives is not the form the button was in — a stale page whose action
+ * ids no longer match the server, or the nested-form bug this file has already
+ * been bitten by once — and then `status` is simply absent and the only thing
+ * the editor sees is "Unknown status.", which says nothing about why.
+ *
+ * Arguments cannot go missing in transit. There is no FormData to parse, so
+ * that failure mode no longer exists.
+ */
+export async function setPostStatus(id: string, status: string): Promise<ActionState> {
   await requireAdmin();
-  const parsed = StatusInput.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) return FAIL('Unknown status.');
-  const { id, status } = parsed.data;
+  const parsed = StatusInput.safeParse({ id, status });
+  if (!parsed.success) {
+    // Name what arrived. "Unknown status." on its own cost an evening.
+    return FAIL(`Cannot change status: received id="${id}", status="${status}".`);
+  }
 
   const existing = await prisma.post.findUnique({
     where: { id },
