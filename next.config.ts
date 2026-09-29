@@ -65,19 +65,21 @@ const nextConfig: NextConfig = {
        * IndexNow verification file. Runs after filesystem routes, so
        * /robots.txt and /sitemap.xml are unaffected.
        *
-       * The param carries an explicit pattern because `/:key.txt` did not work:
-       * the rewrite matched and the request reached the handler, but `:key` was
-       * never substituted into the destination query, so the handler compared
-       * the configured key against nothing and answered 404 for the very URL
-       * IndexNow fetches. Hitting `/api/indexnow-key?key=…` directly returned
-       * the key the whole time, which is what made it look configured.
+       * The key is handed over as a path segment. An earlier version passed it
+       * as `?key=:key` and never worked at all: the source matched and the
+       * request reached the handler, but the param was not substituted into the
+       * destination *query*, so the handler compared the configured key against
+       * nothing and answered 404 for the exact URL IndexNow fetches. Adding an
+       * explicit param pattern did not fix it either — only moving the value
+       * into the path did. Calling `/api/indexnow-key?key=…` by hand worked
+       * throughout, which is what disguised it.
        *
-       * The length bound also keeps shorter names — /robots.txt above all —
-       * from ever reaching this handler.
+       * The length bound keeps shorter names — /robots.txt above all — from
+       * ever reaching this handler.
        */
       {
         source: '/:key([A-Za-z0-9-]{8,64}).txt',
-        destination: '/api/indexnow-key?key=:key',
+        destination: '/api/indexnow-key/:key',
       },
 
       /**
