@@ -14,6 +14,19 @@ export const SETTING_DEFAULTS = {
   DISCOVERY_SUGGEST: 'true',
   DISCOVERY_TRENDS: 'true',
   SITE_TAGLINE: 'Trending stories, explained properly.',
+  /**
+   * Slug of the author every generated post is bylined to.
+   *
+   * Empty restores the original behaviour: round-robin among the house authors
+   * whose categoryFocus covers the article's category. Set, it pins the byline
+   * to one person — the publisher taking responsibility for the output rather
+   * than a rota of personas.
+   *
+   * A slug that matches no author is ignored with a warning rather than failing
+   * the run, so naming the setting before creating the author cannot break
+   * generation. Existing posts are never touched; this only affects new ones.
+   */
+  AI_AUTHOR_SLUG: 'ankur-singh',
   AD_SLOT_HEADER: '',
   AD_SLOT_IN_ARTICLE: '',
   AD_SLOT_SIDEBAR: '',

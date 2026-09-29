@@ -1,6 +1,7 @@
 import type { Author, Category, Keyword } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { StringArray, parseJson } from '@/lib/json';
+import { getSetting } from '@/lib/settings';
 import { log } from '@/pipeline/log';
 
 /**
@@ -82,13 +83,35 @@ export async function selectKeywords(
 }
 
 /**
- * Picks an author whose categoryFocus covers this category, avoiding the author
- * used for the previous post in the same run and the most recent published post.
+ * Picks the author for a generated post.
+ *
+ * If AI_AUTHOR_SLUG names an existing house author, every generated post is
+ * bylined to them and the rotation below is skipped. Otherwise: an author whose
+ * categoryFocus covers this category, avoiding the author used for the previous
+ * post in the same run and on the most recent published post.
  */
 export async function assignAuthor(
   categorySlug: string,
   previousAuthorId: string | null,
 ): Promise<Author | null> {
+  const pinnedSlug = (await getSetting('AI_AUTHOR_SLUG')).trim();
+  if (pinnedSlug) {
+    const pinned = await prisma.author.findFirst({
+      // isGuest for the same reason the rotation filters on it: a contributor's
+      // name must never appear on something they did not write.
+      where: { slug: pinnedSlug, isGuest: false },
+    });
+    if (pinned) return pinned;
+    // Naming an author who does not exist yet is the expected order of events —
+    // the setting ships with a default and the row is created afterwards — so
+    // this falls through to the rotation rather than failing the run. Said out
+    // loud, because silently ignoring it is how the byline quietly stays wrong.
+    log.warn(
+      `select: AI_AUTHOR_SLUG is "${pinnedSlug}" but no house author has that slug — ` +
+        'falling back to the author rotation. Create the author in /admin/authors.',
+    );
+  }
+
   /**
    * House bylines only.
    *

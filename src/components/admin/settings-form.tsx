@@ -205,6 +205,20 @@ export function SettingsForm({ values }: { values: Record<SettingKey, string> })
           </Field>
 
           <Field
+            label="Byline for generated posts"
+            htmlFor="AI_AUTHOR_SLUG"
+            hint="Author slug. Empty rotates among the house authors as before. Existing posts are never changed."
+          >
+            <input
+              id="AI_AUTHOR_SLUG"
+              name="AI_AUTHOR_SLUG"
+              defaultValue={values.AI_AUTHOR_SLUG}
+              className={inputClass}
+              placeholder="ankur-singh"
+            />
+          </Field>
+
+          <Field
             label="Tag Manager container"
             htmlFor="GTM_ID"
             hint="Only a container you own — it can run any script on every page. Clear it to remove."
