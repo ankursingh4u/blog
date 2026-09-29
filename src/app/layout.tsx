@@ -96,6 +96,24 @@ const themeScript = `
 })();
 `;
 
+/**
+ * Google's standard GTM loader, with the container id filled in.
+ *
+ * The id is stripped to `[A-Za-z0-9-]` first. It arrives from a database
+ * setting an admin typed, and this string is written into the page with
+ * `dangerouslySetInnerHTML` — without the strip, a value containing a quote
+ * and `</script>` would close the tag and run whatever followed. A real
+ * container id has no other characters, so nothing legitimate is lost.
+ */
+function gtmSnippet(containerId: string) {
+  const id = containerId.replace(/[^A-Za-z0-9-]/g, '');
+  return `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','${id}');`;
+}
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const [categories, settings] = await Promise.all([getCategories(), getSettings()]);
 
@@ -105,12 +123,36 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${mono.variable}`}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        {/**
+         * Google Tag Manager, as high in <head> as Google asks for.
+         *
+         * The inline part is a few hundred bytes and only schedules the real
+         * container, which loads async — so it does not block render. It is a
+         * plain <script> rather than next/script because those mount in the
+         * body, and a container that loads after hydration misses the very
+         * pageview it exists to record.
+         */}
+        {settings.GTM_ID ? (
+          <script dangerouslySetInnerHTML={{ __html: gtmSnippet(settings.GTM_ID) }} />
+        ) : null}
         {settings.GSC_VERIFICATION ? (
           <meta name="google-site-verification" content={settings.GSC_VERIFICATION} />
         ) : null}
         <link rel="alternate" type="application/rss+xml" title={SITE.name} href="/feed.xml" />
       </head>
       <body className="min-h-dvh bg-background font-sans text-foreground">
+        {/* GTM's no-JavaScript fallback, which Google requires directly after <body>. */}
+        {settings.GTM_ID ? (
+          <noscript>
+            <iframe
+              src={`https://www.googletagmanager.com/ns.html?id=${encodeURIComponent(settings.GTM_ID)}`}
+              height="0"
+              width="0"
+              style={{ display: 'none', visibility: 'hidden' }}
+            />
+          </noscript>
+        ) : null}
+
         <JsonLd data={jsonLdGraph(organisationLd(), websiteLd())} />
 
         <a

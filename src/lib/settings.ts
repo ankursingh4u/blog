@@ -19,6 +19,16 @@ export const SETTING_DEFAULTS = {
   AD_SLOT_SIDEBAR: '',
   AD_SLOT_FOOTER: '',
   GA4_ID: '',
+  /**
+   * Google Tag Manager container (GTM-XXXXXXX). Empty renders nothing.
+   *
+   * Kept as a setting rather than a constant so a container can be pulled
+   * immediately from /admin without waiting on a deploy — which is exactly the
+   * situation this site has already been in once. A container is a channel for
+   * running arbitrary JavaScript on every page, so whoever owns it owns the
+   * front end: only ever point this at a container you control.
+   */
+  GTM_ID: '',
   GSC_VERIFICATION: '',
   INDEXNOW_KEY: '',
 } as const;

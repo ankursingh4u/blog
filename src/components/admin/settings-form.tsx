@@ -205,6 +205,20 @@ export function SettingsForm({ values }: { values: Record<SettingKey, string> })
           </Field>
 
           <Field
+            label="Tag Manager container"
+            htmlFor="GTM_ID"
+            hint="Only a container you own — it can run any script on every page. Clear it to remove."
+          >
+            <input
+              id="GTM_ID"
+              name="GTM_ID"
+              defaultValue={values.GTM_ID}
+              className={inputClass}
+              placeholder="GTM-XXXXXXX"
+            />
+          </Field>
+
+          <Field
             label="Search Console token"
             htmlFor="GSC_VERIFICATION"
             hint="The content= value only."
