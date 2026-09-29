@@ -7,9 +7,15 @@ import {
   describeStructure,
 } from '../src/pipeline/structure';
 
-/** Builds a body of roughly `words` words with the requested shape. */
+/**
+ * Builds a body of roughly `words` words with the requested shape.
+ *
+ * The default is derived from MIN_WORDS rather than written as a number, so
+ * moving the band does not silently turn "a well-formed article" into one that
+ * fails the floor.
+ */
 function body({
-  words = 900,
+  words = MIN_WORDS + 200,
   intro = true,
   conclusion = true,
   headings = 3,
@@ -69,8 +75,9 @@ describe('checkStructure', () => {
   });
 
   it('does not flag an article inside the standard band', () => {
-    const report = checkStructure(body({ words: 950 }));
+    const report = checkStructure(body({ words: MIN_WORDS + 200 }));
     expect(report.issues.some((i) => i.rule === 'over-standard-length')).toBe(false);
+    expect(report.ok).toBe(true);
   });
 
   it('blocks an article under the word floor', () => {

@@ -42,14 +42,15 @@ export const DraftSchema = z.object({
     .describe('Two to three sentences that resolve the problem for most readers. No preamble.'),
   body: z
     .string()
-    // ~4,800 characters is roughly 800 words, the floor for a standard guide.
-    // The previous min(800) was characters, which allowed ~130-word posts.
-    .min(4800)
+    // ~9,000 characters is roughly 1,500 words, the floor in structure.ts.
+    // Characters, not words — an earlier min(800) was characters too and allowed
+    // ~130-word posts, so the unit is worth stating.
+    .min(9000)
     .describe(
-      'Markdown body, 800-1200 words for a standard guide and up to 2500 for a deep dive. ' +
-        'Opens with a 2-3 paragraph introduction (hook, then what the piece covers), then ' +
-        'H2 sections, then a "Conclusion" H2 that summarises and tells the reader what to ' +
-        'do next. No H1 — the title is rendered separately. No FAQ section — separate field.',
+      'Markdown body, 1500-2000 words. Opens with a 2-3 paragraph introduction (hook, then ' +
+        'what the piece covers), then H2 sections, then a "Conclusion" H2 that summarises ' +
+        'and tells the reader what to do next. No H1 — the title is rendered separately. ' +
+        'No FAQ section — separate field.',
     ),
   affectedBuilds: z
     .array(z.string())
@@ -90,10 +91,17 @@ const UNIVERSAL_STRUCTURE = `Every article on this site follows the same shape:
    to do next.
 6. Three to five FAQ entries (a separate field, not part of the body).
 
-Length:
-- Standard guide: 800-1200 words in the body.
-- Deep dive on a competitive topic: 1400-2500 words.
-- Never publish under 800 words. Thin pages do not rank and waste the reader's time.
+Length — 1500 to 2000 words in the body. Reach it by covering more ground, never
+by saying the same thing twice. A rough budget that lands in the band:
+- Introduction: 120-180 words.
+- Five to seven H2 sections at roughly 220 words each.
+- Conclusion: 120 words.
+
+If the subject genuinely does not support 1500 words of substance, write what it
+does support and stop. A short article that says something is worth more than a
+long one that circles. Repetition is checked automatically after you finish:
+restating a point under a second heading, or echoing a sentence you have already
+written, fails the draft outright. Padding costs more than being brief.
 
 Formatting rules for the body — these exist so the page can be skimmed:
 - Markdown only. No raw HTML — it is stripped before rendering.
@@ -236,7 +244,10 @@ export async function generateDraft({
     prompt,
     schema: DraftSchema,
     schemaName: 'article_draft',
-    maxTokens: 20000,
+    // Covers reasoning *and* the response. A 2,000-word body is ~2,700 output
+    // tokens, but at effort 'high' the reasoning is the larger share, and the
+    // request throws rather than truncating when it runs out.
+    maxTokens: 28000,
     effort: 'high',
   });
 

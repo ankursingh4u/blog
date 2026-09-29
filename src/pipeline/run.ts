@@ -5,6 +5,7 @@ import { toJson } from '@/lib/json';
 import { slugify } from '@/lib/utils';
 import { notifyPublished } from '@/lib/indexing';
 import { checkStructure, describeStructure } from '@/pipeline/structure';
+import { checkPadding, describePadding } from '@/pipeline/padding';
 import { checkStyle, describeStyle } from '@/pipeline/style';
 import { categoryPath, postPath, type CategoryRef } from '@/lib/urls';
 
@@ -224,6 +225,12 @@ async function produceOne({
   const structure = checkStructure(draft.body);
   log.info(describeStructure(structure));
 
+  // The other half of the 1500-word floor. Length alone is satisfiable by
+  // restating the same point under a new heading, so repetition is measured
+  // separately and blocks auto-publish the way a structural failure does.
+  const padding = checkPadding(draft.body);
+  log.info(describePadding(padding));
+
   // Prose tells (AI vocabulary, em-dash overuse, puffery). Advisory rather than
   // blocking: several flagged words are legitimate in the right context, so this
   // is recorded in the quality notes for the editor to judge.
@@ -273,6 +280,7 @@ async function produceOne({
     autoPublish &&
     !quality.blocked &&
     structure.ok &&
+    padding.ok &&
     quality.score >= threshold &&
     Boolean(featuredImage);
 
@@ -297,6 +305,7 @@ async function produceOne({
       qualityNotes: [
         quality.notes,
         describeStructure(structure),
+        describePadding(padding),
         `Style: ${describeStyle(style)}`,
       ]
         .filter(Boolean)
@@ -331,6 +340,14 @@ async function produceOne({
     if (!structure.ok) {
       reasons.push(
         `structure: ${structure.issues
+          .filter((i) => i.blocking)
+          .map((i) => i.rule)
+          .join(', ')}`,
+      );
+    }
+    if (!padding.ok) {
+      reasons.push(
+        `padding: ${padding.issues
           .filter((i) => i.blocking)
           .map((i) => i.rule)
           .join(', ')}`,

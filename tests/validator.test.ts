@@ -62,9 +62,11 @@ describe('DraftSchema', () => {
     slug: 'fix-0x800f0922-windows-11',
     quickAnswer:
       'This error usually means the System Reserved partition is full. Free 250 MB on it, then retry the update from Settings.',
-    // Above the 4,800-character floor (~800 words), which is what the schema
-    // now requires — the old 900-character fixture was a ~150-word article.
-    body: 'x'.repeat(5000),
+    // Above the 9,000-character floor (~1,500 words) the schema requires. The
+    // figure has moved twice — 900 characters allowed a ~150-word article, then
+    // 4,800 matched the old 800-word band — so it is kept comfortably clear of
+    // the boundary rather than sitting on it.
+    body: 'x'.repeat(9500),
     affectedBuilds: ['26100.2314'],
     faq: [
       { question: 'Is this reversible?', answer: 'Yes, nothing in method one deletes data.' },

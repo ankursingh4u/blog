@@ -31,7 +31,15 @@ export interface ResearchSource {
 
 const FETCH_TIMEOUT_MS = 15_000;
 const MAX_CHARS_PER_SOURCE = 12_000;
-const TARGET_SOURCES = 5;
+/**
+ * Raised from 5 alongside the 1500-word floor.
+ *
+ * Length has to come from somewhere. Asked for 2,000 words off three sources,
+ * the model has nothing left to say by the halfway point and starts restating —
+ * which `checkPadding` then fails, burning the generation call. More source
+ * material is the cheaper half of that trade.
+ */
+const TARGET_SOURCES = 7;
 
 /**
  * A URL carried on the keyword itself, if it is worth fetching.

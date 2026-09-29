@@ -11,8 +11,18 @@
  * commands would otherwise pass the length floor without containing much prose.
  */
 
-export const MIN_WORDS = 800;
-export const STANDARD_MAX_WORDS = 1200;
+/**
+ * The publishable band, raised from 800-1200 on 2026-09-29.
+ *
+ * A floor this high only works alongside `checkPadding`. Length and the
+ * standing instruction to "cut every word that does no work" pull against each
+ * other, and given only the floor the cheapest way to satisfy it is to say the
+ * same thing three times. The padding check is what makes the floor mean
+ * "covered more ground" rather than "wrote more words", so the two are a pair:
+ * raising this without it would buy nothing but filler.
+ */
+export const MIN_WORDS = 1500;
+export const STANDARD_MAX_WORDS = 2000;
 export const MAX_SENTENCES_PER_PARAGRAPH = 5;
 
 export interface StructureIssue {
@@ -129,10 +139,11 @@ export function checkStructure(body: string): StructureReport {
     });
   }
 
-  // A standard guide is 800-1200 words; a deep dive on a competitive topic is
-  // allowed to run to 2500. There is no way to tell mechanically which one was
-  // intended, so overshooting the standard band is a note for the editor rather
-  // than a failure — the floor is the rule worth blocking on.
+  // The band is 1500-2000; a deep dive on a competitive topic may run further.
+  // There is no way to tell mechanically which was intended, so overshooting is
+  // a note for the editor rather than a failure — the floor is the rule worth
+  // blocking on, and `checkPadding` is what judges whether the extra words are
+  // substance or repetition.
   if (wordCount > STANDARD_MAX_WORDS) {
     issues.push({
       rule: 'over-standard-length',
