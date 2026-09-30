@@ -125,19 +125,142 @@ function extractLink(entry: string): string {
   return '';
 }
 
-/** Strips CDATA wrappers and HTML tags, then resolves the common entities. */
+/**
+ * Reads a feed response with the character set it is actually written in.
+ *
+ * `response.text()` trusts the HTTP `Content-Type` charset and falls back to
+ * Latin-1 when there is none. A great many RSS feeds serve UTF-8 while
+ * declaring nothing, which is how "GM can't" arrived as "GM canâ€™t" — one
+ * apostrophe read a byte at a time.
+ *
+ * Precedence is: the XML declaration, then the HTTP header, then UTF-8. The
+ * document's own declaration is trusted over the header because the header is
+ * produced by the web server, which frequently has no idea, while the
+ * declaration was written by whatever generated the feed.
+ */
+export async function readFeedBody(response: Response): Promise<string> {
+  const buffer = await response.arrayBuffer();
+
+  // The declaration is ASCII-compatible in every encoding worth supporting, so
+  // reading the first bytes as UTF-8 is safe regardless of the real charset.
+  const preamble = new TextDecoder('utf-8').decode(buffer.slice(0, 200));
+  const declared =
+    /<\?xml[^>]*encoding=["']([\w-]+)["']/i.exec(preamble)?.[1] ??
+    /charset=([\w-]+)/i.exec(response.headers.get('content-type') ?? '')?.[1] ??
+    'utf-8';
+
+  try {
+    return new TextDecoder(declared.toLowerCase()).decode(buffer);
+  } catch {
+    // An encoding label Node does not know. UTF-8 is the right guess in 2026
+    // and worst case `repairMojibake` catches what it produces.
+    return new TextDecoder('utf-8').decode(buffer);
+  }
+}
+
+/**
+ * Named entities worth resolving by hand, beyond the numeric forms below.
+ *
+ * Publisher headlines are full of typographic punctuation, and an unresolved
+ * `&rsquo;` reaches the reader as literal text in an H1.
+ */
+const NAMED_ENTITIES: Record<string, string> = {
+  lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ',
+  lsquo: '‘', rsquo: '’', ldquo: '“', rdquo: '”',
+  ndash: '–', mdash: '—', hellip: '…', middot: '·',
+  eacute: 'é', egrave: 'è', agrave: 'à', ccedil: 'ç',
+  uuml: 'ü', ouml: 'ö', auml: 'ä', ntilde: 'ñ',
+  pound: '£', euro: '€', deg: '°', amp: '&',
+};
+
+/**
+ * Repairs UTF-8 that was decoded as Windows-1252.
+ *
+ * `â€™` is one apostrophe read a byte at a time. It arrives whenever a feed
+ * serves UTF-8 without saying so and the decoder falls back to Latin-1 — see
+ * `fetchFeedText`, which is where this is now prevented rather than repaired.
+ * Kept because the keyword table already holds phrases mangled this way, and a
+ * headline is worth repairing on the way out as well as on the way in.
+ *
+ * Only triggered when a telltale sequence is present, so text that legitimately
+ * contains `â` is left alone.
+ */
+export function repairMojibake(input: string): string {
+  // The lead byte of a mangled sequence is the UTF-8 first byte read as
+  // Windows-1252: 0xC3 -> "Ã" for two-byte characters (é), 0xE2 -> "â" for the
+  // three-byte punctuation range (’ “ —). Both are lowercase in the common
+  // case, which an earlier version of this guard missed entirely.
+  if (!MOJIBAKE.test(input)) return input;
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(
+      Uint8Array.from([...input].map(cp1252Byte)),
+    );
+  } catch {
+    // Not recoverable as UTF-8 — leave it rather than making it worse.
+    return input;
+  }
+}
+
+/** A UTF-8 lead byte followed by a continuation byte, both read as Windows-1252. */
+const MOJIBAKE = /[ÂÃâã][-¿€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ]/;
+
+/**
+ * The Windows-1252 byte a character came from.
+ *
+ * `charCodeAt() & 0xff` is wrong here, and silently so: Windows-1252 maps bytes
+ * 0x80-0x9F to code points scattered through General Punctuation, so `€` is
+ * U+20AC and masking yields 0xAC rather than 0x80. Every repaired string came
+ * out corrupted a different way.
+ */
+const CP1252_HIGH =
+  '€‚ƒ„…†‡ˆ‰Š‹ŒŽ' +
+  '‘’“”•–—˜™š›œžŸ';
+
+function cp1252Byte(char: string): number {
+  const code = char.codePointAt(0) ?? 0;
+  if (code <= 0xff) return code;
+  const index = CP1252_HIGH.indexOf(char);
+  if (index >= 0) return 0x80 + index;
+  // Never a Windows-1252 character, so this string is not mojibake after all.
+  // Out of byte range forces the decoder to throw and the original is kept.
+  return 0x100;
+}
+
+
+/**
+ * Strips CDATA wrappers and HTML tags, then resolves entities.
+ *
+ * Previously resolved seven named entities and nothing numeric, so `&#8216;`
+ * reached the database intact and went on to become an article H1 reading
+ * "Can &#8216;eSUV&#8217; e-bikes really…". Numeric entities are the common
+ * form in publisher RSS, so that was the majority case, not an edge one.
+ */
 export function decode(input: string): string {
-  return input
+  return repairMojibake(input)
     .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
     .replace(/<[^>]+>/g, ' ')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#0?39;|&apos;/g, "'")
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
+    // Numeric, decimal and hex. Done before the named pass so a `&amp;#8217;`
+    // double-encoding resolves in one direction only.
+    .replace(/&#(\d+);/g, (_m, code) => safeCodePoint(Number(code)))
+    .replace(/&#x([0-9a-f]+);/gi, (_m, code) => safeCodePoint(Number.parseInt(code, 16)))
+    // `&amp;` resolves last within the named pass because the table is applied
+    // in one sweep — otherwise `&amp;lt;` would turn into `<` rather than `&lt;`.
+    .replace(/&([a-z]+);/gi, (match, name: string) => {
+      const value = NAMED_ENTITIES[name.toLowerCase()];
+      return value ?? match;
+    })
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+/** Guards against a malformed entity producing an invalid code point. */
+function safeCodePoint(code: number): string {
+  if (!Number.isFinite(code) || code <= 0 || code > 0x10ffff) return '';
+  try {
+    return String.fromCodePoint(code);
+  } catch {
+    return '';
+  }
 }
 
 /* ------------------------------------------------------- keyword synthesis */

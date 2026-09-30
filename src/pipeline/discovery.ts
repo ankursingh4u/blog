@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { decode, parseFeed, type CategorySlug, type FeedItem } from '@/pipeline/parser';
+import { decode, parseFeed, readFeedBody, type CategorySlug, type FeedItem } from '@/pipeline/parser';
 import { log } from '@/pipeline/log';
 import { botUserAgent } from '@/lib/site';
 
@@ -245,7 +245,9 @@ async function fetchText(url: string, accept: string): Promise<string> {
     headers: { 'User-Agent': UA, Accept: accept },
   });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
-  return response.text();
+  // Not response.text(): it falls back to Latin-1 when a feed serves UTF-8
+  // without declaring it, which turns every apostrophe into "â€™".
+  return readFeedBody(response);
 }
 
 /* ------------------------------------------------------------ Google News */

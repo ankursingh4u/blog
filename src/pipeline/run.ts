@@ -10,7 +10,7 @@ import { checkStyle, describeStyle } from '@/pipeline/style';
 import { categoryPath, postPath, type CategoryRef } from '@/lib/urls';
 
 import { log, type LogLine } from '@/pipeline/log';
-import type { CategorySlug } from '@/pipeline/parser';
+import { decode, type CategorySlug } from '@/pipeline/parser';
 
 /** Candidates fetched per post wanted, to absorb keywords that cannot be sourced. */
 const KEYWORD_OVERSELECT = 6;
@@ -189,7 +189,19 @@ async function produceOne({
   /** Mutated as photographs are taken, so later posts in the run see them. */
   usedPhotoKeys: Set<string>;
 }): Promise<PipelineOutcome> {
-  const keyword = await prisma.keyword.findUniqueOrThrow({ where: { id: keywordId } });
+  const stored = await prisma.keyword.findUniqueOrThrow({ where: { id: keywordId } });
+
+  /**
+   * Re-decode the phrase on the way out, not just on the way in.
+   *
+   * `decode` only learned numeric entities and mojibake repair on 2026-09-30,
+   * and the keyword table already held hundreds of rows ingested before that —
+   * "Can &#8216;eSUV&#8217; e-bikes…", "GM canâ€™t…". The phrase becomes the
+   * target keyword and then the H1, so publishing one of those puts the raw
+   * entity in front of a reader. Repairing here fixes the existing backlog
+   * without a migration, and is a no-op for anything already clean.
+   */
+  const keyword = { ...stored, phrase: decode(stored.phrase) };
   log.info(`--- "${keyword.phrase}"`);
 
   const categoryInclude = { parent: { select: { name: true, slug: true } } };

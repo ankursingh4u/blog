@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   decode,
+  readFeedBody,
   extractBuildNumbers,
   extractErrorCodes,
   extractIdentifiers,
@@ -60,6 +61,75 @@ describe('decode', () => {
   it('resolves entities, ampersand last so &amp;lt; stays literal', () => {
     expect(decode('a &amp;lt; b')).toBe('a &lt; b');
     expect(decode('Tom &amp; Jerry &quot;quoted&quot;')).toBe('Tom & Jerry "quoted"');
+  });
+
+  // These reached the database intact and would have become article H1s. The
+  // decoder resolved seven named entities and nothing numeric, and numeric is
+  // the common form in publisher RSS.
+  it('resolves numeric entities, decimal and hex', () => {
+    expect(decode('Can &#8216;eSUV&#8217; e-bikes really go from trail to town?')).toBe(
+      'Can ‘eSUV’ e-bikes really go from trail to town?',
+    );
+    expect(decode('caf&#233; and caf&#xe9;')).toBe('café and café');
+  });
+
+  it('resolves the typographic named entities publishers actually use', () => {
+    expect(decode('It&rsquo;s a &ldquo;win&rdquo; &mdash; probably&hellip;')).toBe(
+      'It’s a “win” — probably…',
+    );
+  });
+
+  it('leaves an unknown entity alone rather than eating it', () => {
+    expect(decode('a &notarealentity; b')).toBe('a &notarealentity; b');
+  });
+
+  it('discards a malformed numeric entity instead of throwing', () => {
+    expect(decode('bad &#99999999999; end')).toBe('bad end');
+  });
+
+  it('repairs UTF-8 that was decoded as Latin-1', () => {
+    expect(decode('GM canâ€™t â€˜bring backâ€™ Apple CarPlay')).toBe(
+      'GM can’t ‘bring back’ Apple CarPlay',
+    );
+  });
+
+  it('leaves text containing a legitimate accented character alone', () => {
+    expect(decode('Beyoncé at the Château')).toBe('Beyoncé at the Château');
+  });
+});
+
+describe('readFeedBody', () => {
+  function response(body: Uint8Array, contentType: string): Response {
+    // .buffer rather than the view: TextEncoder returns an exactly-sized
+    // Uint8Array, and a view is not a BodyInit under this TS lib.
+    return new Response(body.buffer as ArrayBuffer, {
+      headers: { 'content-type': contentType },
+    });
+  }
+
+  it('honours the XML declaration over the HTTP header', async () => {
+    // UTF-8 bytes, but the server claims Latin-1 — the case that mangled
+    // every apostrophe coming out of Google News.
+    const xml = '<?xml version="1.0" encoding="utf-8"?><rss><title>can’t</title></rss>';
+    const bytes = new TextEncoder().encode(xml);
+    expect(await readFeedBody(response(bytes, 'text/xml; charset=iso-8859-1'))).toContain('can’t');
+  });
+
+  it('falls back to the HTTP charset when the document declares none', async () => {
+    const xml = '<?xml version="1.0"?><rss><title>can’t</title></rss>';
+    const bytes = new TextEncoder().encode(xml);
+    expect(await readFeedBody(response(bytes, 'text/xml; charset=utf-8'))).toContain('can’t');
+  });
+
+  it('defaults to UTF-8 when neither says anything', async () => {
+    const bytes = new TextEncoder().encode('<rss><title>can’t</title></rss>');
+    expect(await readFeedBody(response(bytes, 'text/xml'))).toContain('can’t');
+  });
+
+  it('survives an encoding label Node does not recognise', async () => {
+    const xml = '<?xml version="1.0" encoding="x-made-up"?><rss><title>ok</title></rss>';
+    const bytes = new TextEncoder().encode(xml);
+    expect(await readFeedBody(response(bytes, 'text/xml'))).toContain('ok');
   });
 });
 

@@ -3,6 +3,7 @@ import {
   newsItemToCandidate,
   normalisePhrase,
   parseFeed,
+  readFeedBody,
   toKeywordCandidates,
   type FeedItem,
   type KeywordCandidate,
@@ -342,7 +343,9 @@ async function fetchText(url: string): Promise<string> {
       },
     });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return await response.text();
+    // Not response.text() — see readFeedBody: a UTF-8 feed that declares no
+    // charset otherwise decodes as Latin-1 and mangles every apostrophe.
+    return await readFeedBody(response);
   } finally {
     clearTimeout(timer);
   }
