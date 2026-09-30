@@ -205,6 +205,35 @@ export function SettingsForm({ values }: { values: Record<SettingKey, string> })
           </Field>
 
           <Field
+            label="Daily token cap"
+            htmlFor="DAILY_TOKEN_BUDGET"
+            hint="A run stops once today's tokens pass this. 0 removes the cap."
+          >
+            <input
+              id="DAILY_TOKEN_BUDGET"
+              name="DAILY_TOKEN_BUDGET"
+              inputMode="numeric"
+              defaultValue={values.DAILY_TOKEN_BUDGET}
+              className={inputClass}
+              placeholder="400000"
+            />
+          </Field>
+
+          <Field
+            label="Token prices (optional)"
+            htmlFor="AI_TOKEN_PRICES"
+            hint="input,output per million — e.g. 1.25,10. Empty hides cost estimates rather than guessing."
+          >
+            <input
+              id="AI_TOKEN_PRICES"
+              name="AI_TOKEN_PRICES"
+              defaultValue={values.AI_TOKEN_PRICES}
+              className={inputClass}
+              placeholder="1.25,10"
+            />
+          </Field>
+
+          <Field
             label="Byline for generated posts"
             htmlFor="AI_AUTHOR_SLUG"
             hint="Author slug. Empty rotates among the house authors as before. Existing posts are never changed."

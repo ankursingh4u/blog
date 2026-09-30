@@ -9,6 +9,8 @@ import { Badge, buttonClass } from '@/components/ui/primitives';
 import { RunPipelineButton } from '@/components/admin/run-pipeline-button';
 import { StatusPill } from '@/components/admin/status-pill';
 import { ReviewActions } from '@/components/admin/review-actions';
+import { LastRun, type StoredRun } from '@/components/admin/last-run';
+import { readBudget, readTodayUsage } from '@/pipeline/budget';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,6 +42,16 @@ export default async function AdminDashboard() {
   });
 
   const autoPublish = asBool(settings.AUTO_PUBLISH);
+
+  // Persisted by runPipeline. A scheduled run leaves nothing on screen, so this
+  // is the only record of what happened overnight.
+  const [usage, budget] = await Promise.all([readTodayUsage(), readBudget()]);
+  let lastRun: StoredRun | null = null;
+  try {
+    lastRun = settings.LAST_RUN ? (JSON.parse(settings.LAST_RUN) as StoredRun) : null;
+  } catch {
+    lastRun = null;
+  }
 
   return (
     <div className="space-y-10">
@@ -86,6 +98,8 @@ export default async function AdminDashboard() {
           <RunPipelineButton disabled={!hasApiKey()} />
         </div>
       </section>
+
+      <LastRun run={lastRun} usage={usage} budget={budget} prices={settings.AI_TOKEN_PRICES} />
 
       {verifyQueue.length > 0 ? (
         <section>

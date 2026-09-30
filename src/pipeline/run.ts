@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db';
-import { asBool, asInt, getSettings } from '@/lib/settings';
+import { asBool, asInt, getSettings, setSetting } from '@/lib/settings';
 import { GenerationError, hasApiKey, readUsage, resetUsage } from '@/lib/ai';
 import { EMPTY_CREDIT, ImageCreditSchema, parseJson, toJson } from '@/lib/json';
 import { slugify } from '@/lib/utils';
@@ -22,6 +22,7 @@ import { runQualityGate } from '@/pipeline/quality-gate';
 import { suggestInternalLinks } from '@/pipeline/internal-links';
 import { generateFeaturedImage } from '@/pipeline/featured-image';
 import { attachCoverPhoto, usedKeysFromCredits } from '@/pipeline/cover-photo';
+import { describeBudget, readBudget, recordUsage } from '@/pipeline/budget';
 
 /**
  * The daily run: ingest → select → assign → research → generate → quality gate
@@ -49,6 +50,8 @@ export interface PipelineRunResult {
   published: number;
   inReview: number;
   failed: number;
+  /** True when the run stopped early because the daily token cap was reached. */
+  budgetStopped: boolean;
   outcomes: PipelineOutcome[];
   logs: LogLine[];
 }
@@ -69,6 +72,7 @@ export async function runPipeline(
       published: 0,
       inReview: 0,
       failed: 0,
+      budgetStopped: false,
       outcomes: [],
       logs: log.recent(),
     };
@@ -118,8 +122,29 @@ export async function runPipeline(
   let produced = 0;
   let attempted = 0;
 
+  let budgetStopped = false;
+
   for (const keyword of candidates) {
     if (produced >= postsPerRun) break;
+
+    /**
+     * The spend guard, checked before each post rather than once per run.
+     *
+     * A run is several articles and the tally only moves after each one
+     * finishes, so checking once at the top would let a run that starts just
+     * under the ceiling finish well over it. Stopping here means the cap is
+     * exceeded by at most the article in flight.
+     */
+    const budget = await readBudget();
+    if (budget.exhausted) {
+      budgetStopped = true;
+      log.warn(
+        `run: stopping — daily token cap reached (${describeBudget(budget)}). ` +
+          'Raise DAILY_TOKEN_BUDGET in /admin/settings or wait for tomorrow.',
+      );
+      break;
+    }
+
     attempted += 1;
 
     try {
@@ -162,7 +187,7 @@ export async function runPipeline(
 
   log.info(`run: ${published} published, ${inReview} in review, ${failed} failed`);
 
-  return {
+  const result: PipelineRunResult = {
     startedAt,
     finishedAt: new Date().toISOString(),
     ingested,
@@ -170,9 +195,26 @@ export async function runPipeline(
     published,
     inReview,
     failed,
+    budgetStopped,
     outcomes,
     logs: log.recent(),
   };
+
+  /**
+   * Persist the summary so an overnight run is inspectable in the morning.
+   *
+   * Logs were in-memory only, which is fine for the "Run now" button — the
+   * result is on screen — and useless for a scheduled run, where nobody is
+   * watching and the process exits. The logs are dropped from what is stored;
+   * they can run to hundreds of lines and the counts are what answer "did last
+   * night work?".
+   */
+  await setSetting(
+    'LAST_RUN',
+    JSON.stringify({ ...result, logs: undefined, outcomes: outcomes.slice(0, 10) }),
+  ).catch(() => log.warn('run: could not persist the run summary'));
+
+  return result;
 }
 
 async function produceOne({
@@ -374,9 +416,14 @@ async function produceOne({
   });
 
   const usage = readUsage();
+  // Added to the daily tally before the post is even a success, because the
+  // tokens were spent either way — a cap that only counted articles that
+  // shipped would be no cap at all on a day when everything failed the gates.
+  const today = await recordUsage(usage);
   log.info(
     `tokens: ${usage.inputTokens.toLocaleString()} in + ` +
-      `${usage.outputTokens.toLocaleString()} out across ${usage.calls} call(s)`,
+      `${usage.outputTokens.toLocaleString()} out across ${usage.calls} call(s) ` +
+      `(${(today.inputTokens + today.outputTokens).toLocaleString()} today)`,
   );
 
   await prisma.keyword.update({ where: { id: keyword.id }, data: { status: 'USED' } });

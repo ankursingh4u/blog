@@ -44,6 +44,37 @@ export const SETTING_DEFAULTS = {
   GTM_ID: '',
   GSC_VERIFICATION: '',
   INDEXNOW_KEY: '',
+  /**
+   * Ceiling on model tokens per calendar day. `0` disables the cap.
+   *
+   * Counted in tokens, not money, deliberately: tokens are what the API
+   * reports, and a price converted here would be a number nobody maintains and
+   * everybody trusts. `AI_TOKEN_PRICES` below turns it into an estimate only if
+   * an operator supplies the rates.
+   *
+   * This is what makes an unattended schedule safe. Without it, a cron entry
+   * that silently spends money is not something anyone can supervise.
+   */
+  DAILY_TOKEN_BUDGET: '400000',
+  /**
+   * Optional "inputPerMillion,outputPerMillion" in your billing currency, e.g.
+   * "1.25,10". Empty means costs are simply not displayed — better than showing
+   * an invented figure.
+   */
+  AI_TOKEN_PRICES: '',
+  /* --------------------------------------------------- runtime state, not settings */
+  /**
+   * Today's token spend and the last run's summary.
+   *
+   * These are pipeline state rather than operator preferences, and they live
+   * here because the deployment has no migration step — a new table would exist
+   * in the generated Prisma client and not in the database. `saveSettings`
+   * skips keys absent from the submitted form, so the admin form cannot clobber
+   * them. When there is a migration path this wants to be a `PipelineRun`
+   * table, which would also give a real history rather than only the last run.
+   */
+  USAGE_TODAY: '',
+  LAST_RUN: '',
 } as const;
 
 export type SettingKey = keyof typeof SETTING_DEFAULTS;
