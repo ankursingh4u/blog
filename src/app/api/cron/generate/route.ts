@@ -1,3 +1,4 @@
+import { prisma } from '@/lib/db';
 import { ingest } from '@/pipeline/ingest';
 import { runPipeline } from '@/pipeline/run';
 
@@ -16,6 +17,8 @@ import { runPipeline } from '@/pipeline/run';
  *
  *   GET  /api/cron/generate            -> ingest only   (what the schedule calls)
  *   GET  /api/cron/generate?mode=generate&limit=2  -> ingest + write up to 2
+ *   ...&only=entertainment,travel                  -> aim those articles at
+ *                                                     named verticals only
  *
  * Auth is a bearer token matching CRON_SECRET. With CRON_SECRET unset the route
  * refuses to do anything rather than defaulting open — an unauthenticated
@@ -52,16 +55,58 @@ async function ingestOnly(): Promise<Response> {
   });
 }
 
-async function ingestAndGenerate(limit: number): Promise<Response> {
-  const result = await runPipeline({ limit });
+/**
+ * Turns `?only=entertainment,travel` into the exclusion list the pipeline takes.
+ *
+ * The pipeline works in exclusions because its normal job is "spread across
+ * everything, holding back whatever is already full". Filling a specific thin
+ * vertical is the inverse and wants naming the ones you want, so the conversion
+ * happens here rather than making callers list the seven they do not.
+ *
+ * An unrecognised slug is reported rather than silently ignored: asking for
+ * `entertaiment` and getting a normal spread looks like the filter working.
+ */
+async function exclusionsFor(only: string | null): Promise<{
+  exclude: string[];
+  unknown: string[];
+}> {
+  if (!only?.trim()) return { exclude: [], unknown: [] };
+
+  const wanted = new Set(
+    only
+      .split(',')
+      .map((slug) => slug.trim().toLowerCase())
+      .filter(Boolean),
+  );
+  const categories = await prisma.category.findMany({ select: { slug: true } });
+  const known = new Set(categories.map((category) => category.slug));
+
+  return {
+    exclude: categories.map((c) => c.slug).filter((slug) => !wanted.has(slug)),
+    unknown: [...wanted].filter((slug) => !known.has(slug)),
+  };
+}
+
+async function ingestAndGenerate(limit: number, only: string | null): Promise<Response> {
+  const { exclude, unknown } = await exclusionsFor(only);
+  if (unknown.length > 0) {
+    return Response.json(
+      { ok: false, error: `Unknown category slug(s): ${unknown.join(', ')}` },
+      { status: 400 },
+    );
+  }
+
+  const result = await runPipeline({ limit, excludeCategorySlugs: exclude });
   return Response.json({
     ok: true,
     mode: 'generate',
+    only: only ?? 'all categories',
     ingested: result.ingested,
     attempted: result.attempted,
     published: result.published,
     inReview: result.inReview,
     failed: result.failed,
+    budgetStopped: result.budgetStopped,
     outcomes: result.outcomes,
   });
 }
@@ -75,7 +120,7 @@ async function trigger(request: Request): Promise<Response> {
 
     const asked = Number.parseInt(url.searchParams.get('limit') ?? '', 10);
     const limit = Math.min(Number.isFinite(asked) && asked > 0 ? asked : 1, MAX_GENERATE);
-    return await ingestAndGenerate(limit);
+    return await ingestAndGenerate(limit, url.searchParams.get('only'));
   } catch (error) {
     return Response.json(
       { ok: false, error: error instanceof Error ? error.message : 'Pipeline failed' },
