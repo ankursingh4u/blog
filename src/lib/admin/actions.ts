@@ -9,7 +9,7 @@ import type { PostStatus } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { toJson } from '@/lib/json';
 import { slugify } from '@/lib/utils';
-import { notifyPublished } from '@/lib/indexing';
+import { applyStatus, archivePost } from '@/lib/admin/moderation';
 import { storage, UploadError, MAX_UPLOAD_BYTES } from '@/lib/storage';
 import { setSetting, SETTING_DEFAULTS, type SettingKey } from '@/lib/settings';
 import { generateText } from '@/lib/ai';
@@ -410,46 +410,10 @@ export async function setPostStatus(id: string, status: string): Promise<ActionS
     return FAIL(`Cannot change status: received id="${id}", status="${status}".`);
   }
 
-  const existing = await prisma.post.findUnique({
-    where: { id },
-    include: { category: { include: { parent: { select: { slug: true } } } } },
-  });
-  if (!existing) return FAIL('That post no longer exists.');
-
-  // A post cannot go live without the things that make it useful and indexable.
-  if (status === 'PUBLISHED') {
-    const problems: string[] = [];
-    if (!existing.featuredImage) problems.push('no featured image');
-    if (existing.body.trim().length < 200) problems.push('body is too short');
-    if (!existing.metaDescription) problems.push('no meta description');
-    if (problems.length > 0) return FAIL(`Cannot publish: ${problems.join(', ')}.`);
-  }
-
-  const post = await prisma.post.update({
-    where: { id },
-    data: {
-      status: status as PostStatus,
-      // publishedAt is set once, on first publish, and kept afterwards so the
-      // canonical publication date does not move when a post is edited.
-      publishedAt:
-        status === 'PUBLISHED' ? (existing.publishedAt ?? new Date()) : existing.publishedAt,
-    },
-    include: { category: { include: { parent: { select: { slug: true } } } } },
-  });
-
-  const path = postPath(post);
-  revalidatePath('/');
-  revalidatePath('/admin');
-  revalidatePath('/admin/posts');
-  revalidatePath(categoryPath(post.category));
-  revalidatePath(path);
-  revalidatePath('/sitemap.xml');
-
-  if (status === 'PUBLISHED') {
-    await notifyPublished([path]);
-    return OK('Published.');
-  }
-  return OK(`Status set to ${status.toLowerCase()}.`);
+  // The rules live in moderation.ts because the Telegram webhook needs them too
+  // and cannot authenticate with a session cookie.
+  const result = await applyStatus(id, parsed.data.status as PostStatus);
+  return result.ok ? OK(result.message) : FAIL(result.message);
 }
 
 export async function deletePost(formData: FormData): Promise<void> {
@@ -499,28 +463,10 @@ export async function rejectPost(formData: FormData): Promise<void> {
   await requireAdmin();
   const id = String(formData.get('id') ?? '');
   if (!id) return;
-
-  const reason = String(formData.get('reason') ?? '').trim().slice(0, 500);
-  const existing = await prisma.post.findUnique({
-    where: { id },
-    select: { qualityNotes: true },
-  });
-  if (!existing) return;
-
-  const stamp = new Date().toISOString().slice(0, 10);
-  const note = `REJECTED ${stamp}: ${reason || 'no reason given'}`;
-
-  await prisma.post.update({
-    where: { id },
-    data: {
-      status: 'ARCHIVED',
-      qualityNotes: [note, existing.qualityNotes].filter(Boolean).join('\n\n'),
-    },
-  });
-
-  revalidatePath('/admin');
-  revalidatePath('/admin/posts');
+  const reason = String(formData.get('reason') ?? '').slice(0, 500);
+  await archivePost(id, reason);
 }
+
 
 /* ------------------------------------------------------- regenerate section */
 

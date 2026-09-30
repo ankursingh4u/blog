@@ -23,6 +23,8 @@ import { suggestInternalLinks } from '@/pipeline/internal-links';
 import { generateFeaturedImage } from '@/pipeline/featured-image';
 import { attachCoverPhoto, usedKeysFromCredits } from '@/pipeline/cover-photo';
 import { describeBudget, readBudget, recordUsage } from '@/pipeline/budget';
+import { notifyDraft } from '@/lib/telegram';
+import { absoluteUrl } from '@/lib/site';
 
 /**
  * The daily run: ingest → select → assign → research → generate → quality gate
@@ -461,6 +463,37 @@ async function produceOne({
     if (!featuredImage) reasons.push('no featured image');
 
     log.info(`review: ${reasons.join('; ') || 'held for human review'}`);
+
+    /**
+     * Push the draft to Telegram with Approve / Reject attached.
+     *
+     * Only for the review branch: an auto-published article is already live and
+     * there is nothing left to decide.
+     *
+     * Failure is swallowed on purpose. The article exists and is queued; a
+     * Telegram outage must not turn a successful generation into a failed one,
+     * and the /admin queue remains the authoritative place to act either way.
+     */
+    try {
+      const sent = await notifyDraft({
+        postId: post.id,
+        title: draft.title,
+        category: category.name,
+        author: author.name,
+        wordCount: structure.wordCount,
+        score: quality.score,
+        adminUrl: absoluteUrl(`/admin/posts/${post.id}`),
+        imageUrl: featuredImage ? absoluteUrl(featuredImage) : null,
+        verdict: [describeStructure(structure), describePadding(padding)]
+          .join(' ')
+          .slice(0, 300),
+      });
+      if (sent) log.info('telegram: sent for review');
+    } catch (error) {
+      log.warn(
+        `telegram: could not notify — ${error instanceof Error ? error.message : error}`,
+      );
+    }
   }
 
   return {
