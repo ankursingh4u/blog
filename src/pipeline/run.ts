@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/db';
 import { asBool, asInt, getSettings } from '@/lib/settings';
 import { GenerationError, hasApiKey, readUsage, resetUsage } from '@/lib/ai';
-import { toJson } from '@/lib/json';
+import { EMPTY_CREDIT, ImageCreditSchema, parseJson, toJson } from '@/lib/json';
 import { slugify } from '@/lib/utils';
 import { notifyPublished } from '@/lib/indexing';
 import { checkStructure, describeStructure } from '@/pipeline/structure';
@@ -21,6 +21,7 @@ import { generateDraft } from '@/pipeline/generate';
 import { runQualityGate } from '@/pipeline/quality-gate';
 import { suggestInternalLinks } from '@/pipeline/internal-links';
 import { generateFeaturedImage } from '@/pipeline/featured-image';
+import { attachCoverPhoto, usedKeysFromCredits } from '@/pipeline/cover-photo';
 
 /**
  * The daily run: ingest → select → assign → research → generate → quality gate
@@ -97,6 +98,21 @@ export async function runPipeline(
     postsPerRun * KEYWORD_OVERSELECT,
     options.excludeCategorySlugs ?? [],
   );
+  /**
+   * Photographs already on the site, so this run cannot reissue one.
+   *
+   * Loaded once and mutated as posts are produced, which also covers reuse
+   * *within* the run — two sports stories on the same morning would otherwise
+   * both match the football rule and both take the top-ranked stadium.
+   */
+  const storedCredits = await prisma.post.findMany({
+    where: { NOT: { imageCredit: '' } },
+    select: { imageCredit: true },
+  });
+  const usedPhotoKeys = usedKeysFromCredits(
+    storedCredits.map((post) => parseJson(post.imageCredit, ImageCreditSchema, EMPTY_CREDIT)),
+  );
+
   const outcomes: PipelineOutcome[] = [];
   let previousAuthorId: string | null = null;
   let produced = 0;
@@ -112,6 +128,7 @@ export async function runPipeline(
         autoPublish,
         threshold,
         previousAuthorId,
+        usedPhotoKeys,
       });
       outcomes.push(outcome);
       produced += 1;
@@ -163,11 +180,14 @@ async function produceOne({
   autoPublish,
   threshold,
   previousAuthorId,
+  usedPhotoKeys,
 }: {
   keywordId: string;
   autoPublish: boolean;
   threshold: number;
   previousAuthorId: string | null;
+  /** Mutated as photographs are taken, so later posts in the run see them. */
+  usedPhotoKeys: Set<string>;
 }): Promise<PipelineOutcome> {
   const keyword = await prisma.keyword.findUniqueOrThrow({ where: { id: keywordId } });
   log.info(`--- "${keyword.phrase}"`);
@@ -266,12 +286,32 @@ async function produceOne({
     excludeSlug: slug,
   });
 
-  const featuredImage = await generateFeaturedImage({
+  /**
+   * A photograph if one can be found, the branded card otherwise.
+   *
+   * The photo is tried first so the OG render is skipped entirely when it
+   * succeeds — `featuredImage` holds one or the other, and `imageCredit` is what
+   * tells them apart downstream (`coverPhoto()` in components/ui/cover-art.tsx).
+   *
+   * `usedPhotoKeys` is seeded from every credit already stored, so a run cannot
+   * hand out a picture an earlier run used. Two football stories getting the
+   * same stadium is the difference between looking automated and looking broken.
+   */
+  const photo = await attachCoverPhoto({
     title: draft.title,
-    category: category.name,
-    build: draft.affectedBuilds[0] ?? keyword.buildNumber,
+    categorySlug: category.slug,
     slug,
+    used: usedPhotoKeys,
   });
+
+  const featuredImage =
+    photo?.url ??
+    (await generateFeaturedImage({
+      title: draft.title,
+      category: category.name,
+      build: draft.affectedBuilds[0] ?? keyword.buildNumber,
+      slug,
+    }));
 
   // AUTO_PUBLISH=true still requires: not blocked, score at or above the
   // threshold, a featured image, and a body that meets the editorial shape.
@@ -298,6 +338,11 @@ async function produceOne({
       metaTitle: draft.metaTitle,
       metaDescription: draft.metaDescription,
       featuredImage,
+      // Empty for the branded card, which is ours and needs no attribution. A
+      // photograph without its credit is an infringing copy, so the two are
+      // written in the same statement rather than in two places that could
+      // disagree.
+      imageCredit: photo ? toJson(photo.credit) : '',
       screenshots: toJson([]),
       sourceUrls: toJson(sources.map((s) => ({ url: s.url, title: s.title }))),
       relatedSlugs: toJson(relatedSlugs),
