@@ -8,6 +8,7 @@ import { formatDate } from '@/lib/utils';
 import { Badge, buttonClass } from '@/components/ui/primitives';
 import { RunPipelineButton } from '@/components/admin/run-pipeline-button';
 import { StatusPill } from '@/components/admin/status-pill';
+import { ReviewActions } from '@/components/admin/review-actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -154,9 +155,12 @@ export default async function AdminDashboard() {
                     ) : null}
                   </p>
                 </div>
-                <Link href={`/admin/posts/${post.id}`} className={buttonClass('outline', 'sm')}>
-                  Open
-                </Link>
+                <div className="flex shrink-0 flex-wrap items-center gap-2">
+                  <Link href={`/admin/posts/${post.id}`} className={buttonClass('outline', 'sm')}>
+                    Open
+                  </Link>
+                  <ReviewActions id={post.id} title={post.title} />
+                </div>
               </li>
             ))}
           </ul>

@@ -462,6 +462,66 @@ export async function deletePost(formData: FormData): Promise<void> {
   redirect('/admin/posts');
 }
 
+/* ----------------------------------------------------- approve / reject */
+
+/**
+ * Approve straight from the review queue.
+ *
+ * Deliberately a thin wrapper over `setPostStatus` rather than its own update:
+ * that function owns the rules about what may go live — a featured image, a
+ * meta description, a body of real length — and a second publish path would be
+ * a second place for those to be forgotten.
+ */
+export async function approvePost(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const id = String(formData.get('id') ?? '');
+  if (!id) return;
+  await setPostStatus(id, 'PUBLISHED');
+  revalidatePath('/admin');
+}
+
+/**
+ * Reject from the review queue, with a reason.
+ *
+ * ARCHIVED rather than deleted. A rejected draft is the most useful record
+ * there is of what the pipeline gets wrong, and deleting it throws that away —
+ * the reasons are the raw material for tuning the prompt and the gates.
+ *
+ * The reason is prepended to `qualityNotes` rather than given its own column.
+ * The deployment runs `prisma generate && next build` with no migration step,
+ * so a new field would exist in the client and not in the database, and every
+ * write would fail in production while passing every test locally. When there
+ * is a migration path this wants to be a real column, alongside a `keywordId`
+ * on Post so that rejecting an article can also retire the keyword that
+ * produced it — which is the feedback loop this is missing today.
+ */
+export async function rejectPost(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const id = String(formData.get('id') ?? '');
+  if (!id) return;
+
+  const reason = String(formData.get('reason') ?? '').trim().slice(0, 500);
+  const existing = await prisma.post.findUnique({
+    where: { id },
+    select: { qualityNotes: true },
+  });
+  if (!existing) return;
+
+  const stamp = new Date().toISOString().slice(0, 10);
+  const note = `REJECTED ${stamp}: ${reason || 'no reason given'}`;
+
+  await prisma.post.update({
+    where: { id },
+    data: {
+      status: 'ARCHIVED',
+      qualityNotes: [note, existing.qualityNotes].filter(Boolean).join('\n\n'),
+    },
+  });
+
+  revalidatePath('/admin');
+  revalidatePath('/admin/posts');
+}
+
 /* ------------------------------------------------------- regenerate section */
 
 const RegenerateInput = z.object({
