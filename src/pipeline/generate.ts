@@ -245,10 +245,24 @@ export async function generateDraft({
     schema: DraftSchema,
     schemaName: 'article_draft',
     // Covers reasoning *and* the response. A 2,000-word body is ~2,700 output
-    // tokens, but at effort 'high' the reasoning is the larger share, and the
-    // request throws rather than truncating when it runs out.
+    // tokens; the reasoning is the larger share, and the request throws rather
+    // than truncating when it runs out. The ceiling stays at 28000 after the
+    // drop to 'medium' — it costs nothing unspent, and a throw here wastes the
+    // whole call.
     maxTokens: 28000,
-    effort: 'high',
+    /**
+     * Dropped from 'high' on 2026-10-01 to cut the bill.
+     *
+     * Reasoning tokens bill as output, and at 'high' they outweighed the article
+     * itself — this was the largest single line in the per-article cost. The
+     * quality gate still reads every draft against its sources, so a weaker
+     * first pass is caught rather than published.
+     *
+     * Watch the rejection rate: a draft that fails review is paid for and
+     * produces nothing, so if more drafts start failing this saves nothing.
+     * Put it back to 'high' if that happens.
+     */
+    effort: 'medium',
   });
 
   // The model is asked for a slug, but the canonical form is ours.

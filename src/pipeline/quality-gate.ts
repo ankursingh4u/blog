@@ -241,7 +241,18 @@ export async function runQualityGate({
        * was the mistake.
        */
       maxTokens: 16000,
-      effort: 'medium',
+      /**
+       * Dropped from 'medium' on 2026-10-01, alongside the draft call.
+       *
+       * This pass compares text against text it has been handed — it is not the
+       * part of the pipeline that needs to reason its way to an answer, so it is
+       * the cheaper of the two places to take effort out of.
+       *
+       * It does not weaken the identifier check: that is `auditIdentifiers`,
+       * local string matching against the source text, and it blocks publication
+       * on its own regardless of what the model scores.
+       */
+      effort: 'low',
     });
     breakdown = data;
     modelScore = data.accuracy + data.structure + data.usefulness + data.safety;
