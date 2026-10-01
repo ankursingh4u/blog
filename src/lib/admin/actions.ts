@@ -7,7 +7,7 @@ import { z } from 'zod';
 import type { PostStatus } from '@prisma/client';
 
 import { prisma } from '@/lib/db';
-import { toJson } from '@/lib/json';
+import { FaqArray, SourceRefArray, StringArray, parseJson, toJson } from '@/lib/json';
 import { slugify } from '@/lib/utils';
 import { applyStatus, archivePost } from '@/lib/admin/moderation';
 import { storage, UploadError, MAX_UPLOAD_BYTES } from '@/lib/storage';
@@ -18,7 +18,8 @@ import { extractSection } from '@/lib/admin/section';
 import { SESSION_COOKIE, verifySessionToken } from '@/lib/auth';
 import { runPipeline, uniqueSlug, type PipelineRunResult } from '@/pipeline/run';
 import { assignAuthor } from '@/pipeline/select';
-import { research } from '@/pipeline/research';
+import { fetchSource, research, type ResearchSource } from '@/pipeline/research';
+import { runQualityGate } from '@/pipeline/quality-gate';
 import { generateFeaturedImage } from '@/pipeline/featured-image';
 import { searchImages, storeImage, type ImageCandidate } from '@/lib/images';
 import { guestAuthorFor, toScreenshots } from '@/lib/submissions';
@@ -467,6 +468,94 @@ export async function rejectPost(formData: FormData): Promise<void> {
   await archivePost(id, reason);
 }
 
+
+/* ------------------------------------------------------------- re-grade */
+
+/**
+ * Re-runs the quality gate on a post whose review never returned.
+ *
+ * A zero score does not mean "bad article" — it means the second of the two API
+ * calls failed after the draft had been written and paid for. The pipeline fails
+ * closed and parks the post in review, which is right, but the score it leaves
+ * behind reads as a verdict on the writing and it is not one. Nothing recomputes
+ * it, so without this the post carries that 0 for the rest of its life.
+ *
+ * Sources are re-fetched because a post stores each source's URL and title but
+ * not the extracted text the gate needs. One that has rotated off its
+ * publisher's site is dropped, and the gate scores against what is still
+ * reachable — if nothing is, this refuses rather than scoring an article
+ * against no sources at all, which would be worse than leaving the 0.
+ *
+ * `scripts/regrade.ts` does the same thing in bulk, but it needs tsx and the
+ * runtime image has production dependencies only. This is the route that exists
+ * on the deployed site.
+ */
+export async function regradePost(id: string): Promise<ActionState> {
+  await requireAdmin();
+  if (!id) return FAIL('No post id.');
+
+  const post = await prisma.post.findUnique({ where: { id }, include: { category: true } });
+  if (!post) return FAIL('That post no longer exists.');
+
+  const refs = parseJson(post.sourceUrls, SourceRefArray, []);
+  const sources: ResearchSource[] = [];
+  for (const ref of refs) {
+    try {
+      const source = await fetchSource(ref.url);
+      if (source.text.length >= 400) sources.push(source);
+    } catch {
+      // A source that has rotated off the publisher's site is simply gone.
+    }
+  }
+
+  if (sources.length === 0) {
+    return FAIL(
+      `None of the ${refs.length} source(s) could be re-fetched, so there is nothing to ` +
+        'check the article against. Review it by hand.',
+    );
+  }
+
+  const quality = await runQualityGate({
+    draft: {
+      title: post.title,
+      slug: post.slug,
+      quickAnswer: post.quickAnswer,
+      body: post.body,
+      affectedBuilds: parseJson(post.affectedBuilds, StringArray, []),
+      faq: parseJson(post.faq, FaqArray, []),
+      metaTitle: post.metaTitle ?? '',
+      metaDescription: post.metaDescription ?? '',
+      internalLinkSuggestions: [],
+    },
+    sources,
+    verifiedIdentifiers: [post.testedOnBuild].filter((v): v is string => Boolean(v)),
+    keywordPhrase: post.title,
+    categorySlug: post.category.slug as CategorySlug,
+  });
+
+  // Another failure must not overwrite the existing notes with a second copy of
+  // "could not run" — the first one already says what went wrong.
+  if (quality.score === 0) {
+    return FAIL(`The review failed again, so the score is unchanged. ${quality.notes.slice(0, 300)}`);
+  }
+
+  await prisma.post.update({
+    where: { id: post.id },
+    data: {
+      qualityScore: quality.score,
+      qualityNotes: `${quality.notes}\n\n(Re-graded: the original run's quality call failed.)`,
+    },
+  });
+
+  revalidatePath(`/admin/posts/${post.id}`);
+  revalidatePath('/admin');
+  revalidatePath('/admin/posts');
+
+  return OK(
+    `Re-graded: ${quality.score}/100 from ${sources.length} source(s)` +
+      (quality.blocked ? ' — still blocked for hallucinated identifiers.' : '.'),
+  );
+}
 
 /* ------------------------------------------------------- regenerate section */
 

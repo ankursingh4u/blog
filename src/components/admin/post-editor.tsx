@@ -8,6 +8,7 @@ import { CoverPicker } from '@/components/admin/cover-picker';
 
 import {
   regenerateSection,
+  regradePost,
   savePost,
   setPostStatus,
   uploadScreenshot,
@@ -93,6 +94,18 @@ export function PostEditor({
   function changeStatus(next: EditorPost['status']) {
     startStatusTransition(async () => {
       setStatusState(await setPostStatus(post.id, next));
+    });
+  }
+
+  // A zero score means the review never ran, not that the article failed one.
+  // Offered only on those posts: re-grading one that already has a score would
+  // spend a second review call to confirm what is already there.
+  const [regradeState, setRegradeState] = useState<ActionState>(EMPTY_STATE);
+  const [regradePending, startRegradeTransition] = useTransition();
+
+  function regrade() {
+    startRegradeTransition(async () => {
+      setRegradeState(await regradePost(post.id));
     });
   }
 
@@ -208,6 +221,19 @@ export function PostEditor({
           <pre className="mt-3 whitespace-pre-wrap text-sm text-muted-foreground">
             {post.qualityNotes}
           </pre>
+
+          {post.qualityScore === 0 ? (
+            <div className="mt-4 space-y-2 border-t border-border pt-3">
+              <p className="text-sm text-muted-foreground">
+                A score of 0 means the review never returned — it is not a verdict on the
+                article. Re-running it re-fetches the sources and scores the draft again.
+              </p>
+              <StatusButton variant="outline" onClick={regrade} pending={regradePending}>
+                Re-run quality review
+              </StatusButton>
+              <FormMessage state={regradeState} />
+            </div>
+          ) : null}
         </details>
       ) : null}
 
@@ -764,7 +790,7 @@ function MediaEditor({
               id="upload-target"
               value={target}
               onChange={(e) => setTarget(e.target.value as 'featured' | 'screenshot')}
-              className="mt-1 h-9 rounded-md border border-input bg-background px-2 text-sm"
+              className="mt-1 h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground"
             >
               <option value="screenshot">Screenshot</option>
               <option value="featured">Featured image</option>
