@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { Author, Category, Keyword } from '@prisma/client';
 import { generateJson } from '@/lib/ai';
+import { getSetting } from '@/lib/settings';
 import type { ResearchSource } from '@/pipeline/research';
 import { slugify } from '@/lib/utils';
 
@@ -249,6 +250,9 @@ export async function generateDraft({
     // than truncating when it runs out. The ceiling stays at 28000 after the
     // drop to 'medium' — it costs nothing unspent, and a throw here wastes the
     // whole call.
+    // Empty setting keeps OPENAI_MODEL. This is the call worth pointing at a
+    // cheaper model: it writes the article, and output is most of the bill.
+    model: await getSetting('AI_MODEL_DRAFT'),
     maxTokens: 28000,
     /**
      * Dropped from 'high' on 2026-10-01 to cut the bill.

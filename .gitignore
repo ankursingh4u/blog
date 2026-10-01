@@ -54,3 +54,8 @@ run*.json
 # still holds the previous keys — including ones that have not been rotated.
 .env.bak*
 .env*.bak*
+
+# Fine-tuning exports from scripts/export-training.ts. Every published article
+# in one file - same reasoning as data-export.json above.
+train*.jsonl
+*.jsonl

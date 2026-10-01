@@ -75,6 +75,43 @@ export function getClient(): OpenAI {
   return cached;
 }
 
+/**
+ * Models that turned out not to exist on this account.
+ *
+ * A per-task model is configured in /admin, which means a typo or a model the
+ * account has no access to is a setting away — and it would otherwise fail
+ * every single call, turning a cost optimisation into a total outage. The first
+ * failure records the name here and the call is retried on the default model,
+ * so the run continues and the operator sees it in the logs instead of in an
+ * empty review queue.
+ */
+const unavailableModels = new Set<string>();
+
+/** True when the API is telling us the model name itself is the problem. */
+function isUnknownModel(error: unknown): boolean {
+  const status = (error as { status?: number } | null)?.status;
+  const message = error instanceof Error ? error.message.toLowerCase() : '';
+  return (
+    status === 404 ||
+    message.includes('does not exist') ||
+    message.includes('do not have access') ||
+    message.includes('model_not_found')
+  );
+}
+
+/**
+ * The model a call should actually use.
+ *
+ * A per-task name wins, unless it has already proved unusable on this account —
+ * one failed call is enough to stop asking, so a bad setting costs one retry
+ * per process rather than one per article.
+ */
+export function resolveModel(requested?: string): string {
+  const wanted = requested?.trim();
+  if (!wanted || unavailableModels.has(wanted)) return getModel();
+  return wanted;
+}
+
 export function getModel(): string {
   return process.env.OPENAI_MODEL?.trim() || DEFAULT_MODEL;
 }
@@ -106,6 +143,15 @@ interface GenerateOptions<S extends z.ZodTypeAny> {
   schemaName: string;
   maxTokens?: number;
   effort?: Effort;
+  /**
+   * Model for this call, overriding OPENAI_MODEL.
+   *
+   * Writing an article and scoring one are not the same job and do not need the
+   * same model: output tokens are ~88% of the bill, and a smaller model writing
+   * the draft is the single biggest saving available. Empty or unset keeps the
+   * default. An unusable name falls back rather than failing the call.
+   */
+  model?: string;
 }
 
 export interface GenerateResult<T> {
@@ -160,14 +206,15 @@ export async function generateJson<S extends z.ZodTypeAny>({
   schemaName,
   maxTokens = 16000,
   effort = 'high',
+  model,
 }: GenerateOptions<S>): Promise<GenerateResult<z.infer<S>>> {
   const client = getClient();
   const name = schemaName.replace(/[^A-Za-z0-9_-]+/g, '_').slice(0, 64);
+  const chosen = resolveModel(model);
 
-  let response;
-  try {
-    response = await client.chat.completions.parse({
-      model: getModel(),
+  const send = (useModel: string) =>
+    client.chat.completions.parse({
+      model: useModel,
       max_completion_tokens: maxTokens,
       reasoning_effort: reasoningEffort(effort),
       response_format: zodResponseFormat(schema, name),
@@ -176,6 +223,25 @@ export async function generateJson<S extends z.ZodTypeAny>({
         { role: 'user', content: `${prompt}\n\nReturn a ${schemaName}.` },
       ],
     });
+
+  let response;
+  try {
+    try {
+      response = await send(chosen);
+    } catch (error) {
+      // A configured model the account cannot use must not take the run down
+      // with it. Record it, say so, and finish this call on the default.
+      if (chosen !== getModel() && isUnknownModel(error)) {
+        unavailableModels.add(chosen);
+        console.warn(
+          `[ai] model "${chosen}" is not available on this account — falling back to ` +
+            `"${getModel()}". Fix or clear the setting that asked for it.`,
+        );
+        response = await send(getModel());
+      } else {
+        throw error;
+      }
+    }
   } catch (error) {
     if (error instanceof OpenAI.RateLimitError) {
       // A 429 is not always throttling. An exhausted balance returns the same
@@ -229,18 +295,21 @@ export async function generateText({
   prompt,
   maxTokens = 8000,
   effort = 'medium',
+  model,
 }: {
   system: string;
   prompt: string;
   maxTokens?: number;
   effort?: 'low' | 'medium' | 'high';
+  /** Overrides OPENAI_MODEL for this call. See `resolveModel`. */
+  model?: string;
 }): Promise<string> {
   const client = getClient();
 
   let response;
   try {
     response = await client.chat.completions.create({
-      model: getModel(),
+      model: resolveModel(model),
       max_completion_tokens: maxTokens,
       reasoning_effort: reasoningEffort(effort),
       messages: [

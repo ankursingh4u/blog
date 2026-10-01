@@ -234,6 +234,68 @@ export function SettingsForm({ values }: { values: Record<SettingKey, string> })
           </Field>
 
           <Field
+            label="Drafts per category, per cycle"
+            htmlFor="POSTS_PER_CATEGORY"
+            hint="A cycle covers all 8 verticals, so 2 here is 16 articles a cycle."
+          >
+            <input
+              id="POSTS_PER_CATEGORY"
+              name="POSTS_PER_CATEGORY"
+              inputMode="numeric"
+              defaultValue={values.POSTS_PER_CATEGORY}
+              className={inputClass}
+              placeholder="2"
+            />
+          </Field>
+
+          {/*
+            Model per job. Output tokens are most of the bill, so the model that
+            writes the article is the lever worth pulling — and the only honest
+            way to judge a cheaper one is the rejection rate, not the invoice.
+          */}
+          <Field
+            label="Model — writing"
+            htmlFor="AI_MODEL_DRAFT"
+            hint="Empty uses OPENAI_MODEL. A smaller model here is the biggest saving available."
+          >
+            <input
+              id="AI_MODEL_DRAFT"
+              name="AI_MODEL_DRAFT"
+              defaultValue={values.AI_MODEL_DRAFT}
+              className={inputClass}
+              placeholder="gpt-5.4-mini"
+            />
+          </Field>
+
+          <Field
+            label="Model — quality review"
+            htmlFor="AI_MODEL_REVIEW"
+            hint="Compares a draft against its sources. Comparison, not composition."
+          >
+            <input
+              id="AI_MODEL_REVIEW"
+              name="AI_MODEL_REVIEW"
+              defaultValue={values.AI_MODEL_REVIEW}
+              className={inputClass}
+              placeholder="gpt-5.4-mini"
+            />
+          </Field>
+
+          <Field
+            label="Model — titles and descriptions"
+            htmlFor="AI_MODEL_META"
+            hint="Mechanical work; the smallest model will do."
+          >
+            <input
+              id="AI_MODEL_META"
+              name="AI_MODEL_META"
+              defaultValue={values.AI_MODEL_META}
+              className={inputClass}
+              placeholder="gpt-5.4-nano"
+            />
+          </Field>
+
+          <Field
             label="Byline for generated posts"
             htmlFor="AI_AUTHOR_SLUG"
             hint="Author slug. Empty rotates among the house authors as before. Existing posts are never changed."

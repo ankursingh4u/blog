@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { generateJson } from '@/lib/ai';
+import { getSetting } from '@/lib/settings';
 import { extractIdentifiers, type CategorySlug } from '@/pipeline/parser';
 import type { Draft } from '@/pipeline/generate';
 import type { ResearchSource } from '@/pipeline/research';
@@ -240,6 +241,7 @@ export async function runQualityGate({
        * like it failed. Raising the generation budget without raising this one
        * was the mistake.
        */
+      model: await getSetting('AI_MODEL_REVIEW'),
       maxTokens: 16000,
       /**
        * Dropped from 'medium' on 2026-10-01, alongside the draft call.

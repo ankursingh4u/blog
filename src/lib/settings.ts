@@ -12,6 +12,28 @@ export const SETTING_DEFAULTS = {
    * drafts per section beats the same total spread thinner.
    */
   POSTS_PER_CATEGORY: '2',
+  /* ------------------------------------------------------- model per task */
+  /**
+   * Which model does which job. Empty means "use OPENAI_MODEL".
+   *
+   * Output tokens are roughly 88% of the bill, so the model that writes the
+   * article is the bill. Writing, checking and naming are different jobs and
+   * do not need the same model:
+   *
+   *   draft   — the article itself. The expensive one, and the one worth
+   *             testing a smaller model on: judge it by the rejection rate,
+   *             not by the invoice.
+   *   review  — scores a draft against text it has already been handed. It is
+   *             comparison, not composition.
+   *   meta    — titles and descriptions. Mechanical; the smallest model will do.
+   *
+   * A name this account cannot use falls back to OPENAI_MODEL and logs, rather
+   * than failing every call — a cost setting must not be able to take the site's
+   * generation down.
+   */
+  AI_MODEL_DRAFT: '',
+  AI_MODEL_REVIEW: '',
+  AI_MODEL_META: '',
   AUTO_PUBLISH: 'false',
   QUALITY_THRESHOLD: '85',
   // Topic-discovery channels beyond the Microsoft release feeds. All keyless.

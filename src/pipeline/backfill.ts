@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { prisma } from '@/lib/db';
 import { generateJson } from '@/lib/ai';
+import { getSetting } from '@/lib/settings';
 import { parseJson, FaqArray, SourceRefArray, StringArray } from '@/lib/json';
 import { notifyPublished } from '@/lib/indexing';
 import { postPath } from '@/lib/urls';
@@ -197,6 +198,8 @@ export async function refreshSeoFields(): Promise<BackfillResult> {
         ].join('\n'),
         schema: MetaSchema,
         schemaName: 'post_metadata',
+        // Naming a page is mechanical — the smallest configured model will do.
+        model: await getSetting('AI_MODEL_META'),
         maxTokens: 2000,
         effort: 'low',
       });
