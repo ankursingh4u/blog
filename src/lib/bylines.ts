@@ -306,7 +306,23 @@ export const HOUSE_BYLINES: HouseByline[] = [
   },
 ];
 
-export const HOUSE_SLUGS = HOUSE_BYLINES.map((author) => author.slug);
+/**
+ * How many names are pinned to the top before the alphabet takes over.
+ *
+ * The three founders lead; everyone after them is sorted by name. Expressed as
+ * a rule rather than a hand-ordered list so that adding a byline sorts it into
+ * place instead of quietly landing at the bottom, which is what a list does and
+ * what nobody remembers to fix.
+ */
+const PINNED = 3;
+
+/** The masthead in display order: founders first, then A to Z. */
+export const DISPLAY_ORDER: HouseByline[] = [
+  ...HOUSE_BYLINES.slice(0, PINNED),
+  ...HOUSE_BYLINES.slice(PINNED).sort((a, b) => a.name.localeCompare(b.name)),
+];
+
+export const HOUSE_SLUGS = DISPLAY_ORDER.map((author) => author.slug);
 
 /** The standing byline for a category, or null when it rotates. */
 export function fixedBylineFor(categorySlug: string): string | null {

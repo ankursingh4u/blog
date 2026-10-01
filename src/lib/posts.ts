@@ -1,7 +1,7 @@
 import { cache } from 'react';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
-import { HOUSE_BYLINES, HOUSE_SLUGS } from '@/lib/bylines';
+import { DISPLAY_ORDER, HOUSE_SLUGS } from '@/lib/bylines';
 import {
   FaqArray,
   ScreenshotArray,
@@ -167,7 +167,7 @@ export const getHouseBylines = cache(async () => {
    * previous masthead for an hour. Six people were missing from /about that
    * way. The list is who writes here; the row is where their posts hang.
    */
-  return HOUSE_BYLINES.map((person) => ({
+  return DISPLAY_ORDER.map((person) => ({
     slug: person.slug,
     name: person.name,
     bio: person.bio,

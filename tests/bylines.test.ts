@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  DISPLAY_ORDER,
   FIXED_BYLINES,
   HOUSE_BYLINES,
   HOUSE_SLUGS,
@@ -69,22 +70,30 @@ describe('house bylines', () => {
     }
   });
 
-  it('is in the display order the owner set', () => {
-    expect(HOUSE_SLUGS).toEqual([
-      'ankur-singh',
-      'kiran-varma',
-      'aakash-sharma',
-      'adarsh-singh',
-      'sushil-kumar-bharti',
-      'kirti-sisodiya',
-      'diksha-ganglani',
-      'anushka-kumari',
-      'jatin-prajapati',
-      'aditi-jain',
-      'ankit-mishra',
-      'irfan-siddique',
-      'ratana-prajapati',
-      'raushan-kumar',
+  it('leads with the three founders, then runs A to Z', () => {
+    expect(HOUSE_SLUGS.slice(0, 3)).toEqual(['ankur-singh', 'kiran-varma', 'aakash-sharma']);
+
+    const rest = DISPLAY_ORDER.slice(3).map((a) => a.name);
+    expect(rest).toEqual([...rest].sort((a, b) => a.localeCompare(b)));
+
+    // Named explicitly as well: a sort that silently drops someone still sorts.
+    expect(rest).toEqual([
+      'Adarsh Singh',
+      'Aditi Jain',
+      'Ankit Mishra',
+      'Anushka Kumari',
+      'Diksha Ganglani',
+      'Irfan Siddique',
+      'Jatin Prajapati',
+      'Kirti Sisodiya',
+      'Ratana Prajapati',
+      'Raushan Kumar',
+      'Sushil Kumar Bharti',
     ]);
+  });
+
+  it('shows every byline exactly once', () => {
+    expect(DISPLAY_ORDER).toHaveLength(HOUSE_BYLINES.length);
+    expect(new Set(HOUSE_SLUGS).size).toBe(HOUSE_BYLINES.length);
   });
 });
