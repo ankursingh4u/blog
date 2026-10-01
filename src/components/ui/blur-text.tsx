@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, type CSSProperties } from 'react';
+import { Fragment, useMemo, type CSSProperties } from 'react';
 import { cn } from '@/lib/utils';
 import { usePrefersReducedMotion } from '@/hooks/use-motion';
 
@@ -60,37 +60,37 @@ export function BlurText({
 
   return (
     <Tag
-      className={cn(
-        'inline-flex flex-wrap',
-        /*
-         * The gap IS the word spacing.
-         *
-         * Each word is an `inline-block` flex item, and a trailing space inside
-         * one collapses — so the rendered line came out as
-         * "Co-foundedFavoNews.Mentorandconsultant". Letters must stay touching,
-         * so this applies to word mode only.
-         */
-        animateBy === 'words' && 'gap-x-[0.28em]',
-        className,
-      )}
+      /*
+       * Word mode lays out as normal inline text, not as a flex row.
+       *
+       * Flex eats the whitespace between items: a trailing space inside an
+       * inline-block collapses, and a whitespace-only text node between two
+       * flex items is discarded outright. Both were tried, and the tagline
+       * rendered as "Writerandaccountant.Noticesthenumber". Ordinary inline
+       * layout with real space text nodes is what puts spaces between words,
+       * so word mode uses that and only letter mode keeps the flex row.
+       */
+      className={cn(animateBy === 'words' ? 'block' : 'inline-flex flex-wrap', className)}
       style={style}
     >
       {/* Real, uninterrupted text for screen readers and crawlers. */}
       <span className="sr-only">{text}</span>
       {segments.map((segment, i) => (
-        <span
-          key={`${segment}-${i}`}
-          aria-hidden="true"
-          style={
-            {
-              display: 'inline-block',
-              animation: `blur-in 0.5s ease-out ${i * delay}ms both`,
-              '--blur-in-from': direction === 'top' ? '-20px' : '20px',
-            } as CSSProperties
-          }
-        >
-          {segment}
-        </span>
+        <Fragment key={`${segment}-${i}`}>
+          <span
+            aria-hidden="true"
+            style={
+              {
+                display: 'inline-block',
+                animation: `blur-in 0.5s ease-out ${i * delay}ms both`,
+                '--blur-in-from': direction === 'top' ? '-20px' : '20px',
+              } as CSSProperties
+            }
+          >
+            {segment}
+          </span>
+          {animateBy === 'words' && i < segments.length - 1 ? ' ' : null}
+        </Fragment>
       ))}
     </Tag>
   );
