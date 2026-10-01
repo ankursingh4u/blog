@@ -37,3 +37,20 @@ data-export.json
 # extension, so a scratch file cannot be committed by having a real suffix.
 *.tmp
 *.tmp.*
+
+# Coolify REST API responses saved while inspecting a deployment. An application
+# dump is not inert configuration: it embeds the server's sentinel token and all
+# four git webhook secrets in cleartext, plus the base64 Traefik labels. `git add
+# -A` with one of these in the tree publishes them.
+app.json
+coolify-*.json
+
+# Pipeline run responses saved while watching a generation run (run1.json). Same
+# reasoning as the run logs above — useful for an afternoon, not worth versioning.
+run*.json
+
+# Hand-made .env backups. The `.env*.local` rule above does not match
+# `.env.bak-20260929-203810`, and the whole reason such a file exists is that it
+# still holds the previous keys — including ones that have not been rotated.
+.env.bak*
+.env*.bak*
