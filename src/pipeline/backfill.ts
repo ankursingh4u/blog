@@ -57,7 +57,10 @@ export async function applyRunningPlan(): Promise<BackfillResult> {
     ['AI_MODEL_DRAFT', 'gpt-5.4-mini'],
     ['AI_MODEL_REVIEW', 'gpt-5.4-mini'],
     ['AI_MODEL_META', 'gpt-5.4-nano'],
-    ['AI_TOKEN_PRICES', '0.75,4.50'],
+    // Left empty on purpose: the owner asked for tokens, not a currency
+    // estimate. `estimateCost` renders nothing rather than a zero when this is
+    // blank, which is the right behaviour — "$0.00 spent" reads as a fact.
+    ['AI_TOKEN_PRICES', ''],
   ];
 
   const applied: string[] = [];

@@ -9,7 +9,17 @@ import { StringArray, parseJson } from '@/lib/json';
 import { breadcrumbLd, buildMetadata, jsonLdGraph, personLd } from '@/lib/seo';
 import { SITE } from '@/lib/site';
 
-export const revalidate = 86400;
+/**
+ * An hour, not a day.
+ *
+ * The masthead is built from the database, and the page was last rendered in
+ * the gap between a deploy and the task that created seven of the eight
+ * authors — so the live site showed one person and a stale bio for a full day
+ * while the data behind it was correct the whole time. An hour keeps this
+ * effectively static while making an editorial change to a bio visible in a
+ * reasonable time rather than tomorrow.
+ */
+export const revalidate = 3600;
 
 export const metadata: Metadata = buildMetadata({
   title: `About ${SITE.name}`,
