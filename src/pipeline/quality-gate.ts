@@ -229,7 +229,18 @@ export async function runQualityGate({
       prompt,
       schema: buildScoreSchema(isTroubleshooting),
       schemaName: 'draft_quality_score',
-      maxTokens: 8000,
+      /**
+       * Raised from 8000 when the article band went to 1500-2000 words.
+       *
+       * This budget covers reasoning as well as the response, and the reviewer
+       * now reads a draft nearly twice as long against seven sources rather
+       * than five. `generateJson` throws rather than truncating when it runs
+       * out, and the throw is caught below as "review could not run" — which
+       * scores the article 0 and sends a perfectly good draft to review looking
+       * like it failed. Raising the generation budget without raising this one
+       * was the mistake.
+       */
+      maxTokens: 16000,
       effort: 'medium',
     });
     breakdown = data;
