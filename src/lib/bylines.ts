@@ -54,6 +54,14 @@ export interface HouseByline {
   biography: string;
   /** Categories this byline may be used for. Empty means rotation only. */
   focus: string[];
+  /**
+   * Things this person makes or runs, elsewhere.
+   *
+   * Listed only where the person has given them. A news byline that also builds
+   * things is a disclosure as much as a credit — a reader who meets an article
+   * about software should be able to see what its author ships.
+   */
+  links?: Array<{ label: string; href: string; note?: string }>;
 }
 
 /**
@@ -88,8 +96,23 @@ export const HOUSE_BYLINES: HouseByline[] = [
       'to be the same habit a decent article needs. Philosophy is the other half of the shelf, ' +
       'and not for decoration: under most technology stories sits an older question about what ' +
       'we hand over and what we keep. Writes on technology, money and travel, and is answerable ' +
-      'for every word of it.',
+      'for every word of it. Builds software when not editing it: SEO4AI, PalmInsights — live ' +
+      'on the Play Store — and Demand Radar, a Shopify app. Which is the useful disclosure ' +
+      'here: the technology written about on this site is written about by someone who ships.',
     focus: ['tech', 'windows', 'money', 'travel'],
+    links: [
+      { label: 'ankursingh.site', href: 'https://ankursingh.site', note: 'Personal site' },
+      { label: 'SEO4AI', href: 'https://seo4ai.app', note: 'seo4ai.app' },
+      { label: 'PalmInsights', href: 'https://palminsights.xyz', note: 'palminsights.xyz' },
+      {
+        label: 'PalmInsights on Google Play',
+        href: 'https://play.google.com/store/apps/details?id=live.bolddev.palminsight',
+        note: 'Android app',
+      },
+      // Demand Radar is named in the biography but not linked: the listing URL
+      // has not been given, and pointing at Shopify's app store front page
+      // would be a dead end dressed up as a product link.
+    ],
   },
   {
     slug: 'kiran-varma',
