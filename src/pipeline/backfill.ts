@@ -119,7 +119,14 @@ export async function regradeAllFailed(): Promise<BackfillResult> {
     });
 
     if (quality.score === 0) {
-      skipped.push(`${post.slug}: the review failed again`);
+      /**
+       * Carry the reason through. "The review failed again" told an operator
+       * nothing: the first run of this backfill reported exactly that for a
+       * post whose gate had supposedly just been fixed, and there was no way
+       * to tell a second length overrun from a refusal or a 429 without
+       * redeploying to find out.
+       */
+      skipped.push(`${post.slug}: ${quality.notes.slice(0, 300)}`);
       continue;
     }
 
