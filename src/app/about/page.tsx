@@ -5,7 +5,6 @@ import { Container, JsonLd, SectionHeading, buttonClass } from '@/components/ui/
 import { ScrollExpandMedia } from '@/components/ui/scroll-expansion-hero';
 import { getHouseBylines } from '@/lib/posts';
 import { HOUSE_BYLINES } from '@/lib/bylines';
-import { StringArray, parseJson } from '@/lib/json';
 import { breadcrumbLd, buildMetadata, jsonLdGraph, personLd } from '@/lib/seo';
 import { SITE } from '@/lib/site';
 
@@ -122,9 +121,9 @@ export default async function AboutPage() {
               // routes to them, and the category slugs shown here before were
               // pipeline plumbing leaking onto a page about people.
               const profile = HOUSE_BYLINES.find((p) => p.slug === author.slug);
-              const focus = profile?.roles ?? parseJson(author.categoryFocus, StringArray, []);
+              const focus = profile?.roles ?? [];
               return (
-                <article key={author.id} className="surface p-6">
+                <article key={author.slug} className="surface p-6">
                   <span
                     aria-hidden="true"
                     className="grid h-12 w-12 place-items-center rounded-full bg-brand/15 text-lg font-semibold text-brand"
@@ -153,8 +152,8 @@ export default async function AboutPage() {
                   <p className="mt-2 text-xs text-muted-foreground">
                     {[
                       profile?.interests.join(', '),
-                      author._count.posts > 0
-                        ? `${author._count.posts} article${author._count.posts === 1 ? '' : 's'}`
+                      author.publishedCount > 0
+                        ? `${author.publishedCount} article${author.publishedCount === 1 ? '' : 's'}`
                         : null,
                     ]
                       .filter(Boolean)

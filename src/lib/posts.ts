@@ -1,7 +1,7 @@
 import { cache } from 'react';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
-import { HOUSE_SLUGS } from '@/lib/bylines';
+import { HOUSE_BYLINES, HOUSE_SLUGS } from '@/lib/bylines';
 import {
   FaqArray,
   ScreenshotArray,
@@ -150,17 +150,30 @@ export const getAuthors = cache(async () => prisma.author.findMany({ orderBy: { 
  * a reader to meet twice. The published count is still loaded and shown.
  */
 export const getHouseBylines = cache(async () => {
-  const authors = await prisma.author.findMany({
+  const rows = await prisma.author.findMany({
     where: { slug: { in: HOUSE_SLUGS }, isGuest: false },
     include: {
       _count: { select: { posts: { where: { status: 'PUBLISHED' } } } },
     },
   });
+  const bySlug = new Map(rows.map((row) => [row.slug, row]));
 
-  const position = new Map(HOUSE_SLUGS.map((slug, index) => [slug, index]));
-  return authors.sort(
-    (a, b) => (position.get(a.slug) ?? 99) - (position.get(b.slug) ?? 99),
-  );
+  /*
+   * Built from the list, topped up from the database, not the other way round.
+   *
+   * Querying for the rows and rendering whatever came back meant a person
+   * appeared on the masthead only once the seed task had created their row,
+   * and a page built in the window between a deploy and that task showed the
+   * previous masthead for an hour. Six people were missing from /about that
+   * way. The list is who writes here; the row is where their posts hang.
+   */
+  return HOUSE_BYLINES.map((person) => ({
+    slug: person.slug,
+    name: person.name,
+    bio: person.bio,
+    avatar: bySlug.get(person.slug)?.avatar ?? '',
+    publishedCount: bySlug.get(person.slug)?._count.posts ?? 0,
+  }));
 });
 
 const fullInclude = {
