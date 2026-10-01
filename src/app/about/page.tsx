@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 
 import { Container, JsonLd, SectionHeading, buttonClass } from '@/components/ui/primitives';
 import { ScrollExpandMedia } from '@/components/ui/scroll-expansion-hero';
-import { getAuthors } from '@/lib/posts';
+import { getHouseBylines } from '@/lib/posts';
 import { StringArray, parseJson } from '@/lib/json';
 import { breadcrumbLd, buildMetadata, jsonLdGraph, personLd } from '@/lib/seo';
 import { SITE } from '@/lib/site';
@@ -25,7 +25,7 @@ const HERO_BG =
   'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1920&auto=format&fit=crop';
 
 export default async function AboutPage() {
-  const authors = await getAuthors();
+  const authors = await getHouseBylines();
 
   const structuredData = jsonLdGraph(
     ...authors.map((a) => personLd(a)),
@@ -101,7 +101,7 @@ export default async function AboutPage() {
           <SectionHeading
             eyebrow="Bylines"
             title="Who writes here"
-            description="Eight bylines, one per beat. Every article is drafted with AI assistance and approved by a person before it publishes — the editorial policy sets out exactly which parts are which."
+            description="The people behind the site, busiest first — the order is earned by publishing, not fixed. Every article is drafted with AI assistance and approved by a person before it publishes; the editorial policy sets out exactly which parts are which."
           />
 
           <div className="mt-10 grid gap-6 md:grid-cols-3">
@@ -122,6 +122,11 @@ export default async function AboutPage() {
                   </h3>
                   <p className="mt-1 font-mono text-xs uppercase tracking-widest text-muted-foreground">
                     {focus.join(' · ')}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {author._count.posts === 0
+                      ? 'No published articles yet'
+                      : `${author._count.posts} published article${author._count.posts === 1 ? '' : 's'}`}
                   </p>
                   <p className="mt-4 text-sm text-muted-foreground">{author.bio}</p>
                 </article>

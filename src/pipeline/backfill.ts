@@ -2,7 +2,8 @@ import { z } from 'zod';
 
 import { prisma } from '@/lib/db';
 import { generateJson } from '@/lib/ai';
-import { getSetting } from '@/lib/settings';
+import { getSetting, setSetting } from '@/lib/settings';
+import { HOUSE_BYLINES } from '@/lib/bylines';
 import { parseJson, FaqArray, SourceRefArray, StringArray } from '@/lib/json';
 import { notifyPublished } from '@/lib/indexing';
 import { postPath } from '@/lib/urls';
@@ -30,6 +31,57 @@ export interface BackfillResult {
   examined: number;
   changed: number;
   skipped: string[];
+}
+
+/**
+ * Create or update the named house bylines, and hand the sections over to them.
+ *
+ * Idempotent: a rerun refreshes the fields that decide whether a byline works
+ * and whether it is honest — name, roles, bio, focus — and creates whatever is
+ * missing. Nothing is deleted. The pre-pivot persona rows still own the back
+ * catalogue and must keep owning it: re-attributing those articles to a real
+ * person who had nothing to do with them is the one move this codebase will not
+ * make. They simply stop appearing on the masthead.
+ *
+ * It also clears AI_AUTHOR_SLUG. That setting pins every generated post to a
+ * single name, which would silently override the per-section bylines this is
+ * putting in place.
+ */
+export async function seedHouseBylines(): Promise<BackfillResult> {
+  const skipped: string[] = [];
+  let changed = 0;
+
+  for (const person of HOUSE_BYLINES) {
+    const existing = await prisma.author.findUnique({ where: { slug: person.slug } });
+
+    const data = {
+      name: person.name,
+      bio: person.bio,
+      categoryFocus: JSON.stringify(person.focus),
+      isGuest: false,
+      stylePrompt:
+        'Write plainly for a general reader. Lead with what happened and why it matters to ' +
+        'them, then the detail. Short paragraphs. Attribute every figure, date and quote to ' +
+        'the source it came from. No hype, no filler, and never pad to reach a length.',
+    };
+
+    await prisma.author.upsert({
+      where: { slug: person.slug },
+      update: data,
+      create: { slug: person.slug, avatar: '', ...data },
+    });
+    changed += 1;
+    if (!existing) skipped.push(`${person.slug}: created`);
+  }
+
+  const pinned = await prisma.setting.findUnique({ where: { key: 'AI_AUTHOR_SLUG' } });
+  if (pinned?.value) {
+    await setSetting('AI_AUTHOR_SLUG', '');
+    skipped.push(`AI_AUTHOR_SLUG was "${pinned.value}" — cleared, the section map now decides`);
+  }
+
+  log.info(`backfill: ${changed} house byline(s) written`);
+  return { examined: HOUSE_BYLINES.length, changed, skipped };
 }
 
 /**

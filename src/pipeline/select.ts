@@ -2,6 +2,7 @@ import type { Author, Category, Keyword } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { StringArray, parseJson } from '@/lib/json';
 import { getSetting } from '@/lib/settings';
+import { fixedBylineFor } from '@/lib/bylines';
 import { log } from '@/pipeline/log';
 
 /**
@@ -94,11 +95,32 @@ export async function assignAuthor(
   categorySlug: string,
   previousAuthorId: string | null,
 ): Promise<Author | null> {
+  /**
+   * A section with a standing byline goes to that person, every time.
+   *
+   * Takes precedence over AI_AUTHOR_SLUG. That setting pins *every* generated
+   * post to one name, which is the thing this replaces: tech, money and travel
+   * belong to the founder, games to Adarsh, entertainment to Anushka, and the
+   * rest flip. Leaving the pin in charge would quietly collapse all eight
+   * sections back onto a single byline.
+   */
+  const standing = fixedBylineFor(categorySlug);
+  if (standing) {
+    const author = await prisma.author.findFirst({
+      // isGuest for the same reason the rotation filters on it: a contributor's
+      // name must never appear on something they did not write.
+      where: { slug: standing, isGuest: false },
+    });
+    if (author) return author;
+    log.warn(
+      `select: "${categorySlug}" is assigned to "${standing}" but no house author has ` +
+        'that slug — falling back to the rotation. Run the seed-authors task.',
+    );
+  }
+
   const pinnedSlug = (await getSetting('AI_AUTHOR_SLUG')).trim();
   if (pinnedSlug) {
     const pinned = await prisma.author.findFirst({
-      // isGuest for the same reason the rotation filters on it: a contributor's
-      // name must never appear on something they did not write.
       where: { slug: pinnedSlug, isGuest: false },
     });
     if (pinned) return pinned;

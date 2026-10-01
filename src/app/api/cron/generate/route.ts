@@ -2,7 +2,12 @@ import { prisma } from '@/lib/db';
 import { ingest } from '@/pipeline/ingest';
 import { runPipeline } from '@/pipeline/run';
 import { runCycle } from '@/pipeline/cycle';
-import { pingAllPublished, refreshSeoFields, regradeAllFailed } from '@/pipeline/backfill';
+import {
+  pingAllPublished,
+  refreshSeoFields,
+  regradeAllFailed,
+  seedHouseBylines,
+} from '@/pipeline/backfill';
 
 /**
  * The scheduled entry point, hit by Coolify's cron (and Vercel Cron if the site
@@ -148,6 +153,7 @@ const BACKFILLS = {
   'ping-all': pingAllPublished,
   'regrade-all': regradeAllFailed,
   'refresh-seo': refreshSeoFields,
+  'seed-authors': seedHouseBylines,
 } as const;
 
 type BackfillName = keyof typeof BACKFILLS;

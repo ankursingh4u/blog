@@ -1,6 +1,7 @@
 import { cache } from 'react';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
+import { HOUSE_SLUGS } from '@/lib/bylines';
 import {
   FaqArray,
   ScreenshotArray,
@@ -134,6 +135,32 @@ export const getAuthorBySlug = cache(async (slug: string) =>
 );
 
 export const getAuthors = cache(async () => prisma.author.findMany({ orderBy: { name: 'asc' } }));
+
+/**
+ * The masthead, busiest byline first.
+ *
+ * Two deliberate choices. It is restricted to the named house bylines, so the
+ * pre-pivot persona rows that still own the back catalogue do not appear as
+ * people who write here — they are historical bylines, not members of the
+ * masthead, and nothing re-attributes their articles to anyone real.
+ *
+ * And it is ordered by how much each person has actually published, not
+ * alphabetically: the top of this list is earned by writing, and a name that
+ * stops appearing on articles drifts down it. Ties fall back to name order so
+ * the page does not reshuffle at random between builds.
+ */
+export const getHouseBylines = cache(async () => {
+  const authors = await prisma.author.findMany({
+    where: { slug: { in: HOUSE_SLUGS }, isGuest: false },
+    include: {
+      _count: { select: { posts: { where: { status: 'PUBLISHED' } } } },
+    },
+  });
+
+  return authors.sort(
+    (a, b) => b._count.posts - a._count.posts || a.name.localeCompare(b.name),
+  );
+});
 
 const fullInclude = {
   category: { include: { parent: { select: { name: true, slug: true } } } },
