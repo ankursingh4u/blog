@@ -79,6 +79,12 @@ describe('house bylines', () => {
       'kirti-sisodiya',
       'diksha-ganglani',
       'anushka-kumari',
+      'jatin-prajapati',
+      'aditi-jain',
+      'ankit-mishra',
+      'irfan-siddique',
+      'ratana-prajapati',
+      'raushan-kumar',
     ]);
   });
 });

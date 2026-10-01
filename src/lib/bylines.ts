@@ -96,17 +96,18 @@ export const HOUSE_BYLINES: HouseByline[] = [
     name: 'Ankur Singh',
     roles: ['Founder', 'Editor', 'Software engineer', 'Writer'],
     interests: ['Philosophy', 'Writing', 'Building things'],
-    bio: 'Founded Favo News and edits it. Software engineer; writes on tech, money and travel.',
+    bio: 'Built Favo News and runs it, solo. Software engineer; writes on tech, money and travel.',
+    strapline: 'Built it alone. Still building.',
     biography:
-      'Ankur Singh started Favo News and still edits it, which means nothing goes out of here ' +
-      'without a last read from the person who began it. An engineer first, and the habit an ' +
-      'engineer builds, of opening a system up until it admits how it actually works, turns out ' +
-      'to be the same habit a decent article needs. Philosophy is the other half of the shelf, ' +
-      'and not for decoration: under most technology stories sits an older question about what ' +
-      'we hand over and what we keep. Writes on technology, money and travel, and is answerable ' +
-      'for every word of it. Builds software when not editing it: SEO4AI, PalmInsights, live ' +
-      'on the Play Store, and Demand Radar, a Shopify app. Which is the useful disclosure ' +
-      'here: the technology written about on this site is written about by someone who ships.',
+      'Ankur Singh built Favo News and runs it, all of it, alone: the pipeline that finds the ' +
+      'stories, the checks that stop the bad ones, and the site you are reading this on. An ' +
+      'engineer first, and the habit an engineer builds, of opening a system up until it ' +
+      'admits how it actually works, turns out to be the same habit a decent article needs. ' +
+      'Philosophy is the other half of the shelf, and not for decoration: under most technology ' +
+      'stories sits an older question about what we hand over and what we keep. The building ' +
+      'has not stopped, and the list is not short: SEO4AI, PalmInsights on the Play Store, ' +
+      'Demand Radar on Shopify. Which is the useful disclosure here, because the technology ' +
+      'covered on this site is covered by someone who ships it.',
     focus: ['tech', 'windows', 'money', 'travel'],
     links: [
       { label: 'ankursingh.site', href: 'https://ankursingh.site', note: 'Personal site' },
@@ -117,9 +118,11 @@ export const HOUSE_BYLINES: HouseByline[] = [
         href: 'https://play.google.com/store/apps/details?id=live.bolddev.palminsight',
         note: 'Android app',
       },
-      // Demand Radar is named in the biography but not linked: the listing URL
-      // has not been given, and pointing at Shopify's app store front page
-      // would be a dead end dressed up as a product link.
+      {
+        label: 'Demand Radar',
+        href: 'https://apps.shopify.com/demandradar',
+        note: 'Shopify app',
+      },
     ],
   },
   {
@@ -219,6 +222,87 @@ export const HOUSE_BYLINES: HouseByline[] = [
       'about what gets made and who gets to make it. Comes to a film the way one comes to a ' +
       'balance sheet: interested, above all, in what it is not saying.',
     focus: ['entertainment'],
+  },
+  {
+    slug: 'jatin-prajapati',
+    name: 'Jatin Prajapati',
+    roles: ['Founder', 'Writer', 'Author'],
+    interests: [],
+    bio: 'Founder of Rdranex. Writer and author.',
+    biography:
+      'Jatin Prajapati founded Rdranex and writes, which are closer to the same activity than ' +
+      'either job title suggests: both start with deciding what is worth other people’s ' +
+      'attention, and both are mostly the work of cutting what is not. Writes across the ' +
+      'sections of Favo News that rotate between us.',
+    focus: ['sports', 'health', 'education'],
+    links: [{ label: 'Rdranex', href: 'https://rdranex.in', note: 'rdranex.in' }],
+  },
+  {
+    slug: 'aditi-jain',
+    name: 'Aditi Jain',
+    roles: ['Writer', 'Author', 'Team lead'],
+    interests: [],
+    bio: 'Writer and team lead. Keeps a room pointed in the same direction.',
+    biography:
+      'Aditi Jain writes and leads, and leading is what sharpened the writing: a team that ' +
+      'half-understands you does the wrong work, cheerfully, for a week. Clarity stopped being ' +
+      'a style preference somewhere around the second time that happened. Writes across the ' +
+      'sections of Favo News that rotate between us.',
+    focus: ['sports', 'health', 'education'],
+  },
+  {
+    slug: 'ankit-mishra',
+    name: 'Ankit Mishra',
+    roles: ['Data analyst', 'Writer'],
+    interests: [],
+    bio: 'Data analyst and writer. Asks what the number is actually counting.',
+    biography:
+      'Ankit Mishra works in data analytics and writes, which turn out to be the same instinct ' +
+      'pointed at different things: find the figure doing the real work, check what it is ' +
+      'actually counting, then say plainly what it shows. A chart can mislead more ' +
+      'efficiently than a sentence, which is a useful thing for a newsroom to have someone ' +
+      'thinking about. Writes across the sections that rotate.',
+    focus: ['sports', 'health', 'education'],
+  },
+  {
+    slug: 'irfan-siddique',
+    name: 'Irfan Siddique',
+    roles: ['Software engineer', 'Problem solver', 'Writer'],
+    interests: [],
+    bio: 'Software engineer and writer. Finds the part that is actually broken.',
+    biography:
+      'Irfan Siddique is an engineer who writes. Debugging teaches a particular kind of ' +
+      'patience: the problem is rarely where the noise is, and the fix is rarely the first ' +
+      'thing that stops the error. The same patience applied to a story means the obvious ' +
+      'explanation gets checked before it gets printed. Writes across the sections that rotate.',
+    focus: ['sports', 'health', 'education'],
+  },
+  {
+    slug: 'ratana-prajapati',
+    name: 'Ratana Prajapati',
+    roles: ['Data analyst', 'Writer'],
+    interests: [],
+    bio: 'Data analyst and writer. Reads a dataset for what it leaves out.',
+    biography:
+      'Ratana Prajapati works in data analytics and writes. Most of the useful work in both ' +
+      'is subtraction: which rows were dropped, which period was chosen, what the average is ' +
+      'hiding. A number that arrives without its method is an opinion wearing a suit. Writes ' +
+      'across the sections that rotate.',
+    focus: ['sports', 'health', 'education'],
+  },
+  {
+    slug: 'raushan-kumar',
+    name: 'Raushan Kumar',
+    roles: ['Writer', 'Author', 'Thinker'],
+    interests: [],
+    bio: 'Writer. Reads the argument underneath the news.',
+    biography:
+      'Raushan Kumar writes, and is the person on this masthead most likely to find the ' +
+      'question nobody in the room had thought to ask. Under most news stories sits an older ' +
+      'argument about what we hand over and what we keep, and that argument is usually the ' +
+      'more interesting half. Quick enough to get to it before the story has finished ' +
+      'happening. Writes across the sections that rotate.',
+    focus: ['sports', 'health', 'education'],
   },
 ];
 
