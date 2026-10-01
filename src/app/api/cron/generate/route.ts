@@ -2,6 +2,7 @@ import { prisma } from '@/lib/db';
 import { ingest } from '@/pipeline/ingest';
 import { runPipeline } from '@/pipeline/run';
 import { runCycle } from '@/pipeline/cycle';
+import { pingAllPublished, refreshSeoFields, regradeAllFailed } from '@/pipeline/backfill';
 
 /**
  * The scheduled entry point, hit by Coolify's cron (and Vercel Cron if the site
@@ -136,12 +137,35 @@ async function runFullCycle(url: URL): Promise<Response> {
   });
 }
 
+/**
+ * The one-off repairs over the existing catalogue. See pipeline/backfill.ts.
+ *
+ * Here rather than behind a button: these are operations, not editorial
+ * decisions, and two of them cost model calls, so they should be deliberate
+ * rather than one mis-click away.
+ */
+const BACKFILLS = {
+  'ping-all': pingAllPublished,
+  'regrade-all': regradeAllFailed,
+  'refresh-seo': refreshSeoFields,
+} as const;
+
+type BackfillName = keyof typeof BACKFILLS;
+
+function isBackfill(value: string | null): value is BackfillName {
+  return value !== null && value in BACKFILLS;
+}
+
 async function trigger(request: Request): Promise<Response> {
   const url = new URL(request.url);
   const mode = url.searchParams.get('mode');
   const generate = mode === 'generate';
 
   try {
+    if (isBackfill(mode)) {
+      const result = await BACKFILLS[mode]();
+      return Response.json({ ok: true, mode, ...result });
+    }
     if (mode === 'cycle') return await runFullCycle(url);
     if (!generate) return await ingestOnly();
 
