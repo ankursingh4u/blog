@@ -96,6 +96,17 @@ export default async function AuthorPage({ params }: { params: Params }) {
       */}
       <Container className="grid gap-10 py-12 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-14">
         <div className="min-w-0">
+          {/*
+            Set large, and as the site's own words rather than a quotation.
+            Formatting a characterisation with quote marks would attribute it to
+            the person, which is not the same thing and is not true.
+          */}
+          {profile?.strapline ? (
+            <p className="mb-6 border-l-2 border-brand pl-5 text-xl font-medium leading-snug text-foreground sm:text-2xl">
+              {profile.strapline}
+            </p>
+          ) : null}
+
           <p className="text-lg leading-relaxed text-foreground/90">
             {profile ? profile.biography : author.bio}
           </p>

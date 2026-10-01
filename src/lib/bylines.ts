@@ -52,6 +52,14 @@ export interface HouseByline {
    * place that nobody has told us about.
    */
   biography: string;
+  /**
+   * A single line that carries the page, set above the biography.
+   *
+   * Deliberately not a quotation. Formatting a characterisation as something
+   * the person said would be putting words in a real mouth; this is the site
+   * describing them, and it is set so it reads that way.
+   */
+  strapline?: string;
   /** Categories this byline may be used for. Empty means rotation only. */
   focus: string[];
   /**
@@ -131,15 +139,19 @@ export const HOUSE_BYLINES: HouseByline[] = [
   {
     slug: 'aakash-sharma',
     name: 'Aakash Sharma',
-    roles: ['CEO at CodersHive', 'Traveller'],
-    interests: ['Travel'],
-    bio: 'CEO at CodersHive. Travels, and writes about what it actually cost.',
+    roles: ['Founder', 'CEO at CodersHive', 'Mentor', 'Traveller'],
+    interests: ['Travel', 'Animals', 'Mentoring'],
+    bio: 'Founder and CEO of CodersHive. Mentor, traveller, pet lover.',
+    strapline: 'Still expanding, which is the part most founder stories leave out.',
     biography:
-      'Aakash Sharma runs CodersHive, and spends whatever the calendar will spare somewhere ' +
-      'else. Most travel writing sells you the postcard; this is the other kind, what the ' +
-      'ticket actually cost, how long the queue really was, whether the detour earned its ' +
-      'place. The list of places still unseen grows faster than the list behind, which is ' +
-      'either a problem or the entire point.',
+      'Aakash Sharma founded CodersHive and runs it, and has never been especially taken with ' +
+      'the safe version of a plan. The company is still expanding, which is the stretch most ' +
+      'founder stories skip over: the long middle where you keep placing bets after the first ' +
+      'one has already come good. Mentors people a few steps back on the same road, on the ' +
+      'theory that the useful advice is the kind that costs the giver something. Travels ' +
+      'whenever the calendar gives way and writes about what the trip actually cost rather ' +
+      'than the postcard version, and is reliably the person in the room who wants to meet ' +
+      'the dog first.',
     focus: ['sports', 'health', 'education'],
   },
   {
