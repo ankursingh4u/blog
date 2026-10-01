@@ -32,6 +32,22 @@ interface ProfileHeroProps {
   className?: string;
 }
 
+/**
+ * Picks a type size the longest line can actually fit on.
+ *
+ * The size was fixed at 16vw, which is fine for "ANKUR SINGH" and clips
+ * "KUMAR BHARTI" — the line is `whitespace-nowrap` inside an `overflow-hidden`
+ * section, so a long surname simply loses its ends. Scaling to the longest
+ * line keeps the poster-sized effect for short names without breaking long
+ * ones, which is the whole reason the hero exists.
+ */
+function nameSize(lines: [string, string]): string {
+  const longest = Math.max(...lines.map((line) => line.length));
+  if (longest <= 7) return 'text-[15vw] lg:text-[9rem]';
+  if (longest <= 11) return 'text-[11vw] lg:text-[6.5rem]';
+  return 'text-[8vw] lg:text-[4.5rem]';
+}
+
 export function ProfileHero({
   nameLines,
   tagline,
@@ -65,7 +81,10 @@ export function ProfileHero({
               delay={70}
               animateBy="letters"
               direction="top"
-              className="justify-center whitespace-nowrap font-mono text-[16vw] font-bold uppercase leading-[0.78] tracking-tighter text-brand sm:text-[13vw] lg:text-[10rem]"
+              className={cn(
+                'justify-center whitespace-nowrap font-mono font-bold uppercase leading-[0.82] tracking-tighter text-brand',
+                nameSize(nameLines),
+              )}
               style={{ display: 'flex' }}
             />
           ))}

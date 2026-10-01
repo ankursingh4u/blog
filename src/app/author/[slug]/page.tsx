@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 
-import { Badge, Container, JsonLd } from '@/components/ui/primitives';
+import { Badge, Container, JsonLd, buttonClass } from '@/components/ui/primitives';
 import { InfinitePosts } from '@/components/infinite-posts';
 import { ProfileHero } from '@/components/ui/profile-hero';
 
@@ -131,13 +131,47 @@ export default async function AuthorPage({ params }: { params: Params }) {
         </p>
 
         <h2 className="mt-10 text-2xl font-bold tracking-tight">
-          {posts.length === 1 ? 'One article' : `Articles`} by {author.name}
+          {posts.length === 0
+            ? `${author.name}'s articles`
+            : posts.length === 1
+              ? `One article by ${author.name}`
+              : `Articles by ${author.name}`}
         </h2>
 
         {posts.length === 0 ? (
-          <p className="mt-4 text-sm text-muted-foreground">
-            Nothing published yet under this byline.
-          </p>
+          /*
+           * An empty byline page still has to be a finished page.
+           *
+           * "Nothing published yet" and a wall of white space reads as a broken
+           * site rather than a new one — and most of the masthead will sit at
+           * zero until the pipeline has been round a few times. Point the
+           * reader at the sections this person writes on instead of at nothing.
+           */
+          <div className="mt-4 max-w-2xl space-y-4">
+            <p className="text-sm text-muted-foreground">
+              {author.name.split(' ')[0]} has not published here yet. The sections
+              {focus.length > 0 ? '' : ' of the site'} below are where their work will appear.
+            </p>
+            {focus.length > 0 ? (
+              <div className="flex flex-wrap gap-3">
+                {focus.map((category) => (
+                  <Link
+                    key={category.slug}
+                    href={`/${category.slug}`}
+                    className={buttonClass('outline', 'sm')}
+                  >
+                    Read {category.name}
+                  </Link>
+                ))}
+              </div>
+            ) : null}
+            <p className="text-sm text-muted-foreground">
+              <Link href="/about" className="underline hover:text-foreground">
+                Meet the rest of the people who write here
+              </Link>
+              .
+            </p>
+          </div>
         ) : (
           <div className="mt-8">
             <InfinitePosts

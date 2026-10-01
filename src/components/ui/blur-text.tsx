@@ -59,7 +59,22 @@ export function BlurText({
   }
 
   return (
-    <Tag className={cn('inline-flex flex-wrap', className)} style={style}>
+    <Tag
+      className={cn(
+        'inline-flex flex-wrap',
+        /*
+         * The gap IS the word spacing.
+         *
+         * Each word is an `inline-block` flex item, and a trailing space inside
+         * one collapses — so the rendered line came out as
+         * "Co-foundedFavoNews.Mentorandconsultant". Letters must stay touching,
+         * so this applies to word mode only.
+         */
+        animateBy === 'words' && 'gap-x-[0.28em]',
+        className,
+      )}
+      style={style}
+    >
       {/* Real, uninterrupted text for screen readers and crawlers. */}
       <span className="sr-only">{text}</span>
       {segments.map((segment, i) => (
@@ -75,7 +90,6 @@ export function BlurText({
           }
         >
           {segment}
-          {animateBy === 'words' && i < segments.length - 1 ? ' ' : ''}
         </span>
       ))}
     </Tag>
