@@ -139,7 +139,12 @@ export default async function AboutPage() {
                   <p className="mt-1 font-mono text-xs uppercase tracking-widest text-muted-foreground">
                     {focus.join(' · ')}
                   </p>
-                  <p className="mt-3 text-sm text-muted-foreground">{author.bio}</p>
+                  {/* Masthead list first, database row second. See the note on
+                      the author page: the row is a copy, and a page built
+                      before the seed ran showed the previous wording. */}
+                  <p className="mt-3 text-sm text-muted-foreground">
+                    {profile?.bio ?? author.bio}
+                  </p>
                   {/*
                     Interests and the article count share one muted line. As
                     three stacked blocks they made each card taller than the

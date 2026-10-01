@@ -85,7 +85,18 @@ export default async function AuthorPage({ params }: { params: Params }) {
                 {profile.roles.join(' · ')}
               </p>
             ) : null}
-            <p className="mt-3 max-w-xl text-base text-muted-foreground">{author.bio}</p>
+            {/*
+              The masthead list wins over the database copy.
+
+              Both hold this text: the row exists so the pipeline can attach
+              posts to an author, and the list is where the words are written.
+              Reading the row meant a page built before the seed task ran showed
+              last week's sentence, and that race lost three times in one
+              evening. Code is the source of truth; the row is a copy.
+            */}
+            <p className="mt-3 max-w-xl text-base text-muted-foreground">
+              {profile?.bio ?? author.bio}
+            </p>
           </div>
         </Container>
       </div>
