@@ -32,7 +32,7 @@ import {
  *
  * Accepting a submission creates a guest Author so the byline is a real profile
  * with its own page, rather than a name floating on a post. Guests are excluded
- * from the generation pool — see assignAuthor.
+ * from the generation pool, see assignAuthor.
  */
 
 
@@ -45,8 +45,8 @@ export const SubmissionInput = z.object({
   body: z
     .string()
     .trim()
-    .min(MIN_BODY_CHARS, `Articles need at least ${MIN_BODY_CHARS} characters — roughly a short page.`)
-    // The only ceiling, and it bounds abuse rather than length — there is no
+    .min(MIN_BODY_CHARS, `Articles need at least ${MIN_BODY_CHARS} characters, roughly a short page.`)
+    // The only ceiling, and it bounds abuse rather than length, there is no
     // word limit. Length is an editorial call, made by a person reading it.
     .max(MAX_BODY_CHARS, 'That is longer than we can accept in one submission.'),
   authorName: z
@@ -57,7 +57,7 @@ export const SubmissionInput = z.object({
   authorEmail: z
     .string()
     .trim()
-    .email('That email address does not look right — we need it to reply to you.')
+    .email('That email address does not look right, we need it to reply to you.')
     .max(MAX_EMAIL_CHARS),
   authorBio: z
     .string()
@@ -74,7 +74,7 @@ export const SubmissionInput = z.object({
   categoryId: z.string().trim().min(1).nullable().catch(null),
 });
 
-/** A caption is trimmed and bounded, never dropped — a picture with no caption
+/** A caption is trimmed and bounded, never dropped, a picture with no caption
  * is still a picture. */
 function cleanCaption(caption: string | undefined): string {
   return (caption ?? '').trim().slice(0, MAX_CAPTION_CHARS);
@@ -92,7 +92,7 @@ export interface SubmissionImage {
  * How many submissions one address may send per window.
  *
  * Deliberately generous: this is a brake on a script, not a quota for a person.
- * Email is trivially faked, so this is a nuisance filter rather than security —
+ * Email is trivially faked, so this is a nuisance filter rather than security -
  * the real control is that an editor reads everything before it can publish.
  */
 
@@ -115,13 +115,13 @@ export const RATE_LIMIT_MAX = RATE_LIMIT;
  *
  * Type and size are already enforced by `storage.put`; this only bounds the
  * count and turns a rejected file into a message rather than a failed
- * submission — losing a whole article because the fourth image was a PDF would
+ * submission, losing a whole article because the fourth image was a PDF would
  * be a poor trade.
  *
  * Captions are matched against the position of the file *as submitted*, before
  * anything is dropped, and then carried on the stored record. Pairing them
- * afterwards is what broke: a skipped file — an empty slot, an oversized
- * picture, a failed write — shortened the stored list without shortening the
+ * afterwards is what broke: a skipped file, an empty slot, an oversized
+ * picture, a failed write, shortened the stored list without shortening the
  * caption list, and every caption after the gap slid onto the wrong image.
  */
 export async function storeSubmissionImages(
@@ -173,7 +173,7 @@ export async function guestAuthorFor(name: string, email: string, bio = '') {
   const existing = await prisma.author.findFirst({ where: { email: normalised, isGuest: true } });
   if (existing) {
     // A returning contributor may have written a better description of
-    // themselves since last time. Only fill a gap or replace the placeholder —
+    // themselves since last time. Only fill a gap or replace the placeholder -
     // never overwrite a bio an editor has since rewritten.
     const placeholder = existing.bio.endsWith('contributed this article to Favo News.');
     if (bio.trim() && (!existing.bio.trim() || placeholder)) {
@@ -210,7 +210,7 @@ export async function guestAuthorFor(name: string, email: string, bio = '') {
  * The two differ in one field and it matters: a submission keeps the
  * contributor's caption in `title`, while a post keeps it in `alt`, which is
  * what the article template renders as the figcaption. Passing the raw JSON
- * straight through parses cleanly — `alt` simply defaults to an empty string —
+ * straight through parses cleanly, `alt` simply defaults to an empty string -
  * so every caption would vanish with nothing to indicate it had.
  *
  * Using the caption as the alt text is deliberate. It describes the picture,

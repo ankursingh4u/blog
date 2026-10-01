@@ -49,7 +49,7 @@ export function isoDate(value: Date | string | null | undefined) {
   return Number.isNaN(d.getTime()) ? undefined : d.toISOString();
 }
 
-/** Rough reading time. Deliberately generous — fix guides are skimmed, not read. */
+/** Rough reading time. Deliberately generous, fix guides are skimmed, not read. */
 export function readingTime(markdown: string) {
   const words = markdown.trim().split(/\s+/).length;
   return Math.max(1, Math.round(words / 220));

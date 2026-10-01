@@ -44,7 +44,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <p className="mt-1 text-sm text-muted-foreground">
               {hasApiKey()
                 ? 'Generation is configured.'
-                : 'OPENAI_API_KEY is not set — generation is disabled.'}
+                : 'OPENAI_API_KEY is not set, generation is disabled.'}
             </p>
           </div>
           <Link

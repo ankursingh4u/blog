@@ -17,7 +17,7 @@ import { jsonLdGraph, organisationLd, websiteLd } from '@/lib/seo';
  *
  * `next/font/google` downloads the files during `next build`, which makes the
  * build depend on fonts.googleapis.com being reachable. The deployment host
- * cannot reach it — npm works, Google Fonts does not — so the build failed
+ * cannot reach it, npm works, Google Fonts does not, so the build failed
  * there while succeeding locally. Self-hosting removes the dependency
  * altogether: the build needs no network, and no visitor's browser is sent to a
  * third party to render the page.
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
     // Left over from when the site was Windows-only. The homepage title is the
     // one Google shows for the domain, so it has to describe all eight
     // verticals, not the back-catalogue.
-    default: `${SITE.name} — trending stories, explained properly`,
+    default: `${SITE.name}, trending stories, explained properly`,
     template: `%s · ${SITE.name}`,
   },
   description: SITE.description,
@@ -77,7 +77,7 @@ export const viewport: Viewport = {
 
 /**
  * Applies the stored theme before first paint. Inlined and run synchronously
- * in <head> — anything async here produces a visible flash of the wrong theme.
+ * in <head>, anything async here produces a visible flash of the wrong theme.
  *
  * Light is the default. Long troubleshooting guides are read in daylight far
  * more often than not, and the system preference is deliberately *not*
@@ -101,7 +101,7 @@ const themeScript = `
  *
  * The id is stripped to `[A-Za-z0-9-]` first. It arrives from a database
  * setting an admin typed, and this string is written into the page with
- * `dangerouslySetInnerHTML` — without the strip, a value containing a quote
+ * `dangerouslySetInnerHTML`, without the strip, a value containing a quote
  * and `</script>` would close the tag and run whatever followed. A real
  * container id has no other characters, so nothing legitimate is lost.
  */
@@ -127,7 +127,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
          * Google Tag Manager, as high in <head> as Google asks for.
          *
          * The inline part is a few hundred bytes and only schedules the real
-         * container, which loads async — so it does not block render. It is a
+         * container, which loads async, so it does not block render. It is a
          * plain <script> rather than next/script because those mount in the
          * body, and a container that loads after hydration misses the very
          * pageview it exists to record.

@@ -70,7 +70,7 @@ interface RelatedOption {
  * Structured fields are managed as React state and serialised into hidden
  * inputs on submit, so the whole form is still one server action and works
  * without JavaScript for the plain text fields. The preview pane renders the
- * markdown source rather than the sanitised HTML — it is a writing aid, and
+ * markdown source rather than the sanitised HTML, it is a writing aid, and
  * fetching a server render on every keystroke would be worse than useless.
  */
 export function PostEditor({
@@ -145,7 +145,7 @@ export function PostEditor({
               fix on that Windows build. There is nothing to test an iPhone
               story against, so a news post was showing a permanent orange
               "Verification pending" that no editor could ever clear. The badge
-              now appears only where the field means something — which is what
+              now appears only where the field means something, which is what
               the field itself is documented to do.
             */}
             {post.testedOnBuild ? (
@@ -216,7 +216,7 @@ export function PostEditor({
       {post.qualityNotes ? (
         <details className={cn('surface p-4', blocked && 'border-danger/40')} open={blocked}>
           <summary className="cursor-pointer text-sm font-medium">
-            Quality notes {blocked ? '— publishing is not recommended' : ''}
+            Quality notes {blocked ? '- publishing is not recommended' : ''}
           </summary>
           <pre className="mt-3 whitespace-pre-wrap text-sm text-muted-foreground">
             {post.qualityNotes}
@@ -225,7 +225,7 @@ export function PostEditor({
           {post.qualityScore === 0 ? (
             <div className="mt-4 space-y-2 border-t border-border pt-3">
               <p className="text-sm text-muted-foreground">
-                A score of 0 means the review never returned — it is not a verdict on the
+                A score of 0 means the review never returned, it is not a verdict on the
                 article. Re-running it re-fetches the sources and scores the draft again.
               </p>
               <StatusButton variant="outline" onClick={regrade} pending={regradePending}>
@@ -486,7 +486,7 @@ export function PostEditor({
 /* ------------------------------------------------------------------ pieces */
 
 /**
- * A status control. Deliberately `type="button"` — it must never submit
+ * A status control. Deliberately `type="button"`, it must never submit
  * anything, because submitting is exactly how the status went missing before.
  */
 function StatusButton({
@@ -514,7 +514,7 @@ function StatusButton({
 
 function MarkdownPreview({ source }: { source: string }) {
   // Deliberately minimal: headings, lists, code fences, bold and links.
-  // The published page renders sanitised HTML server-side — this is a writing
+  // The published page renders sanitised HTML server-side, this is a writing
   // aid, so it stays cheap and never renders raw HTML from the textarea.
   const blocks = useMemo(() => source.split(/\n{2,}/), [source]);
 
@@ -559,7 +559,7 @@ function MarkdownPreview({ source }: { source: string }) {
   );
 }
 
-/** Renders **bold**, `code` and [links](url) as text — no HTML is interpreted. */
+/** Renders **bold**, `code` and [links](url) as text, no HTML is interpreted. */
 function inline(text: string): React.ReactNode {
   const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\))/g);
   return parts.map((part, i) => {
@@ -745,7 +745,7 @@ function MediaEditor({
                       screenshots.map((s, i) => (i === index ? { ...s, alt: e.target.value } : s)),
                     )
                   }
-                  placeholder="Alt text — describe what the screenshot shows"
+                  placeholder="Alt text, describe what the screenshot shows"
                   className={inputClass}
                 />
                 <button
@@ -766,11 +766,11 @@ function MediaEditor({
         The uploader has no <form> of its own. It used to render one and point
         the file input and button at it with `form="upload-form"`, but this
         section is itself inside the main save form, so that produced a nested
-        <form> — invalid HTML. The parser drops the inner start tag and lets its
+        <form>, invalid HTML. The parser drops the inner start tag and lets its
         </form> close the *outer* form early, which merged the uploader's fields
         and its server-action refs into the save form: the save form ended up
         carrying two `$ACTION_REF` sets, and a submit could resolve to the wrong
-        action entirely. That is what surfaced as a stray "Unknown status." —
+        action entirely. That is what surfaced as a stray "Unknown status." -
         `setPostStatus` receiving the save form's data, which has `id` but no
         `status`.
 
@@ -798,7 +798,7 @@ function MediaEditor({
           </div>
           <div className="flex-1">
             <label htmlFor="upload-file" className="block text-xs text-muted-foreground">
-              File (PNG, JPEG, WebP, AVIF or GIF — max 8 MB)
+              File (PNG, JPEG, WebP, AVIF or GIF, max 8 MB)
             </label>
             <input
               id="upload-file"
@@ -930,7 +930,7 @@ function RegenerateSection({ postId, sections }: { postId: string; sections: str
         Regenerate a section
       </h2>
       <p className="mt-1 text-xs text-muted-foreground">
-        Rewrites one H2 section in place and saves immediately. Save any unsaved body edits first —
+        Rewrites one H2 section in place and saves immediately. Save any unsaved body edits first -
         this reads the stored version.
       </p>
 

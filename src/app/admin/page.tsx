@@ -32,7 +32,7 @@ export default async function AdminDashboard() {
   });
 
   // Anything published today without a tested build still needs a human to run
-  // the fix — this is the "Published today — verify" queue from the brief.
+  // the fix, this is the "Published today, verify" queue from the brief.
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
   const verifyQueue = await prisma.post.findMany({
@@ -86,8 +86,8 @@ export default async function AdminDashboard() {
               Ingests the feeds, then produces {asInt(settings.POSTS_PER_DAY, 2)} post
               {asInt(settings.POSTS_PER_DAY, 2) === 1 ? '' : 's'}.{' '}
               {autoPublish
-                ? `Auto-publish is ON — anything scoring ${asInt(settings.QUALITY_THRESHOLD, 85)}+ with clean identifiers goes live immediately.`
-                : 'Auto-publish is OFF — everything lands in review.'}
+                ? `Auto-publish is ON, anything scoring ${asInt(settings.QUALITY_THRESHOLD, 85)}+ with clean identifiers goes live immediately.`
+                : 'Auto-publish is OFF, everything lands in review.'}
             </p>
           </div>
           <Badge tone={autoPublish ? 'warn' : 'neutral'}>
@@ -103,7 +103,7 @@ export default async function AdminDashboard() {
 
       {verifyQueue.length > 0 ? (
         <section>
-          <h2 className="text-lg font-semibold">Published today — verify</h2>
+          <h2 className="text-lg font-semibold">Published today, verify</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Live, but nobody has run the fix yet. Each one shows &ldquo;verification
             pending&rdquo; to readers until a tested build is recorded.

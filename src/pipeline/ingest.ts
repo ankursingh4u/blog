@@ -22,16 +22,16 @@ import { botUserAgent } from '@/lib/site';
 import { log } from '@/pipeline/log';
 
 /**
- * Step 1 — ingest.
+ * Step 1, ingest.
  *
  * Four discovery channels, each independently switchable from /admin/settings:
  *
- *   1. Microsoft release feeds — authoritative, carries real identifiers.
+ *   1. Microsoft release feeds, authoritative, carries real identifiers.
  *      Feeds the `/tech/windows` sub-section only.
- *   2. Google News RSS — the main channel. Section feeds, search feeds and top
+ *   2. Google News RSS, the main channel. Section feeds, search feeds and top
  *      stories, across all eight verticals and both editions.
- *   3. Google autocomplete — what people are actually typing.
- *   4. Google Trends daily RSS — today's spikes.
+ *   3. Google autocomplete, what people are actually typing.
+ *   4. Google Trends daily RSS, today's spikes.
  *
  * Channel 1 is the only one that can be trusted for identifiers, and it is the
  * only one that produces troubleshooting-shaped keywords. Channels 2–4 produce
@@ -44,11 +44,11 @@ import { log } from '@/pipeline/log';
  *
  * Deduping happens twice. Exact `phrase` is unique, so a re-run is a no-op; on
  * top of that, a candidate that is a retelling of a story already queued or used
- * is dropped (`src/lib/similarity.ts`) — one event reaches us under a different
+ * is dropped (`src/lib/similarity.ts`), one event reaches us under a different
  * headline from every publisher and both editions, and the exact-phrase check
  * sees those as unrelated.
  *
- * Channel order is also precedence order — the first writer of a phrase wins, so
+ * Channel order is also precedence order, the first writer of a phrase wins, so
  * a Microsoft-feed candidate keeps its verified identifiers if a news item later
  * produces the same phrase.
  */
@@ -62,7 +62,7 @@ export const FEEDS = [
     name: 'Windows Insider blog',
     url: 'https://blogs.windows.com/windows-insider/feed/',
   },
-  // Replaced the Windows IT Pro TechCommunity board feed, which now 404s —
+  // Replaced the Windows IT Pro TechCommunity board feed, which now 404s -
   // Microsoft reorganised the TechCommunity RSS paths and the board id no longer
   // resolves. The `/t5/s/` variant answers 200 but returns an empty channel, so
   // there is no drop-in replacement; this is the nearest live equivalent.
@@ -118,9 +118,9 @@ export async function ingest(): Promise<IngestResult> {
       }
       log.info(`ingest: ${feed.name} → ${items.length} items`);
     } catch (error) {
-      // One unreachable feed must not abort the run — the others still have value.
+      // One unreachable feed must not abort the run, the others still have value.
       result.feedsFailed.push(feed.name);
-      log.warn(`ingest: ${feed.name} failed — ${describe(error)}`);
+      log.warn(`ingest: ${feed.name} failed, ${describe(error)}`);
     }
   }
 
@@ -191,7 +191,7 @@ export async function ingest(): Promise<IngestResult> {
   /* ------------------------------------------------------------ persistence */
   const byPhrase = new Map<string, (typeof allCandidates)[number]>();
   for (const candidate of allCandidates) {
-    // First writer wins, and the Microsoft feeds run first — so if the same
+    // First writer wins, and the Microsoft feeds run first, so if the same
     // phrase is found by both, the version keeping the verified identifiers is
     // the one that survives.
     if (!byPhrase.has(candidate.phrase)) byPhrase.set(candidate.phrase, candidate);
@@ -203,7 +203,7 @@ export async function ingest(): Promise<IngestResult> {
   // repeat, and one story never arrives twice in the same words: every
   // publisher writes its own headline and both editions carry several of them.
   // Left to the phrase check alone, "Transfer rumors: Arsenal want Rice" and
-  // "Arsenal in Rice talks — transfer rumors" both became keywords and both got
+  // "Arsenal in Rice talks, transfer rumors" both became keywords and both got
   // written up, which is how the site ended up with the same story three times.
   //
   // Compared against everything already queued or used, not just this batch, so
@@ -233,7 +233,7 @@ export async function ingest(): Promise<IngestResult> {
 
     // A keyword with no category can never be selected for generation, so an
     // unresolved slug silently drops the topic. That is exactly how the
-    // pre-pivot slugs went unnoticed — say so rather than storing null quietly.
+    // pre-pivot slugs went unnoticed, say so rather than storing null quietly.
     const categoryId = categoryIdBySlug.get(candidate.categorySlug) ?? null;
     if (categoryId === null) {
       unresolvedSlugs.add(candidate.categorySlug);
@@ -258,7 +258,7 @@ export async function ingest(): Promise<IngestResult> {
 
   if (unresolvedSlugs.size > 0) {
     log.warn(
-      `ingest: no Category row for slug(s) ${[...unresolvedSlugs].join(', ')} — those keywords ` +
+      `ingest: no Category row for slug(s) ${[...unresolvedSlugs].join(', ')}, those keywords ` +
         'were stored without a category and will never be selected. Seed the categories.',
     );
   }
@@ -279,7 +279,7 @@ export async function ingest(): Promise<IngestResult> {
  * Turns a bare search phrase into a keyword candidate.
  *
  * Unlike a feed item there is no article body to mine, so the only identifiers
- * attached are ones present in the phrase itself — someone searching
+ * attached are ones present in the phrase itself, someone searching
  * "0x800f0922 fix" has supplied a real error code; a phrase with no identifier
  * gets none rather than an inferred one.
  */
@@ -304,7 +304,7 @@ export function phraseToCandidate(
     kbNumber,
     buildNumber: null,
     errorCode,
-    // The phrase came from a query, not a document — there is no source page to
+    // The phrase came from a query, not a document, there is no source page to
     // point at, and inventing one would put a fake citation in the database.
     sourceUrl: `discovery:${origin}`,
   };
@@ -313,8 +313,8 @@ export function phraseToCandidate(
 /**
  * Falls back to the shared vertical classifier, then to `tech`.
  *
- * This previously returned one of five pre-pivot slugs — `error-codes`,
- * `how-to`, `app-not-working`, `update-problems`, `windows-updates` — none of
+ * This previously returned one of five pre-pivot slugs, `error-codes`,
+ * `how-to`, `app-not-working`, `update-problems`, `windows-updates`, none of
  * which survived the move to eight verticals. The slug lookup in `ingest` missed
  * every time, so every keyword this produced was stored with a null category and
  * could never be selected for generation.
@@ -343,7 +343,7 @@ async function fetchText(url: string): Promise<string> {
       },
     });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    // Not response.text() — see readFeedBody: a UTF-8 feed that declares no
+    // Not response.text(), see readFeedBody: a UTF-8 feed that declares no
     // charset otherwise decodes as Latin-1 and mangles every apostrophe.
     return await readFeedBody(response);
   } finally {

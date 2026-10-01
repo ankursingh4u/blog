@@ -7,7 +7,7 @@ export const SETTING_DEFAULTS = {
    * Drafts a cycle asks for from each category.
    *
    * A cycle covers every vertical, so the run size is this times the number of
-   * top-level categories — 2 across 8 verticals is 16 drafts, and four cycles a
+   * top-level categories, 2 across 8 verticals is 16 drafts, and four cycles a
    * day is 64. Lower this before lowering the cadence: fewer, better-sourced
    * drafts per section beats the same total spread thinner.
    */
@@ -20,15 +20,15 @@ export const SETTING_DEFAULTS = {
    * article is the bill. Writing, checking and naming are different jobs and
    * do not need the same model:
    *
-   *   draft   — the article itself. The expensive one, and the one worth
+   *   draft  , the article itself. The expensive one, and the one worth
    *             testing a smaller model on: judge it by the rejection rate,
    *             not by the invoice.
-   *   review  — scores a draft against text it has already been handed. It is
+   *   review , scores a draft against text it has already been handed. It is
    *             comparison, not composition.
-   *   meta    — titles and descriptions. Mechanical; the smallest model will do.
+   *   meta   , titles and descriptions. Mechanical; the smallest model will do.
    *
    * A name this account cannot use falls back to OPENAI_MODEL and logs, rather
-   * than failing every call — a cost setting must not be able to take the site's
+   * than failing every call, a cost setting must not be able to take the site's
    * generation down.
    */
   AI_MODEL_DRAFT: '',
@@ -50,7 +50,7 @@ export const SETTING_DEFAULTS = {
    *
    * Empty restores the original behaviour: round-robin among the house authors
    * whose categoryFocus covers the article's category. Set, it pins the byline
-   * to one person — the publisher taking responsibility for the output rather
+   * to one person, the publisher taking responsibility for the output rather
    * than a rota of personas.
    *
    * A slug that matches no author is ignored with a warning rather than failing
@@ -67,7 +67,7 @@ export const SETTING_DEFAULTS = {
    * Google Tag Manager container (GTM-XXXXXXX). Empty renders nothing.
    *
    * Kept as a setting rather than a constant so a container can be pulled
-   * immediately from /admin without waiting on a deploy — which is exactly the
+   * immediately from /admin without waiting on a deploy, which is exactly the
    * situation this site has already been in once. A container is a channel for
    * running arbitrary JavaScript on every page, so whoever owns it owns the
    * front end: only ever point this at a container you control.
@@ -89,7 +89,7 @@ export const SETTING_DEFAULTS = {
   DAILY_TOKEN_BUDGET: '400000',
   /**
    * Optional "inputPerMillion,outputPerMillion" in your billing currency, e.g.
-   * "1.25,10". Empty means costs are simply not displayed — better than showing
+   * "1.25,10". Empty means costs are simply not displayed, better than showing
    * an invented figure.
    */
   AI_TOKEN_PRICES: '',
@@ -98,7 +98,7 @@ export const SETTING_DEFAULTS = {
    * Today's token spend and the last run's summary.
    *
    * These are pipeline state rather than operator preferences, and they live
-   * here because the deployment has no migration step — a new table would exist
+   * here because the deployment has no migration step, a new table would exist
    * in the generated Prisma client and not in the database. `saveSettings`
    * skips keys absent from the submitted form, so the admin form cannot clobber
    * them. When there is a migration path this wants to be a `PipelineRun`

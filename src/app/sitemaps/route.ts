@@ -3,7 +3,7 @@ import { redirect, permanentRedirect } from 'next/navigation';
 /**
  * /sitemaps hands off to the real XML sitemap.
  *
- * There is one sitemap and it is /sitemap.xml — that filename is what crawlers
+ * There is one sitemap and it is /sitemap.xml, that filename is what crawlers
  * probe for by default and what robots.txt declares, so it stays where it is.
  * This exists because /sitemaps is the address a person is likely to try, and
  * landing them on an HTML page when they wanted the machine-readable file is the
@@ -19,7 +19,7 @@ export const dynamic = 'force-dynamic';
 
 export function GET(): never {
   permanentRedirect('/sitemap.xml');
-  // Unreachable — permanentRedirect throws. Kept so the signature stays honest
+  // Unreachable, permanentRedirect throws. Kept so the signature stays honest
   // if the call above is ever made conditional.
   redirect('/sitemap.xml');
 }

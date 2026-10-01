@@ -58,13 +58,13 @@ export async function pingSitemap(): Promise<PingResult> {
   }
 }
 
-/** Called from the publish action. Never throws — indexing must not block a publish. */
+/** Called from the publish action. Never throws, indexing must not block a publish. */
 export async function notifyPublished(paths: string[]) {
   const [indexNow, sitemap] = await Promise.all([pingIndexNow(paths), pingSitemap()]);
   const summarise = (label: string, r: PingResult) =>
     `${label}: ${r.ok ? 'ok' : r.skipped ? `skipped (${r.skipped})` : `failed (${r.detail})`}`;
   console.info(
-    `[indexing] ${paths.length} URL(s) — ${summarise('IndexNow', indexNow)}; ${summarise('sitemap', sitemap)}`,
+    `[indexing] ${paths.length} URL(s), ${summarise('IndexNow', indexNow)}; ${summarise('sitemap', sitemap)}`,
   );
   return { indexNow, sitemap };
 }

@@ -15,8 +15,8 @@ import {
  * ever moves back).
  *
  * **This route ingests by default and does not write articles.** That split is
- * deliberate and it is the whole point of the endpoint. Discovery is free — it
- * reads Google News RSS and autocomplete — whereas generation costs real OpenAI
+ * deliberate and it is the whole point of the endpoint. Discovery is free, it
+ * reads Google News RSS and autocomplete, whereas generation costs real OpenAI
  * credits per article. An unattended daily job that silently spends money is not
  * something you can supervise, so the schedule fills the keyword queue and a
  * human decides what is worth writing from /admin.
@@ -29,7 +29,7 @@ import {
  *                                                     named verticals only
  *
  * Auth is a bearer token matching CRON_SECRET. With CRON_SECRET unset the route
- * refuses to do anything rather than defaulting open — an unauthenticated
+ * refuses to do anything rather than defaulting open, an unauthenticated
  * generation endpoint on a public host is a way to burn an API budget.
  *
  * Cron issues a GET, so GET is the trigger. A GET with no valid bearer (a
@@ -53,7 +53,7 @@ async function ingestOnly(): Promise<Response> {
   return Response.json({
     ok: true,
     mode: 'ingest',
-    spent: 'nothing — discovery only, no model calls',
+    spent: 'nothing, discovery only, no model calls',
     feedsRead: result.feedsRead,
     feedsFailed: result.feedsFailed,
     itemsSeen: result.itemsSeen,
@@ -122,8 +122,8 @@ async function ingestAndGenerate(limit: number, only: string | null): Promise<Re
 /**
  * A cycle: every vertical covered, then handed to the one-at-a-time queue.
  *
- * This is the scheduled mode. `?mode=generate` stays what it was — a small,
- * aimed run that pushes each draft straight to Telegram — because "fill this
+ * This is the scheduled mode. `?mode=generate` stays what it was, a small,
+ * aimed run that pushes each draft straight to Telegram, because "fill this
  * one thin section now" and "do the rounds" are different jobs.
  */
 async function runFullCycle(url: URL): Promise<Response> {

@@ -31,7 +31,7 @@ function write(slugs: string[]) {
     window.localStorage.setItem(KEY, JSON.stringify(slugs));
     window.dispatchEvent(new CustomEvent(CHANGED));
   } catch {
-    /* ignore — see read() */
+    /* ignore, see read() */
   }
 }
 

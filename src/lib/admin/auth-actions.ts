@@ -28,7 +28,7 @@ export interface AuthState {
  *
  * A single shared password is precisely the thing worth brute-forcing, and the
  * login endpoint is public. This is in-process, so on serverless it is per
- * instance rather than global — partial cover, but it turns an unlimited
+ * instance rather than global, partial cover, but it turns an unlimited
  * guessing rate into a slow one, and the alternative of no limit at all is
  * worse. A shared store (Redis, or a table) is the upgrade if the admin ever
  * faces real traffic.
@@ -95,7 +95,7 @@ export async function signIn(_prev: AuthState, formData: FormData): Promise<Auth
   store.set(SESSION_COOKIE, await createSessionToken(), {
     httpOnly: true,
     // Not readable from JavaScript, not sent cross-site, and HTTPS-only once
-    // deployed — locally there is no certificate, so secure would break it.
+    // deployed, locally there is no certificate, so secure would break it.
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
     path: '/',

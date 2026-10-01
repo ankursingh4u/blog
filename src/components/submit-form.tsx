@@ -70,7 +70,7 @@ export function SubmitForm({ categories }: { categories: CategoryOption[] }) {
         <Callout tone="brand" title="Your draft is back">
           <p>
             This browser had an unsent article saved, so we have put it back. Pictures are
-            not kept — attach those again.
+            not kept, attach those again.
           </p>
           <button
             type="button"
@@ -127,7 +127,7 @@ export function SubmitForm({ categories }: { categories: CategoryOption[] }) {
       <Field
         label="Your article"
         htmlFor="body"
-        hint="Write as long a piece as it needs to be. Use the toolbar for headings, emphasis, quotes and links — Preview shows the article exactly as it would appear on the site."
+        hint="Write as long a piece as it needs to be. Use the toolbar for headings, emphasis, quotes and links, Preview shows the article exactly as it would appear on the site."
         error={state.errors?.body}
       >
         <MarkdownEditor

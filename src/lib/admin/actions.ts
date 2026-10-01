@@ -30,7 +30,7 @@ import type { CategorySlug } from '@/pipeline/parser';
  * Admin server actions.
  *
  * Everything that writes lives here, so when auth lands a single wrapper around
- * this module covers every mutation — no admin route writes to the database
+ * this module covers every mutation, no admin route writes to the database
  * directly. All input is validated with Zod: a server action is a public HTTP
  * endpoint whether or not a form points at it.
  */
@@ -117,7 +117,7 @@ const CreatePostInput = z.object({
  * Creates an empty article for a human to write.
  *
  * Nothing here calls a language model. Discovery is RSS, the sources are
- * fetched HTML, and the cover is rendered locally by /api/og — so a
+ * fetched HTML, and the cover is rendered locally by /api/og, so a
  * hand-written article costs nothing to produce, which is the entire point of
  * having this alongside the pipeline.
  *
@@ -140,12 +140,12 @@ export async function createPost(_prev: ActionState, formData: FormData): Promis
   if (!category) return FAIL('That section no longer exists.', { categoryId: 'Unknown section.' });
 
   const author = await assignAuthor(category.slug, null);
-  if (!author) return FAIL('No authors exist — run the seed first.');
+  if (!author) return FAIL('No authors exist, run the seed first.');
 
   const slug = await uniqueSlug(slugify(title));
 
-  // Pull the sources the ingest already found for this story. Free — RSS and
-  // plain HTTP — but slow enough to be worth doing once, here, rather than
+  // Pull the sources the ingest already found for this story. Free, RSS and
+  // plain HTTP, but slow enough to be worth doing once, here, rather than
   // making the writer wait for it later.
   let sources: Array<{ url: string; title: string }> = [];
   if (keywordId) {
@@ -155,7 +155,7 @@ export async function createPost(_prev: ActionState, formData: FormData): Promis
         const found = await research(keyword, category.slug as CategorySlug);
         sources = found.map((s) => ({ url: s.url, title: s.title }));
       } catch {
-        // A story with no reachable source is still worth writing by hand —
+        // A story with no reachable source is still worth writing by hand -
         // the writer supplies their own. Do not block creation on it.
       }
       await prisma.keyword.update({ where: { id: keyword.id }, data: { status: 'USED' } });
@@ -178,7 +178,7 @@ export async function createPost(_prev: ActionState, formData: FormData): Promis
       screenshots: toJson([]),
       sourceUrls: toJson(sources),
       relatedSlugs: toJson([]),
-      // HUMAN is what separates a hand-written article from pipeline output —
+      // HUMAN is what separates a hand-written article from pipeline output -
       // it is also what the quality gate's absence is explained by, so nothing
       // downstream mistakes an unscored draft for a failed one.
       generatedBy: 'HUMAN',
@@ -301,7 +301,7 @@ export async function savePost(_prev: ActionState, formData: FormData): Promise<
 
   // Read the slug before the update so the old URL can be kept. Fixing a typo
   // in a headline regenerates the slug, and the old one is what Google has
-  // indexed — losing it costs the page its ranking history.
+  // indexed, losing it costs the page its ranking history.
   const before = await prisma.post.findUnique({
     where: { id: input.id },
     select: { slug: true },
@@ -351,7 +351,7 @@ export async function savePost(_prev: ActionState, formData: FormData): Promise<
    * Keep the URL the post used to answer on.
    *
    * `upsert` rather than `create` because a slug can be retired more than once
-   * — rename A to B, then back to A, then to C — and the second retirement of A
+   *, rename A to B, then back to A, then to C, and the second retirement of A
    * must not collide with the first. The row is simply repointed at the post
    * that owns it now.
    *
@@ -396,9 +396,9 @@ const StatusInput = z.object({
  *
  * The buttons used to submit a shared form and rely on the browser adding the
  * pressed button's name and value. That works right up until the form the
- * action receives is not the form the button was in — a stale page whose action
+ * action receives is not the form the button was in, a stale page whose action
  * ids no longer match the server, or the nested-form bug this file has already
- * been bitten by once — and then `status` is simply absent and the only thing
+ * been bitten by once, and then `status` is simply absent and the only thing
  * the editor sees is "Unknown status.", which says nothing about why.
  *
  * Arguments cannot go missing in transit. There is no FormData to parse, so
@@ -434,8 +434,8 @@ export async function deletePost(formData: FormData): Promise<void> {
  * Approve straight from the review queue.
  *
  * Deliberately a thin wrapper over `setPostStatus` rather than its own update:
- * that function owns the rules about what may go live — a featured image, a
- * meta description, a body of real length — and a second publish path would be
+ * that function owns the rules about what may go live, a featured image, a
+ * meta description, a body of real length, and a second publish path would be
  * a second place for those to be forgotten.
  */
 export async function approvePost(formData: FormData): Promise<void> {
@@ -453,7 +453,7 @@ export async function approvePost(formData: FormData): Promise<void> {
  * Reject from the review queue, with a reason.
  *
  * ARCHIVED rather than deleted. A rejected draft is the most useful record
- * there is of what the pipeline gets wrong, and deleting it throws that away —
+ * there is of what the pipeline gets wrong, and deleting it throws that away -
  * the reasons are the raw material for tuning the prompt and the gates.
  *
  * The reason is prepended to `qualityNotes` rather than given its own column.
@@ -462,7 +462,7 @@ export async function approvePost(formData: FormData): Promise<void> {
  * write would fail in production while passing every test locally. When there
  * is a migration path this wants to be a real column, alongside a `keywordId`
  * on Post so that rejecting an article can also retire the keyword that
- * produced it — which is the feedback loop this is missing today.
+ * produced it, which is the feedback loop this is missing today.
  */
 export async function rejectPost(formData: FormData): Promise<void> {
   await requireAdmin();
@@ -479,7 +479,7 @@ export async function rejectPost(formData: FormData): Promise<void> {
 /**
  * Re-runs the quality gate on a post whose review never returned.
  *
- * A zero score does not mean "bad article" — it means the second of the two API
+ * A zero score does not mean "bad article", it means the second of the two API
  * calls failed after the draft had been written and paid for. The pipeline fails
  * closed and parks the post in review, which is right, but the score it leaves
  * behind reads as a verdict on the writing and it is not one. Nothing recomputes
@@ -488,7 +488,7 @@ export async function rejectPost(formData: FormData): Promise<void> {
  * Sources are re-fetched because a post stores each source's URL and title but
  * not the extracted text the gate needs. One that has rotated off its
  * publisher's site is dropped, and the gate scores against what is still
- * reachable — if nothing is, this refuses rather than scoring an article
+ * reachable, if nothing is, this refuses rather than scoring an article
  * against no sources at all, which would be worse than leaving the 0.
  *
  * `scripts/regrade.ts` does the same thing in bulk, but it needs tsx and the
@@ -539,7 +539,7 @@ export async function regradePost(id: string): Promise<ActionState> {
   });
 
   // Another failure must not overwrite the existing notes with a second copy of
-  // "could not run" — the first one already says what went wrong.
+  // "could not run", the first one already says what went wrong.
   if (quality.score === 0) {
     return FAIL(`The review failed again, so the score is unchanged. ${quality.notes.slice(0, 300)}`);
   }
@@ -558,7 +558,7 @@ export async function regradePost(id: string): Promise<ActionState> {
 
   return OK(
     `Re-graded: ${quality.score}/100 from ${sources.length} source(s)` +
-      (quality.blocked ? ' — still blocked for hallucinated identifiers.' : '.'),
+      (quality.blocked ? ', still blocked for hallucinated identifiers.' : '.'),
   );
 }
 
@@ -574,7 +574,7 @@ const RegenerateInput = z.object({
  * Rewrites one H2 section of the body in place.
  *
  * The model sees the whole article for context but is told to return only the
- * replacement section, and the swap is done here by string surgery — so a
+ * replacement section, and the swap is done here by string surgery, so a
  * regeneration can never silently rewrite the rest of the guide.
  */
 export async function regenerateSection(
@@ -809,7 +809,7 @@ export async function triggerPipeline(): Promise<PipelineRunResult> {
  * Accepts a reader submission and turns it into a draft post.
  *
  * Deliberately creates the post as DRAFT, never PUBLISHED. Accepting means "this
- * is worth editing", not "put it on the site" — the editor then works on it in
+ * is worth editing", not "put it on the site", the editor then works on it in
  * the normal post editor and publishes from there, which is the same path every
  * other article takes and the same place the structure and style checks live.
  *
@@ -849,7 +849,7 @@ export async function acceptSubmission(
   /**
    * A card shows `metaDescription`, falling back to the quick answer. A
    * contributor wrote neither, so without this the article would sit in its
-   * section with a blank summary while every neighbour has one — the same
+   * section with a blank summary while every neighbour has one, the same
    * listing, visibly inconsistent. The opening of their own text is the honest
    * stand-in until an editor writes a better one.
    */
@@ -863,7 +863,7 @@ export async function acceptSubmission(
       authorId: author.id,
       status: 'DRAFT',
       // The contributor wrote prose, not our post structure. Leaving the quick
-      // answer empty is honest — the editor writes it, and the structure check
+      // answer empty is honest, the editor writes it, and the structure check
       // says what is missing.
       quickAnswer: '',
       body: submission.body,
@@ -875,7 +875,7 @@ export async function acceptSubmission(
       // Submissions store a caption as `title`; a post's screenshots store it as
       // `alt`, and the article renders `alt`. Without this translation every
       // caption a contributor typed would be parsed away and the images would
-      // publish bare — silently, because the Zod schema defaults alt to "".
+      // publish bare, silently, because the Zod schema defaults alt to "".
       screenshots: toScreenshots(submission.images),
       generatedBy: 'HUMAN',
       qualityNotes:

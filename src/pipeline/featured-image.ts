@@ -3,7 +3,7 @@ import { absoluteUrl } from '@/lib/site';
 import { log } from '@/pipeline/log';
 
 /**
- * Step 8 — featured image.
+ * Step 8, featured image.
  *
  * Renders the branded 1200x630 card from /api/og and stores the bytes, rather
  * than pointing the post at the live endpoint. Two reasons: Google Discover
@@ -31,7 +31,7 @@ export async function generateFeaturedImage({
    *
    * The card draws `SITE.url` as its footer, so `NEXT_PUBLIC_SITE_URL` has to be
    * the real public domain. But fetching from that domain requires it to be
-   * registered, resolving and already serving this build — which is false while
+   * registered, resolving and already serving this build, which is false while
    * rendering cards for a domain that has not launched, and false again for any
    * run against a server that is not yet reachable at its final address.
    *
@@ -57,10 +57,10 @@ export async function generateFeaturedImage({
     log.info(`image: stored ${stored.url} (${Math.round(stored.size / 1024)} KB)`);
     return stored.url;
   } catch (error) {
-    // A missing featured image downgrades the post, it does not fail the run —
+    // A missing featured image downgrades the post, it does not fail the run -
     // the publish step refuses to auto-publish without one.
     log.warn(
-      `image: could not render OG card for "${slug}" — ${error instanceof Error ? error.message : error}`,
+      `image: could not render OG card for "${slug}", ${error instanceof Error ? error.message : error}`,
     );
     return null;
   }

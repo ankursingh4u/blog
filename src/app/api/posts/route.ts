@@ -5,7 +5,7 @@ import { getPublishedPosts, searchPosts } from '@/lib/posts';
 /**
  * Paged article feed, used by the infinite-scroll lists.
  *
- * The first page is always server-rendered by the page itself — this endpoint
+ * The first page is always server-rendered by the page itself, this endpoint
  * only serves what comes *after* it. That keeps the initial paint and the
  * crawlable markup identical to what they were before infinite scroll existed;
  * a crawler that never scrolls still sees a full first page and can reach the

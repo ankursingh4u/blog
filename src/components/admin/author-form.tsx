@@ -78,7 +78,7 @@ export function AuthorForm({
       <Field
         label="Bio"
         htmlFor={`bio-${author?.id ?? 'new'}`}
-        hint="Shown on every article and on the author page. Honest — no invented credentials."
+        hint="Shown on every article and on the author page. Honest, no invented credentials."
         error={errors.bio}
       >
         <textarea

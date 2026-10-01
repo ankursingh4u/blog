@@ -103,7 +103,7 @@ export const countPublishedPosts = cache(async (opts: PostFilter = {}) =>
   prisma.post.count({ where: whereFor(opts) }),
 );
 
-/** Top-level categories only, each with its children — this drives the nav. */
+/** Top-level categories only, each with its children, this drives the nav. */
 export const getCategories = cache(async () =>
   prisma.category.findMany({
     where: { parentId: null },
@@ -112,7 +112,7 @@ export const getCategories = cache(async () =>
   }),
 );
 
-/** Every category, parents and children alike — for the sitemap and admin. */
+/** Every category, parents and children alike, for the sitemap and admin. */
 export const getAllCategories = cache(async () =>
   prisma.category.findMany({
     orderBy: [{ position: 'asc' }, { name: 'asc' }],
@@ -140,7 +140,7 @@ export const getAuthors = cache(async () => prisma.author.findMany({ orderBy: { 
  * The masthead, in the order the owner set.
  *
  * Restricted to the named house bylines, so the pre-pivot persona rows that
- * still own the back catalogue do not appear as people who write here — they
+ * still own the back catalogue do not appear as people who write here, they
  * are historical bylines, not members of the masthead, and nothing
  * re-attributes their articles to anyone real.
  *
@@ -170,7 +170,7 @@ const fullInclude = {
 
 /**
  * Full post for the article page. `categorySlug` is the post's own (leaf)
- * category — `windows` for /tech/windows/x, `tech` for /tech/x. The route
+ * category, `windows` for /tech/windows/x, `tech` for /tech/x. The route
  * resolves the nesting before calling this. Returns null unless published.
  */
 export const getPublishedPost = cache(async (categorySlug: string, slug: string) => {
@@ -182,7 +182,7 @@ export const getPublishedPost = cache(async (categorySlug: string, slug: string)
   return hydrate(post);
 });
 
-/** Same shape as the public article, but ignores status — used by /admin preview. */
+/** Same shape as the public article, but ignores status, used by /admin preview. */
 export const getPostForPreview = cache(async (id: string) => {
   const post = await prisma.post.findUnique({ where: { id }, include: fullInclude });
   return post ? hydrate(post) : null;
@@ -222,7 +222,7 @@ export const getRelatedPosts = cache(async (post: FullPost, limit = 4) => {
 
   /**
    * Top up in widening rings. A small category cannot fill the rail on its own
-   * — Education has three posts — and stopping at the category boundary left
+   *, Education has three posts, and stopping at the category boundary left
    * the sidebar visibly empty and wasted the internal linking.
    */
   const rings: Prisma.PostWhereInput[] = [
@@ -254,7 +254,7 @@ export const getRelatedPosts = cache(async (post: FullPost, limit = 4) => {
 
 /**
  * Keyword search over title, quick answer and body. SQLite has no full-text
- * index here, so this is a bounded LIKE scan — fine at this corpus size, and
+ * index here, so this is a bounded LIKE scan, fine at this corpus size, and
  * the one place to swap for Postgres `tsvector` after the move.
  */
 export const searchPosts = cache(async (query: string, take = 30, skip = 0) => {
@@ -267,7 +267,7 @@ export const searchPosts = cache(async (query: string, take = 30, skip = 0) => {
       // `mode: 'insensitive'` is required on Postgres and is not a nicety:
       // SQLite's `contains` is already case-insensitive for ASCII, Postgres's
       // is not. Without it the migration would silently stop "arsenal" from
-      // matching "Arsenal" — no error, just worse search.
+      // matching "Arsenal", no error, just worse search.
       AND: terms.map((term) => ({
         OR: [
           { title: { contains: term, mode: 'insensitive' } },
@@ -290,7 +290,7 @@ export const searchPosts = cache(async (query: string, take = 30, skip = 0) => {
  *
  * Called only when the normal lookup has already missed, so it costs nothing on
  * the path that matters. Returns the post's *current* URL rather than just its
- * slug, because the category can move too — a post reassigned from /tech to
+ * slug, because the category can move too, a post reassigned from /tech to
  * /gaming needs the whole path rebuilt, not the last segment swapped.
  *
  * Drafts are excluded: a URL that is not live has nothing to redirect to, and

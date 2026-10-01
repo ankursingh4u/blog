@@ -188,7 +188,7 @@ export default async function AdminPostsPage({ searchParams }: { searchParams: S
                             : 'text-danger',
                     )}
                   >
-                    {post.qualityScore ?? '—'}
+                    {post.qualityScore ?? '-'}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{formatDate(post.updatedAt)}</td>
                 </tr>

@@ -89,7 +89,7 @@ export function SubmissionCard({
 
       {/*
         Plain text, deliberately. This is unreviewed input from a stranger, and
-        `whitespace-pre-wrap` shows exactly what was sent — no markdown, no HTML,
+        `whitespace-pre-wrap` shows exactly what was sent, no markdown, no HTML,
         nothing that could execute or mislead the person deciding on it.
       */}
       <div className="mt-4 rounded-md border border-border bg-background p-4">
@@ -127,7 +127,7 @@ export function SubmissionCard({
               className="object-contain"
             />
           </div>
-          <figcaption className="mt-1 text-xs text-muted-foreground">Hero image — becomes the cover</figcaption>
+          <figcaption className="mt-1 text-xs text-muted-foreground">Hero image, becomes the cover</figcaption>
         </figure>
       ) : null}
 
@@ -148,7 +148,7 @@ export function SubmissionCard({
 
       {/*
         Read-only on purpose. An editor may rewrite the article freely, but the
-        contributor's own description of themselves is not ours to edit — it
+        contributor's own description of themselves is not ours to edit, it
         becomes the bio on a page carrying their name.
       */}
       <dl className="mt-4 rounded-md border border-dashed border-border p-3 text-xs">
@@ -223,7 +223,7 @@ export function SubmissionCard({
 
           <p className="mt-3 text-xs text-muted-foreground">
             Accepting creates a <strong>draft</strong> under the contributor&rsquo;s name. It does not
-            publish — you edit and publish it like any other post.
+            publish, you edit and publish it like any other post.
           </p>
         </div>
       ) : null}

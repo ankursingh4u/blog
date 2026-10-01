@@ -12,7 +12,7 @@ import { useSaved } from '@/lib/saved';
  * Renders whatever the reader has saved.
  *
  * Saved slugs live in localStorage, so the server cannot know them. The full
- * published list is passed in and filtered here — at this corpus size that is a
+ * published list is passed in and filtered here, at this corpus size that is a
  * few kilobytes and avoids an API round-trip on every visit.
  */
 export function SavedList({ posts }: { posts: PostCardData[] }) {
@@ -26,7 +26,7 @@ export function SavedList({ posts }: { posts: PostCardData[] }) {
     );
   }
 
-  // Keep the reader's own ordering — most recently saved first.
+  // Keep the reader's own ordering, most recently saved first.
   const bySlug = new Map(posts.map((post) => [post.slug, post]));
   const saved = slugs.map((slug) => bySlug.get(slug)).filter((p): p is PostCardData => Boolean(p));
 

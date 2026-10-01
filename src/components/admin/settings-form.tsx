@@ -52,8 +52,8 @@ export function SettingsForm({ values }: { values: Record<SettingKey, string> })
               defaultValue={values.AUTO_PUBLISH}
               className={inputClass}
             >
-              <option value="false">Off — human publishes</option>
-              <option value="true">On — publish above the threshold</option>
+              <option value="false">Off, human publishes</option>
+              <option value="true">On, publish above the threshold</option>
             </select>
           </Field>
 
@@ -86,7 +86,7 @@ export function SettingsForm({ values }: { values: Record<SettingKey, string> })
         </h2>
         <p className="text-xs text-muted-foreground">
           Extra channels the daily run uses to find topics, on top of the Microsoft release feeds.
-          All three are keyless public endpoints — there is no account to set up.
+          All three are keyless public endpoints, there is no account to set up.
         </p>
 
         <div className="grid gap-5 sm:grid-cols-3">
@@ -125,7 +125,7 @@ export function SettingsForm({ values }: { values: Record<SettingKey, string> })
           <Field
             label="Google Trends"
             htmlFor="DISCOVERY_TRENDS"
-            hint="Daily trending searches. Usually returns nothing Windows-related — that is normal."
+            hint="Daily trending searches. Usually returns nothing Windows-related, that is normal."
           >
             <select
               id="DISCOVERY_TRENDS"
@@ -168,7 +168,7 @@ export function SettingsForm({ values }: { values: Record<SettingKey, string> })
         </h2>
         <p className="text-xs text-muted-foreground">
           First-party HTML, inserted as-is into a height-reserved container. Leave a slot empty and
-          it renders nothing at all — no placeholder, no reserved gap.
+          it renders nothing at all, no placeholder, no reserved gap.
         </p>
 
         {AD_PLACEMENTS.map((placement) => (
@@ -222,7 +222,7 @@ export function SettingsForm({ values }: { values: Record<SettingKey, string> })
           <Field
             label="Token prices (optional)"
             htmlFor="AI_TOKEN_PRICES"
-            hint="input,output per million — e.g. 1.25,10. Empty hides cost estimates rather than guessing."
+            hint="input,output per million, e.g. 1.25,10. Empty hides cost estimates rather than guessing."
           >
             <input
               id="AI_TOKEN_PRICES"
@@ -250,11 +250,11 @@ export function SettingsForm({ values }: { values: Record<SettingKey, string> })
 
           {/*
             Model per job. Output tokens are most of the bill, so the model that
-            writes the article is the lever worth pulling — and the only honest
+            writes the article is the lever worth pulling, and the only honest
             way to judge a cheaper one is the rejection rate, not the invoice.
           */}
           <Field
-            label="Model — writing"
+            label="Model, writing"
             htmlFor="AI_MODEL_DRAFT"
             hint="Empty uses OPENAI_MODEL. A smaller model here is the biggest saving available."
           >
@@ -268,7 +268,7 @@ export function SettingsForm({ values }: { values: Record<SettingKey, string> })
           </Field>
 
           <Field
-            label="Model — quality review"
+            label="Model, quality review"
             htmlFor="AI_MODEL_REVIEW"
             hint="Compares a draft against its sources. Comparison, not composition."
           >
@@ -282,7 +282,7 @@ export function SettingsForm({ values }: { values: Record<SettingKey, string> })
           </Field>
 
           <Field
-            label="Model — titles and descriptions"
+            label="Model, titles and descriptions"
             htmlFor="AI_MODEL_META"
             hint="Mechanical work; the smallest model will do."
           >
@@ -312,7 +312,7 @@ export function SettingsForm({ values }: { values: Record<SettingKey, string> })
           <Field
             label="Tag Manager container"
             htmlFor="GTM_ID"
-            hint="Only a container you own — it can run any script on every page. Clear it to remove."
+            hint="Only a container you own, it can run any script on every page. Clear it to remove."
           >
             <input
               id="GTM_ID"

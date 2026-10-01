@@ -8,8 +8,8 @@ import { formatDate, isoDate } from '@/lib/utils';
  *
  * The server cannot know the reader's clock, and rendering a relative string on
  * the server would produce a hydration mismatch (and go stale in a cached page).
- * So the absolute date is rendered first — which is also what a crawler and a
- * reader with JavaScript disabled get — and swapped for the relative form after
+ * So the absolute date is rendered first, which is also what a crawler and a
+ * reader with JavaScript disabled get, and swapped for the relative form after
  * mount.
  */
 const DIVISIONS: Array<{ amount: number; unit: Intl.RelativeTimeFormatUnit }> = [

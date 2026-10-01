@@ -3,7 +3,7 @@
  *
  * Every run collects its lines in memory as well as writing them to stdout, so
  * /admin can show the transcript of the last "Run pipeline now" click without a
- * log shipper. Kept to the last 500 lines — this is a debugging aid, not
+ * log shipper. Kept to the last 500 lines, this is a debugging aid, not
  * storage.
  */
 

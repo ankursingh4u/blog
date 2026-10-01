@@ -40,7 +40,7 @@ export default function TermsPage() {
           <p className="mt-3 text-sm text-muted-foreground">Last updated: {LAST_UPDATED}</p>
 
           <Callout tone="brand" title="In one paragraph" className="mt-10">
-            Anyone may submit an article. If we publish it, you keep the copyright — we only get
+            Anyone may submit an article. If we publish it, you keep the copyright, we only get
             permission to run it, and you can ask us to take it down. Our articles are drawn from
             publicly available sources, which are always cited. Names, logos and quoted material
             belong to whoever owns them. Nothing here is professional advice.
@@ -54,12 +54,12 @@ export default function TermsPage() {
               subscribers, because there are no subscribers.
             </p>
             <p>
-              Open to read does not mean unowned. The articles belong to the people who wrote them —
+              Open to read does not mean unowned. The articles belong to the people who wrote them -
               see &ldquo;Who owns what you read&rdquo; below, because free access and free
               republication are commonly and wrongly treated as the same thing.
             </p>
 
-            <h2>Open to write — anyone can publish here</h2>
+            <h2>Open to write, anyone can publish here</h2>
             <p>
               There is no application, no pitch letter and no account to create. Send an article
               through <Link href="/write">/write</Link> and an editor reads it. If we run it, it
@@ -94,7 +94,7 @@ export default function TermsPage() {
             <h2>Who owns what you read</h2>
             <p>
               <strong>The writer owns their article.</strong> Copyright in a contributed piece stays
-              with the person who wrote it — we do not ask for it and we do not take it. By sending
+              with the person who wrote it, we do not ask for it and we do not take it. By sending
               us an article you give {SITE.name} permission to publish it, keep it online, edit it
               for clarity, and distribute it in the site&rsquo;s feeds and search listings. That
               permission is non-exclusive: the piece is still yours to republish wherever else you
@@ -107,7 +107,7 @@ export default function TermsPage() {
             <p>
               Photographs, illustrations and other images belong to whoever made them and are used
               with permission, under an open licence, or under the licence of the source they came
-              from. If you believe an image here is yours and should not be, tell us — see
+              from. If you believe an image here is yours and should not be, tell us, see
               &ldquo;Corrections and takedowns&rdquo;.
             </p>
 
@@ -120,7 +120,7 @@ export default function TermsPage() {
             </p>
             <p>
               Where we quote or refer to someone else&rsquo;s reporting, it is attributed, kept
-              short, and linked — every source an article was drawn from is listed at the bottom of
+              short, and linked, every source an article was drawn from is listed at the bottom of
               it. The words remain the property of whoever wrote them; the quotation is use for
               reporting and commentary, not a transfer of anything.
             </p>
@@ -133,7 +133,7 @@ export default function TermsPage() {
 
             <h2>Reusing what is on this site</h2>
             <p>
-              Quote us, link to us, and summarise us freely — attribution and a link back is all we
+              Quote us, link to us, and summarise us freely, attribution and a link back is all we
               ask. What we cannot hand over is a blanket right to republish a contributor&rsquo;s
               article in full, because it is not ours to give: that permission has to come from the
               writer. Ask us and we will put you in touch.
@@ -144,7 +144,7 @@ export default function TermsPage() {
               If something here is wrong, is your work, infringes your rights or names you unfairly,
               write to <a href={`mailto:${SITE.email}`}>{SITE.email}</a> with the page address and
               what the problem is. Complaints of that kind are handled quickly and without argument
-              — we would rather pull a page and look into it than defend one. Factual corrections go
+             , we would rather pull a page and look into it than defend one. Factual corrections go
               through the <Link href="/contact">contact page</Link> and are made in the article
               itself.
             </p>
@@ -153,7 +153,7 @@ export default function TermsPage() {
             <p>
               Articles are published in good faith and as-is. News moves, prices change and fixes
               that worked last month stop working; we cannot promise a page is complete or current.
-              Nothing here is financial, medical, legal or professional advice — decisions of that
+              Nothing here is financial, medical, legal or professional advice, decisions of that
               kind need someone qualified who knows your circumstances. Back up your data before
               applying any technical fix. To the extent the law allows, we are not liable for what
               follows from acting on something you read here.

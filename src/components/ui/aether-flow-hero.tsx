@@ -17,7 +17,7 @@ import {
  *   - the canvas measures its own container, not `window`, so it can sit in a
  *     normal section instead of owning the viewport;
  *   - particle count is capped and scaled to area, and the neighbour-linking
- *     pass is O(n²) so the cap matters — 110 is the ceiling;
+ *     pass is O(n²) so the cap matters, 110 is the ceiling;
  *   - the loop stops when the section scrolls out of view or the tab is hidden;
  *   - honours `prefers-reduced-motion` by painting one static frame;
  *   - draws on a transparent canvas so the section background shows through
@@ -84,7 +84,7 @@ export function AetherFlowHero({
     const linkDistanceSq = Math.min(width, height) ** 2 / 40;
 
     // The reference palette assumes a black backdrop. On the light theme those
-    // values wash out against white, so each theme gets its own — read once
+    // values wash out against white, so each theme gets its own, read once
     // per effect run and refreshed by the theme-change listener below.
     const palette = () =>
       document.documentElement.classList.contains('dark')

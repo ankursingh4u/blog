@@ -8,8 +8,8 @@ export const revalidate = 86400;
 
 /**
  * Written against what the code actually does rather than from a template.
- * If you change what is stored — a new form field, an analytics tag, a
- * third-party embed — this page has to change with it, and the "Last updated"
+ * If you change what is stored, a new form field, an analytics tag, a
+ * third-party embed, this page has to change with it, and the "Last updated"
  * line below has to move.
  */
 const LAST_UPDATED = '15 September 2026';
@@ -52,7 +52,7 @@ export default function PrivacyPage() {
               <li>Your saved articles and your light/dark choice never leave your own browser.</li>
               <li>Nothing is sold, rented or handed to a data broker. Ever.</li>
               <li>
-                Ask us to delete anything of yours and we will —{' '}
+                Ask us to delete anything of yours and we will -{' '}
                 <a href={`mailto:${SITE.email}`} className="underline hover:text-foreground">
                   {SITE.email}
                 </a>
@@ -73,7 +73,7 @@ export default function PrivacyPage() {
             <p>
               The form at <Link href="/write">/write</Link> asks for your name, your email address,
               a short biography and the article itself, plus any images you attach. We store those
-              so an editor can read the submission, reply to you, and — if it runs — publish it
+              so an editor can read the submission, reply to you, and, if it runs, publish it
               under your byline.
             </p>
             <ul>
@@ -100,7 +100,7 @@ export default function PrivacyPage() {
             <p>
               Correspondence sent to the addresses on the{' '}
               <Link href="/contact">contact page</Link> sits in an ordinary mailbox and is kept for
-              as long as it is useful to keep — a correction thread, for instance, is worth having
+              as long as it is useful to keep, a correction thread, for instance, is worth having
               when the same question comes back a year later.
             </p>
 
@@ -128,8 +128,8 @@ export default function PrivacyPage() {
 
             <h2>Analytics</h2>
             <p>
-              Where Google Analytics is enabled, it records aggregate visits — which pages are read,
-              roughly where from, which site referred you — and sets its own cookies to do it. We
+              Where Google Analytics is enabled, it records aggregate visits, which pages are read,
+              roughly where from, which site referred you, and sets its own cookies to do it. We
               use it to see which articles were worth writing. We do not attempt to identify
               individual readers, and we have not enabled any advertising or cross-site
               identification features in it.
@@ -151,7 +151,7 @@ export default function PrivacyPage() {
               The site is paid for by display slots we sell and serve ourselves. There are no
               affiliate links and nothing to buy here. Where a slot is filled by a third-party ad
               network, that network can set its own cookies and see your IP address and the page you
-              were on — that is the network&rsquo;s processing under its own policy, not ours, and
+              were on, that is the network&rsquo;s processing under its own policy, not ours, and
               we do not pass it anything about you. We do not build advertising profiles of readers.
             </p>
 
@@ -180,7 +180,7 @@ export default function PrivacyPage() {
             <p>
               You can ask us what we hold about you, ask for it to be corrected, ask for a copy, or
               ask for it to be deleted. One email to{' '}
-              <a href={`mailto:${SITE.email}`}>{SITE.email}</a> is enough — you do not need to cite
+              <a href={`mailto:${SITE.email}`}>{SITE.email}</a> is enough, you do not need to cite
               a regulation at us, and we do not charge for it. If you contributed an article and
               later want your name off it, say so; we will either remove the byline or take the page
               down, whichever you prefer. See the{' '}

@@ -9,7 +9,7 @@ import { buttonClass } from '@/components/ui/primitives';
  *
  * Client-side only for the reject reason, which needs a second step: rejecting
  * without saying why throws away the one useful by-product of a bad draft. The
- * approve path is a plain form post with no confirmation — publishing is
+ * approve path is a plain form post with no confirmation, publishing is
  * reversible from the editor in one click, so a dialog would cost more than the
  * mistake does.
  *

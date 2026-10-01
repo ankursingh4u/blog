@@ -6,12 +6,12 @@ import type { Draft } from '@/pipeline/generate';
 import type { ResearchSource } from '@/pipeline/research';
 
 /**
- * Step 6 — quality gate.
+ * Step 6, quality gate.
  *
  * Two independent checks, in this order:
  *
  *   1. A deterministic scan for hallucinated identifiers. This is pure string
- *      work — no model involved — because it is the check that must not be
+ *      work, no model involved, because it is the check that must not be
  *      talked out of its answer. Any KB number, build number or error code in
  *      the draft that does not appear in the sources or the verified list is a
  *      hard block, whatever the score says.
@@ -26,7 +26,7 @@ import type { ResearchSource } from '@/pipeline/research';
  * The scoring rubric, which differs by content type.
  *
  * The field descriptions are sent to the model as part of the structured-output
- * schema, so they *are* the rubric — a general-interest article graded against
+ * schema, so they *are* the rubric, a general-interest article graded against
  * "per-method H2s, numbered steps, 'If nothing worked'" loses marks for omitting
  * a structure it was correctly instructed not to produce, and the same goes for
  * a safety dimension about destructive steps in an article that has none. Both
@@ -86,7 +86,7 @@ function buildScoreSchema(isTroubleshooting: boolean) {
   });
 }
 
-/** The troubleshooting rubric. Kept as the exported shape — the two are structurally identical. */
+/** The troubleshooting rubric. Kept as the exported shape, the two are structurally identical. */
 export const ScoreSchema = buildScoreSchema(true);
 
 export type Score = z.infer<typeof ScoreSchema>;
@@ -105,7 +105,7 @@ export interface QualityResult {
 }
 
 /**
- * Deterministic identifier check. Pure — no I/O — so it is directly unit
+ * Deterministic identifier check. Pure, no I/O, so it is directly unit
  * testable and cannot fail open on a network error.
  */
 export function auditIdentifiers(
@@ -192,7 +192,7 @@ export async function runQualityGate({
     isTroubleshooting
       ? ''
       : 'Invented figures, dates, prices, scores, quotes and study results are the failure ' +
-        'mode here — check every one against a source.',
+        'mode here, check every one against a source.',
   ]
     .filter(Boolean)
     .join(' ');
@@ -202,7 +202,7 @@ export async function runQualityGate({
     '',
     'SOURCES:',
     sources.map((s, i) => `--- SOURCE ${i + 1}: ${s.title}\n${s.text}`).join('\n\n') ||
-      '(none — every specific claim in the draft is therefore unsupported)',
+      '(none, every specific claim in the draft is therefore unsupported)',
     '',
     'DRAFT:',
     `Title: ${draft.title}`,
@@ -236,7 +236,7 @@ export async function runQualityGate({
        * This budget covers reasoning as well as the response, and the reviewer
        * now reads a draft nearly twice as long against seven sources rather
        * than five. `generateJson` throws rather than truncating when it runs
-       * out, and the throw is caught below as "review could not run" — which
+       * out, and the throw is caught below as "review could not run", which
        * scores the article 0 and sends a perfectly good draft to review looking
        * like it failed. Raising the generation budget without raising this one
        * was the mistake.
@@ -246,7 +246,7 @@ export async function runQualityGate({
       /**
        * Dropped from 'medium' on 2026-10-01, alongside the draft call.
        *
-       * This pass compares text against text it has been handed — it is not the
+       * This pass compares text against text it has been handed, it is not the
        * part of the pipeline that needs to reason its way to an answer, so it is
        * the cheaper of the two places to take effort out of.
        *
@@ -276,7 +276,7 @@ export async function runQualityGate({
       parts.push(`builds not in sources: ${audit.hallucinated.buildNumbers.join(', ')}`);
     if (audit.hallucinated.errorCodes.length)
       parts.push(`error codes not in sources: ${audit.hallucinated.errorCodes.join(', ')}`);
-    notes = `BLOCKED — hallucinated identifiers (${parts.join('; ')}). Remove or verify each one before publishing.\n\n${notes}`;
+    notes = `BLOCKED, hallucinated identifiers (${parts.join('; ')}). Remove or verify each one before publishing.\n\n${notes}`;
   }
 
   return {

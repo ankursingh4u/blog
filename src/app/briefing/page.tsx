@@ -11,7 +11,7 @@ import { categoryPath } from '@/lib/urls';
  * The briefing: today's headlines from across the web, linked out.
  *
  * This is a reading surface, not a publishing one. It lists what the morning
- * ingest found — headline, publisher and a link to the original — and writes
+ * ingest found, headline, publisher and a link to the original, and writes
  * nothing of its own.
  *
  * **It is deliberately noindex.** A page of other people's headlines is what
@@ -43,14 +43,14 @@ export const metadata: Metadata = {
  * hour behind the data it summarises is not a briefing.
  *
  * The cost is one indexed query returning a few dozen rows, on a page that is
- * noindex and linked only from the footer — far cheaper than the article pages
+ * noindex and linked only from the footer, far cheaper than the article pages
  * that legitimately are cached.
  */
 export const dynamic = 'force-dynamic';
 
 /** How many links to show per section before it stops being skimmable. */
 const PER_SECTION = 8;
-/** Only the last few days — older headlines are no longer a briefing. */
+/** Only the last few days, older headlines are no longer a briefing. */
 const WINDOW_DAYS = 3;
 
 /**
@@ -58,7 +58,7 @@ const WINDOW_DAYS = 3;
  *
  * `publisher` is taken off the Google News headline at ingest and is the only
  * reliable source, but rows collected before that field existed do not have it.
- * For those, the link's own host works — except for `news.google.com`, which is
+ * For those, the link's own host works, except for `news.google.com`, which is
  * a redirect rather than a publisher and would credit the wrong party entirely.
  * Better to show nothing than to attribute someone else's reporting to Google.
  */
@@ -94,7 +94,7 @@ export default async function BriefingPage() {
           /**
            * Google News links are excluded outright.
            *
-           * They are not publisher URLs — the article id is an opaque token that
+           * They are not publisher URLs, the article id is an opaque token that
            * Google resolves on its own servers, so the link goes to google.com
            * and the reader has to be bounced onward. On a page that exists to
            * send people to the publications doing the reporting, a redirect
@@ -141,7 +141,7 @@ export default async function BriefingPage() {
         title="What the web is reporting today"
         description={
           total > 0
-            ? `${total} stories our morning scan picked up across ${sections.length} sections. These are links to other people’s reporting — our own writing is in the sections above.`
+            ? `${total} stories our morning scan picked up across ${sections.length} sections. These are links to other people’s reporting, our own writing is in the sections above.`
             : 'Nothing has come in yet today. The scan runs each morning.'
         }
       />

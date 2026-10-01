@@ -10,7 +10,7 @@ import type { z } from 'zod';
  * stripping code fences afterwards. The schema is enforced server-side, so a
  * malformed response is not something the pipeline has to defend against.
  *
- * This is the single seam between the site and the model provider — nothing
+ * This is the single seam between the site and the model provider, nothing
  * outside this file imports an SDK. Swapping providers again means rewriting
  * this file and the two environment variables, and nothing else.
  *
@@ -18,7 +18,7 @@ import type { z } from 'zod';
  * assumed, because the GPT-5 family rejects several parameters that older
  * models accepted:
  *
- *   - `max_completion_tokens`, never `max_tokens` — the legacy name is refused
+ *   - `max_completion_tokens`, never `max_tokens`, the legacy name is refused
  *     outright ("not supported with this model").
  *   - No `temperature`. Only the default of 1 is accepted; sending any other
  *     value is a 400, so the field is omitted entirely and output is steered
@@ -62,7 +62,7 @@ export function getClient(): OpenAI {
       apiKey,
       // The SDK default is 2. A bulk backfill makes hundreds of calls back to
       // back, and a blip on the *second* call of a post throws away a draft
-      // that has already been generated and paid for — the post lands in review
+      // that has already been generated and paid for, the post lands in review
       // with a zero score and has to be regenerated from scratch. Retrying
       // costs a few seconds; not retrying costs the whole article.
       maxRetries: 5,
@@ -79,7 +79,7 @@ export function getClient(): OpenAI {
  * Models that turned out not to exist on this account.
  *
  * A per-task model is configured in /admin, which means a typo or a model the
- * account has no access to is a setting away — and it would otherwise fail
+ * account has no access to is a setting away, and it would otherwise fail
  * every single call, turning a cost optimisation into a total outage. The first
  * failure records the name here and the call is retried on the default model,
  * so the run continues and the operator sees it in the logs instead of in an
@@ -102,7 +102,7 @@ function isUnknownModel(error: unknown): boolean {
 /**
  * The model a call should actually use.
  *
- * A per-task name wins, unless it has already proved unusable on this account —
+ * A per-task name wins, unless it has already proved unusable on this account -
  * one failed call is enough to stop asking, so a bad setting costs one retry
  * per process rather than one per article.
  */
@@ -165,7 +165,7 @@ export interface GenerateResult<T> {
  * Kept here rather than threaded through `generateDraft` and `runQualityGate`
  * return types: both discard the usage they receive, and the pipeline wants the
  * total for a post rather than per call. Reset it before a unit of work and read
- * it after. Not concurrency-safe, which is fine — the pipeline generates one
+ * it after. Not concurrency-safe, which is fine, the pipeline generates one
  * post at a time.
  */
 export interface UsageTally {
@@ -196,7 +196,7 @@ function record(inputTokens: number, outputTokens: number): void {
  * One structured generation call.
  *
  * `max_completion_tokens` covers reasoning *and* the response, so it is sized
- * well above the length of an article — a truncated piece surfaces as a
+ * well above the length of an article, a truncated piece surfaces as a
  * `length` finish reason and is thrown rather than silently half-saved.
  */
 export async function generateJson<S extends z.ZodTypeAny>({
@@ -234,7 +234,7 @@ export async function generateJson<S extends z.ZodTypeAny>({
       if (chosen !== getModel() && isUnknownModel(error)) {
         unavailableModels.add(chosen);
         console.warn(
-          `[ai] model "${chosen}" is not available on this account — falling back to ` +
+          `[ai] model "${chosen}" is not available on this account, falling back to ` +
             `"${getModel()}". Fix or clear the setting that asked for it.`,
         );
         response = await send(getModel());
@@ -266,7 +266,7 @@ export async function generateJson<S extends z.ZodTypeAny>({
   if (!choice) throw new GenerationError('The model returned no choices.');
 
   // A refusal is a first-class field on the message rather than a stop reason,
-  // and it arrives instead of the parsed object — check it before the payload.
+  // and it arrives instead of the parsed object, check it before the payload.
   if (choice.message.refusal) {
     throw new GenerationError(`The model declined this request: ${choice.message.refusal}`);
   }

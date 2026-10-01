@@ -67,7 +67,7 @@ export default async function WritePage() {
             <h2 className="font-semibold tracking-tight">Your work stays yours</h2>
             <p className="mt-3 text-muted-foreground">
               You keep the copyright. Publishing here is permission to run the piece, not a
-              transfer — you can republish it elsewhere, and you can ask us to take it down at any
+              transfer, you can republish it elsewhere, and you can ask us to take it down at any
               point. Full detail in the{' '}
               <Link href="/terms" className="underline hover:text-foreground">
                 terms &amp; content rights
@@ -77,7 +77,7 @@ export default async function WritePage() {
           </div>
 
           <p className="border-t border-border pt-5 text-xs text-muted-foreground">
-            Your email is used to reply to you and is never published — see the{' '}
+            Your email is used to reply to you and is never published, see the{' '}
             <Link href="/privacy" className="underline hover:text-foreground">
               privacy policy
             </Link>

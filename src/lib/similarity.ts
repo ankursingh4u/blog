@@ -4,7 +4,7 @@
  * One story reaches us under many headlines. Google News carries every
  * publisher's wording of the same event, and the India and US editions often
  * carry both, so "Transfer rumors: Arsenal want Rice" and "Arsenal in Rice
- * talks — transfer rumors" arrive as two distinct phrases. Ingest dedupes on
+ * talks, transfer rumors" arrive as two distinct phrases. Ingest dedupes on
  * the exact phrase, which catches none of that: both became keywords, both were
  * written up, and the site ended up with the same story three times.
  *
@@ -46,8 +46,8 @@ export interface DuplicateOptions {
   ratio?: number;
   /**
    * Absolute number of words that must overlap, regardless of ratio. Without
-   * this, two short headlines sharing a single word — "Arsenal beat Chelsea"
-   * and "Arsenal beat Spurs" — clear a percentage test and two genuinely
+   * this, two short headlines sharing a single word, "Arsenal beat Chelsea"
+   * and "Arsenal beat Spurs", clear a percentage test and two genuinely
    * different results get collapsed into one.
    */
   minShared?: number;
@@ -69,7 +69,7 @@ export function isNearDuplicate(
 
   const shared = sharedTokenCount(a, b);
   // A title with fewer distinctive words than the floor can still be a
-  // duplicate — it just has to match nearly all of them.
+  // duplicate, it just has to match nearly all of them.
   const required = Math.min(minShared, smaller);
   return shared >= required && shared / smaller >= ratio;
 }

@@ -4,12 +4,12 @@ import { cn } from '@/lib/utils';
 /**
  * Self-managed display ad placement.
  *
- * The HTML comes from a Setting an operator pastes in /admin/settings — it is
+ * The HTML comes from a Setting an operator pastes in /admin/settings, it is
  * first-party markup, not third-party script injection, and no ad network is
  * involved. Two things matter here for Core Web Vitals:
  *   1. the slot reserves its height before the markup renders, so a late-
  *      loading creative cannot shift the article;
- *   2. an empty setting renders nothing at all — no empty box, no reserved gap.
+ *   2. an empty setting renders nothing at all, no empty box, no reserved gap.
  */
 
 const SIZES = {

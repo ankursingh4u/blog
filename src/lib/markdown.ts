@@ -18,7 +18,7 @@ const schema: SanitizeOptions = {
   // rehype-sanitize defaults to prefixing every id with "user-content-" to
   // prevent DOM clobbering. That would break the table of contents, whose ids
   // are derived from the same markdown source, and it puts "user-content-" in
-  // every shareable deep link — which Google also surfaces as jump-to links.
+  // every shareable deep link, which Google also surfaces as jump-to links.
   //
   // Dropping the prefix is safe here because the only ids on the page come from
   // our own H2/H3 text via rehype-slug: raw HTML is discarded at parse time
@@ -127,7 +127,7 @@ function githubSlug(text: string) {
       .replace(/[^\p{L}\p{N}\s-]/gu, '')
       .trim()
       /*
-       * Each space becomes its own dash — runs are NOT collapsed.
+       * Each space becomes its own dash, runs are NOT collapsed.
        *
        * This has to match github-slugger, which rehype-slug uses to mint the
        * real heading ids, and it strips punctuation before replacing spaces.

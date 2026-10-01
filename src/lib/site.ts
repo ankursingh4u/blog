@@ -2,7 +2,7 @@ export const SITE = {
   name: process.env.NEXT_PUBLIC_SITE_NAME || 'Favo News',
   url: (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000').replace(/\/$/, ''),
   description:
-    'Trending stories explained properly — tech, entertainment, sport, money, health, gaming, travel and education.',
+    'Trending stories explained properly, tech, entertainment, sport, money, health, gaming, travel and education.',
   locale: 'en_GB',
   twitter: '@favonews',
   /** Where readers write in. Also the address publishers see in `contactUrl`. */
@@ -14,7 +14,7 @@ export function absoluteUrl(path = '/') {
 }
 
 /**
- * The User-Agent every outbound fetch identifies itself with — feeds, research
+ * The User-Agent every outbound fetch identifies itself with, feeds, research
  * sources and image lookups alike.
  *
  * It carries a real, reachable URL on purpose. This string is what a publisher

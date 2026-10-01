@@ -4,7 +4,7 @@
  * The word floor and the prose rules pull in opposite directions. `MIN_WORDS`
  * says 1500; `PROSE_RULES` says cut every word that does no work. Faced with a
  * thin story, the cheapest way to satisfy the first is to restate the same
- * point under three headings — which is exactly the shape Google's helpfulness
+ * point under three headings, which is exactly the shape Google's helpfulness
  * signals are built to catch, and exactly what a length floor produces if
  * nothing is watching.
  *
@@ -81,7 +81,7 @@ function overlapRatio(a: Set<string>, b: Set<string>): number {
  * Prose sentences, with headings, list markers and code removed.
  *
  * List items are dropped deliberately. A well-made comparison list repeats its
- * own frame on every row — "Battery life: …", "Battery life: …" — and counting
+ * own frame on every row, "Battery life: …", "Battery life: …", and counting
  * those as restatements would flag the most scannable part of a good article.
  */
 export function proseSentences(markdown: string): string[] {
@@ -190,7 +190,7 @@ export function describePadding(report: PaddingReport): string {
   if (report.issues.length === 0) {
     return `Padding OK (${report.sentenceCount} sentences, ${report.repeatedSentences} restating another).`;
   }
-  const detail = report.issues.map((i) => `${i.blocking ? 'BLOCKING' : 'note'} ${i.rule} — ${i.detail}`);
+  const detail = report.issues.map((i) => `${i.blocking ? 'BLOCKING' : 'note'} ${i.rule}, ${i.detail}`);
   const shown = report.examples.map((e) => `  · "${e.a}" ≈ "${e.b}"`);
   return [`Padding: ${detail.join(' ')}`, ...shown].join('\n');
 }

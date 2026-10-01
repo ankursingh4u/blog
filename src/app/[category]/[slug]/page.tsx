@@ -18,8 +18,8 @@ export const dynamicParams = true;
 /**
  * Two different things live at this depth:
  *
- *   /tech/windows      — a sub-section listing (slug is a child category)
- *   /tech/some-post    — an article in a top-level category
+ *   /tech/windows     , a sub-section listing (slug is a child category)
+ *   /tech/some-post   , an article in a top-level category
  *
  * Sub-sections win the lookup, so a post may not take the slug of an existing
  * child category. The seed keeps those namespaces apart.
@@ -31,7 +31,7 @@ async function resolve(categorySlug: string, slug: string) {
   }
 
   const post = await getPublishedPost(categorySlug, slug);
-  // A post whose category is nested does not live here — it belongs at
+  // A post whose category is nested does not live here, it belongs at
   // /parent/child/slug, so serving it here too would duplicate the content.
   if (post && !post.category.parentId) return { kind: 'post' as const, post };
 
@@ -39,14 +39,14 @@ async function resolve(categorySlug: string, slug: string) {
 }
 
 /**
- * Sub-section landing pages only — the articles themselves are not prerendered.
+ * Sub-section landing pages only, the articles themselves are not prerendered.
  *
  * Building every published article was the largest single cost in a deploy:
  * rendering each one means a database round trip, the full article body, the
  * related-posts query and four JSON-LD blocks, and on the deployment host that
  * was minutes of a build that already takes too long.
  *
- * `dynamicParams` is true above, so an article not listed here still resolves —
+ * `dynamicParams` is true above, so an article not listed here still resolves -
  * it renders on the first request and is then cached for its `revalidate`
  * window like any other page. The cost moves from every deploy to the first
  * visitor of each article, once.
@@ -75,7 +75,10 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 
   if (found.kind === 'category') {
     return buildMetadata({
-      title: `${found.category.name} — ${found.category.parent?.name ?? ''}`.trim().replace(/—$/, ''),
+      // Joined from the parts that exist. This used to interpolate a separator
+      // and then strip a dangling one off the end, which the em-dash removal
+      // turned into "Tech," for every top-level section.
+      title: [found.category.name, found.category.parent?.name].filter(Boolean).join(', '),
       description: found.category.description,
       path: `/${category}/${slug}`,
     });
@@ -108,7 +111,7 @@ export default async function CategoryOrPostPage({
   /*
    * Before giving up, check whether this URL is one the post has moved away
    * from. Editing a headline regenerates the slug, and the old path is the one
-   * already indexed and linked to — a 404 there throws away the page's ranking
+   * already indexed and linked to, a 404 there throws away the page's ranking
    * history for what is usually a typo fix.
    *
    * 308 rather than 307: the move is permanent, so Google should transfer the

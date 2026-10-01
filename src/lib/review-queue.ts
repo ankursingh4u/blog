@@ -9,14 +9,14 @@ import { setSetting } from '@/lib/settings';
  * exactly one is in front of you at a time: decide, and the next arrives.
  *
  * State lives in a Setting row rather than new columns because the deployment
- * runs `prisma generate && next build` with no migration step — a new table
+ * runs `prisma generate && next build` with no migration step, a new table
  * would exist in the generated client and not in the database, and every write
  * would fail in production while passing every test locally. When there is a
  * migration path this wants to be a `ReviewCycle` table.
  *
  * The entry list is written once and never mutated; a cursor walks it. Shifting
  * decided drafts out of an array loses the one thing the regeneration rule
- * needs — which category a rejected draft belonged to.
+ * needs, which category a rejected draft belonged to.
  *
  * Everything that decides behaviour is a pure function over the cycle object,
  * so the ordering and the regeneration rule are testable without a database.
@@ -43,7 +43,7 @@ export interface ReviewCycle {
    * Categories whose drafts have already been regenerated once.
    *
    * Without this, a category whose replacements are also rejected regenerates
-   * again, and again — an unattended loop that spends money on every pass.
+   * again, and again, an unattended loop that spends money on every pass.
    */
   regenerated: string[];
   /** True while the replacements for rejected categories are being reviewed. */
@@ -123,7 +123,7 @@ export function recordOutcome(cycle: ReviewCycle, postId: string, outcome: Outco
 /**
  * Categories where every decided draft was rejected.
  *
- * One approval is enough to leave a category alone — this catches a section
+ * One approval is enough to leave a category alone, this catches a section
  * that came back with nothing usable, it is not a hunt for a perfect score.
  * Categories already regenerated once are excluded, by the rule above.
  */
@@ -146,7 +146,7 @@ export function fullyRejectedCategories(cycle: ReviewCycle): string[] {
       /**
        * Every draft in the section must have been judged, not just the ones
        * that happened to be rejected. A category holding one rejection and one
-       * undecided draft has not come back empty — it has not finished being
+       * undecided draft has not come back empty, it has not finished being
        * read, and regenerating it there would throw away an article nobody has
        * looked at yet.
        */
@@ -173,7 +173,7 @@ export function rejectedEntries(cycle: ReviewCycle): CycleEntry[] {
  *
  * `getSettings` is wrapped in React's `cache`, which dedupes for the lifetime
  * of a request. The webhook writes a decision and then reads the cycle back to
- * find the next draft — through the cache it would read its own stale copy and
+ * find the next draft, through the cache it would read its own stale copy and
  * send the same article twice.
  */
 export async function readCycle(): Promise<ReviewCycle | null> {

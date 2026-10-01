@@ -2,7 +2,7 @@ import type { FaqItem } from '@/lib/json';
 
 /**
  * FAQ rendered as native <details>. It emits FAQPage JSON-LD from the page,
- * so the answers must be in the initial HTML — an accordion that mounts its
+ * so the answers must be in the initial HTML, an accordion that mounts its
  * answers on click would leave the structured data unsupported by visible
  * content, which is a Google rich-result violation.
  */

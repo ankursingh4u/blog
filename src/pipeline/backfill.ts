@@ -42,12 +42,12 @@ export interface BackfillResult {
  * pipeline that halts at lunchtime or a bill nobody predicted.
  *
  * The numbers: one draft per category per cycle, four cycles a day, eight
- * verticals — 32 articles a day at roughly 20,000 tokens each, so a cap of
+ * verticals, 32 articles a day at roughly 20,000 tokens each, so a cap of
  * 700,000 leaves headroom for retries without being a blank cheque.
  *
  * The prices are the drafting model's, because drafting is where the spend is.
  * The review and metadata calls are cheaper, so the dashboard's figure reads
- * slightly high — an estimate that errs upward is the safe direction for a
+ * slightly high, an estimate that errs upward is the safe direction for a
  * number you are using to decide whether to keep going.
  */
 export async function applyRunningPlan(): Promise<BackfillResult> {
@@ -59,7 +59,7 @@ export async function applyRunningPlan(): Promise<BackfillResult> {
     ['AI_MODEL_META', 'gpt-5.4-nano'],
     // Left empty on purpose: the owner asked for tokens, not a currency
     // estimate. `estimateCost` renders nothing rather than a zero when this is
-    // blank, which is the right behaviour — "$0.00 spent" reads as a fact.
+    // blank, which is the right behaviour, "$0.00 spent" reads as a fact.
     ['AI_TOKEN_PRICES', ''],
   ];
 
@@ -69,7 +69,7 @@ export async function applyRunningPlan(): Promise<BackfillResult> {
     applied.push(`${key}=${value}`);
   }
 
-  log.info(`backfill: applied running plan — ${applied.join(', ')}`);
+  log.info(`backfill: applied running plan, ${applied.join(', ')}`);
   return { examined: plan.length, changed: plan.length, skipped: applied };
 }
 
@@ -77,7 +77,7 @@ export async function applyRunningPlan(): Promise<BackfillResult> {
  * Create or update the named house bylines, and hand the sections over to them.
  *
  * Idempotent: a rerun refreshes the fields that decide whether a byline works
- * and whether it is honest — name, roles, bio, focus — and creates whatever is
+ * and whether it is honest, name, roles, bio, focus, and creates whatever is
  * missing. Nothing is deleted. The pre-pivot persona rows still own the back
  * catalogue and must keep owning it: re-attributing those articles to a real
  * person who had nothing to do with them is the one move this codebase will not
@@ -117,7 +117,7 @@ export async function seedHouseBylines(): Promise<BackfillResult> {
   const pinned = await prisma.setting.findUnique({ where: { key: 'AI_AUTHOR_SLUG' } });
   if (pinned?.value) {
     await setSetting('AI_AUTHOR_SLUG', '');
-    skipped.push(`AI_AUTHOR_SLUG was "${pinned.value}" — cleared, the section map now decides`);
+    skipped.push(`AI_AUTHOR_SLUG was "${pinned.value}", cleared, the section map now decides`);
   }
 
   log.info(`backfill: ${changed} house byline(s) written`);
@@ -128,7 +128,7 @@ export async function seedHouseBylines(): Promise<BackfillResult> {
  * Announce every published URL to IndexNow and ping the sitemap.
  *
  * New posts already do this on publish. Everything published before that was
- * wired — or while the key setting was empty — was never announced at all.
+ * wired, or while the key setting was empty, was never announced at all.
  *
  * Submitted in batches because IndexNow takes a list, and a single request per
  * URL would be both slower and more likely to be rate-limited.
@@ -162,7 +162,7 @@ export async function pingAllPublished(): Promise<BackfillResult> {
  * Re-run the quality gate on every post scoring 0.
  *
  * A zero is what the gate records when its API call failed, not a verdict on
- * the article — see the note on `regradePost`. Sources are re-fetched because a
+ * the article, see the note on `regradePost`. Sources are re-fetched because a
  * post stores each source's URL, not the text the gate needs.
  */
 export async function regradeAllFailed(): Promise<BackfillResult> {
@@ -297,7 +297,7 @@ export async function refreshSeoFields(): Promise<BackfillResult> {
         ].join('\n'),
         schema: MetaSchema,
         schemaName: 'post_metadata',
-        // Naming a page is mechanical — the smallest configured model will do.
+        // Naming a page is mechanical, the smallest configured model will do.
         model: await getSetting('AI_MODEL_META'),
         maxTokens: 2000,
         effort: 'low',

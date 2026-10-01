@@ -94,7 +94,7 @@ export async function POST(request: Request) {
   }
 
   // Only retire the buttons when something actually happened. A failed publish
-  // — no cover image, say — should stay actionable once the cause is fixed.
+  //, no cover image, say, should stay actionable once the cause is fixed.
   if (result.ok && query.message) {
     await markResolved(
       query.message.chat.id,

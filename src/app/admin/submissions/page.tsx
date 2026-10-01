@@ -17,7 +17,7 @@ type Search = Promise<{ status?: string }>;
  * The reader-submission queue.
  *
  * Nothing here has been read by anyone yet, so the body is rendered as plain
- * text — never as markdown or HTML. A submission is arbitrary text from a
+ * text, never as markdown or HTML. A submission is arbitrary text from a
  * stranger, and the admin is the one place where rendering it would do the most
  * damage.
  */

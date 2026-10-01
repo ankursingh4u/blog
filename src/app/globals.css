@@ -5,7 +5,7 @@
 @layer base {
   :root {
     /*
-     * Tells the browser which theme to paint native controls in — the select
+     * Tells the browser which theme to paint native controls in, the select
      * dropdown list, scrollbars, focus rings, date pickers. Without it the
      * browser uses the OS preference, so a reader on a dark desktop got a
      * dropdown painted in dark-mode text colours on top of this light page:
@@ -65,7 +65,7 @@
    * The blur-in used by the profile hero.
    *
    * A CSS animation rather than a JavaScript one, deliberately. It used to be
-   * opacity:0 until an IntersectionObserver callback flipped it — which meant
+   * opacity:0 until an IntersectionObserver callback flipped it, which meant
    * the author's name was invisible to anything that did not run that script:
    * a crawler, a reader whose JS failed, or a hydration error. An author page
    * rendered with no visible name at all. `both` holds the final frame, so the
@@ -138,7 +138,7 @@
    *
    * The pattern and its fade-out mask live on a ::before layer, NOT on the
    * element itself. `mask-image` applies to an element's entire rendered
-   * subtree — putting it on the section would fade out the heading and body
+   * subtree, putting it on the section would fade out the heading and body
    * copy along with the grid, which is exactly what it did before this was
    * split out. Keep the mask on the pseudo-element. */
   .grid-bg {

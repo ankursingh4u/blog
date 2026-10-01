@@ -8,8 +8,8 @@ import { z } from 'zod';
  * the decision happens wherever you already are.
  *
  * Credentials come from the environment rather than the Setting table. A bot
- * token is a credential — anyone holding it can post as the bot and read the
- * chat — and settings are rendered back into the admin form as plain values.
+ * token is a credential, anyone holding it can post as the bot and read the
+ * chat, and settings are rendered back into the admin form as plain values.
  *
  * Everything here fails soft. A notification that cannot be sent must never
  * fail the pipeline run that produced the article: the article is written and
@@ -37,7 +37,7 @@ export function telegramConfig(): TelegramConfig | null {
 
 /**
  * Telegram caps `callback_data` at 64 bytes, so the payload is
- * `<action>:<postId>` and nothing else — no titles, no reasons.
+ * `<action>:<postId>` and nothing else, no titles, no reasons.
  *
  * It is also attacker-controllable in principle: anyone who learns the bot's
  * username can press a button in their own chat with it. That is why the
@@ -101,7 +101,7 @@ async function call(token: string, method: string, body: unknown): Promise<boole
   }
 }
 
-/** Telegram's own escaping rules for MarkdownV2 — an unescaped "." breaks the send. */
+/** Telegram's own escaping rules for MarkdownV2, an unescaped "." breaks the send. */
 export function escapeMarkdown(text: string): string {
   return text.replace(/([_*[\]()~`>#+\-=|{}.!\\])/g, '\\$1');
 }
@@ -171,7 +171,7 @@ export async function notifyDraft(draft: DraftNotification): Promise<boolean> {
 }
 
 /**
- * A plain message with no buttons — cycle progress and the closing summary.
+ * A plain message with no buttons, cycle progress and the closing summary.
  *
  * Takes text already escaped for MarkdownV2 by the caller, because these
  * messages are assembled from fragments and escaping the finished string would
@@ -199,7 +199,7 @@ export async function answerCallback(id: string, text: string): Promise<boolean>
  * Replaces the buttons with the outcome.
  *
  * Without this the buttons stay live and a second press runs the whole thing
- * again — approving something already rejected, in whichever order the taps
+ * again, approving something already rejected, in whichever order the taps
  * land.
  */
 export async function markResolved(

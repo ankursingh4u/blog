@@ -20,8 +20,8 @@ import { articleLd, breadcrumbLd, faqLd, jsonLdGraph, personLd } from '@/lib/seo
 
 /**
  * The article page body, shared by the flat route (/tech/x) and the nested one
- * (/tech/windows/x). Both routes resolve the post themselves — how a URL maps
- * to a post differs between them — and hand the result here to render.
+ * (/tech/windows/x). Both routes resolve the post themselves, how a URL maps
+ * to a post differs between them, and hand the result here to render.
  */
 export async function ArticleView({ post }: { post: FullPost }) {
   // Eight rather than four: the first four fill the grid at the foot of the
@@ -113,7 +113,7 @@ export async function ArticleView({ post }: { post: FullPost }) {
         </nav>
 
         {/* Three columns from `xl`: sections on the left, the article, then the
-            22rem rail — wide enough to hold the contents, an ad and a link list
+            22rem rail, wide enough to hold the contents, an ad and a link list
             without running out of content halfway down. Below `xl` the left
             rail drops and the layout is the previous two-column one; below
             `lg`, a single column. */}
@@ -165,7 +165,7 @@ export async function ArticleView({ post }: { post: FullPost }) {
                     fill
                     priority
                     sizes="(max-width: 1024px) 100vw, 832px"
-                    // Whole image, never a crop — see the note in cover-art.
+                    // Whole image, never a crop, see the note in cover-art.
                     className="object-contain"
                   />
                 ) : (
@@ -173,7 +173,7 @@ export async function ArticleView({ post }: { post: FullPost }) {
                 )}
               </div>
               {/* CC-BY and CC-BY-SA require this credit to be shown. It is not
-                  decoration — without it the licence is not satisfied. */}
+                  decoration, without it the licence is not satisfied. */}
               <ImageCreditLine
                 credit={credit}
                 className="mt-2 text-xs text-muted-foreground"
@@ -193,7 +193,7 @@ export async function ArticleView({ post }: { post: FullPost }) {
               <AdSlot placement="AD_SLOT_IN_ARTICLE" size="rectangle" />
             </div>
 
-            {/* Sanitised in src/lib/markdown.ts — raw HTML from the generator is
+            {/* Sanitised in src/lib/markdown.ts, raw HTML from the generator is
                 dropped at parse time and again by the rehype allow-list. */}
             <div
               className="prose prose-lg mt-10 max-w-none dark:prose-invert"
@@ -350,7 +350,7 @@ function ReadNextCta({
       </h2>
       <p className="mt-2 max-w-prose text-sm text-muted-foreground">
         If this answered your question, the rest of our {category.name} coverage works the same
-        way — the short answer first, then the detail, and every source listed.
+        way, the short answer first, then the detail, and every source listed.
       </p>
       <div className="mt-5 flex flex-wrap gap-3">
         <Link href={categoryPath(category)} className={buttonClass('primary', 'md')}>

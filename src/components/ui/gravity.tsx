@@ -86,7 +86,7 @@ export interface GravityRef {
 interface GravityContextValue {
   registerElement: (id: string, element: HTMLElement, props: MatterBodyProps) => void;
   unregisterElement: (id: string) => void;
-  /** Null when reduced motion is on — children then position themselves in CSS. */
+  /** Null when reduced motion is on, children then position themselves in CSS. */
   enabled: boolean;
 }
 
@@ -155,7 +155,7 @@ interface GravityProps {
   /**
    * Whether bodies can be grabbed and thrown. Turning this off skips the
    * MouseConstraint and makes the physics canvas click-through, which is what
-   * you want when the bodies are real links — otherwise the canvas sits on top
+   * you want when the bodies are real links, otherwise the canvas sits on top
    * and eats every click.
    */
   draggable?: boolean;

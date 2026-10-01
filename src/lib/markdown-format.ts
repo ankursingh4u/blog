@@ -13,7 +13,7 @@ export interface Edit {
   selectionEnd: number;
 }
 
-/** Block markers are mutually exclusive — applying one replaces another. */
+/** Block markers are mutually exclusive, applying one replaces another. */
 const BLOCK_PREFIX = /^(#{1,6} {1,}| {0,3}> ?|[-*+] {1,}|\d+\. {1,})/;
 
 function stripBlockPrefix(line: string) {

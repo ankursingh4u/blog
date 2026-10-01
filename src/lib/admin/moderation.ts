@@ -13,7 +13,7 @@ import { categoryPath, postPath } from '@/lib/urls';
  * check. Neither can use the other's mechanism, so the moderation rules live
  * here and each caller does its own authentication before delegating.
  *
- * The alternative — the webhook reimplementing "may this go live?" — is how the
+ * The alternative, the webhook reimplementing "may this go live?", is how the
  * two paths end up disagreeing, and the one that disagrees is always the one
  * nobody is looking at.
  *
@@ -84,7 +84,7 @@ export async function applyStatus(id: string, status: PostStatus): Promise<Moder
  * Archive with a recorded reason.
  *
  * The reason is prepended to `qualityNotes` rather than given its own column,
- * because the deployment has no migration step — see the note on rejectPost in
+ * because the deployment has no migration step, see the note on rejectPost in
  * actions.ts.
  */
 export async function archivePost(id: string, reason: string): Promise<ModerationResult> {

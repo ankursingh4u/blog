@@ -78,7 +78,7 @@ export async function runPipeline(
   log.reset();
 
   if (!hasApiKey()) {
-    log.error('OPENAI_API_KEY is not set — the pipeline cannot generate anything.');
+    log.error('OPENAI_API_KEY is not set, the pipeline cannot generate anything.');
     return {
       startedAt,
       finishedAt: new Date().toISOString(),
@@ -121,7 +121,7 @@ export async function runPipeline(
    * Photographs already on the site, so this run cannot reissue one.
    *
    * Loaded once and mutated as posts are produced, which also covers reuse
-   * *within* the run — two sports stories on the same morning would otherwise
+   * *within* the run, two sports stories on the same morning would otherwise
    * both match the football rule and both take the top-ranked stadium.
    */
   const storedCredits = await prisma.post.findMany({
@@ -154,7 +154,7 @@ export async function runPipeline(
     if (budget.exhausted) {
       budgetStopped = true;
       log.warn(
-        `run: stopping — daily token cap reached (${describeBudget(budget)}). ` +
+        `run: stopping, daily token cap reached (${describeBudget(budget)}). ` +
           'Raise DAILY_TOKEN_BUDGET in /admin/settings or wait for tomorrow.',
       );
       break;
@@ -182,7 +182,7 @@ export async function runPipeline(
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      log.error(`"${keyword.phrase}" failed — ${message}`);
+      log.error(`"${keyword.phrase}" failed, ${message}`);
       await prisma.keyword
         .update({ where: { id: keyword.id }, data: { status: 'SKIPPED' } })
         .catch(() => undefined);
@@ -193,7 +193,7 @@ export async function runPipeline(
   if (produced < postsPerRun) {
     log.warn(
       `run: wanted ${postsPerRun} post(s) but produced ${produced} after trying ` +
-        `${attempted} keyword(s) — most had no citable source.`,
+        `${attempted} keyword(s), most had no citable source.`,
     );
   }
 
@@ -219,8 +219,8 @@ export async function runPipeline(
   /**
    * Persist the summary so an overnight run is inspectable in the morning.
    *
-   * Logs were in-memory only, which is fine for the "Run now" button — the
-   * result is on screen — and useless for a scheduled run, where nobody is
+   * Logs were in-memory only, which is fine for the "Run now" button, the
+   * result is on screen, and useless for a scheduled run, where nobody is
    * watching and the process exits. The logs are dropped from what is stored;
    * they can run to hundreds of lines and the counts are what answer "did last
    * night work?".
@@ -256,7 +256,7 @@ async function produceOne({
    * Re-decode the phrase on the way out, not just on the way in.
    *
    * `decode` only learned numeric entities and mojibake repair on 2026-09-30,
-   * and the keyword table already held hundreds of rows ingested before that —
+   * and the keyword table already held hundreds of rows ingested before that -
    * "Can &#8216;eSUV&#8217; e-bikes…", "GM canâ€™t…". The phrase becomes the
    * target keyword and then the H1, so publishing one of those puts the raw
    * entity in front of a reader. Repairing here fixes the existing backlog
@@ -272,14 +272,14 @@ async function produceOne({
         include: categoryInclude,
       })
     : await prisma.category.findFirst({ orderBy: { position: 'asc' }, include: categoryInclude });
-  if (!category) throw new Error('No category available — run the seed first.');
+  if (!category) throw new Error('No category available, run the seed first.');
 
   const author = await assignAuthor(category.slug, previousAuthorId);
-  if (!author) throw new Error('No authors exist — run the seed first.');
+  if (!author) throw new Error('No authors exist, run the seed first.');
   log.info(`author: ${author.name}`);
 
   // Token accounting is per post, so the tally starts clean here rather than at
-  // the top of the run — a keyword skipped for want of sources costs nothing and
+  // the top of the run, a keyword skipped for want of sources costs nothing and
   // should not be averaged in.
   resetUsage();
 
@@ -293,7 +293,7 @@ async function produceOne({
   // cost a full generation call. Skip the keyword and move to the next instead.
   if (sources.length === 0 && category.slug !== 'windows') {
     throw new Error(
-      `no citable sources found for "${keyword.phrase}" — skipped before generating`,
+      `no citable sources found for "${keyword.phrase}", skipped before generating`,
     );
   }
 
@@ -309,8 +309,8 @@ async function produceOne({
    *
    * These are string functions over the draft we already have; the quality gate
    * below is a second API call. Running the gate first meant a draft that the
-   * `research-meta` rule throws away — and that rule hit 24 of the first 34
-   * articles — was scored by a model, paid for, and then discarded unread.
+   * `research-meta` rule throws away, and that rule hit 24 of the first 34
+   * articles, was scored by a model, paid for, and then discarded unread.
    * Nothing is skipped by this reordering, it only stops buying a verdict on an
    * article that is about to be thrown out.
    */
@@ -336,8 +336,8 @@ async function produceOne({
    * `research-meta` is the exception: it blocks.
    *
    * Every other style rule flags a word that can be legitimate in context. This
-   * one flags the draft talking about its own research — "the supplied sources",
-   * "not confirmed in the supplied material" — and there is no context in which
+   * one flags the draft talking about its own research, "the supplied sources",
+   * "not confirmed in the supplied material", and there is no context in which
    * that belongs in a published article. The reader cannot see the research and
    * does not know it exists.
    *
@@ -381,7 +381,7 @@ async function produceOne({
    * A photograph if one can be found, the branded card otherwise.
    *
    * The photo is tried first so the OG render is skipped entirely when it
-   * succeeds — `featuredImage` holds one or the other, and `imageCredit` is what
+   * succeeds, `featuredImage` holds one or the other, and `imageCredit` is what
    * tells them apart downstream (`coverPhoto()` in components/ui/cover-art.tsx).
    *
    * `usedPhotoKeys` is seeded from every credit already stored, so a run cannot
@@ -454,7 +454,7 @@ async function produceOne({
 
   const usage = readUsage();
   // Added to the daily tally before the post is even a success, because the
-  // tokens were spent either way — a cap that only counted articles that
+  // tokens were spent either way, a cap that only counted articles that
   // shipped would be no cap at all on a day when everything failed the gates.
   const today = await recordUsage(usage);
   log.info(
@@ -473,7 +473,7 @@ async function produceOne({
   } else {
     // Report the reason that actually applies. This used to print
     // "score N < threshold" for every unpublished post, which was wrong and
-    // confusing whenever the real cause was something else — a post scoring 96
+    // confusing whenever the real cause was something else, a post scoring 96
     // with auto-publish off was logged as "score 96 < 85".
     const reasons: string[] = [];
     if (!autoPublish) reasons.push('AUTO_PUBLISH is off');
@@ -529,7 +529,7 @@ async function produceOne({
       if (sent) log.info('telegram: sent for review');
     } catch (error) {
       log.warn(
-        `telegram: could not notify — ${error instanceof Error ? error.message : error}`,
+        `telegram: could not notify, ${error instanceof Error ? error.message : error}`,
       );
     }
   }
@@ -549,7 +549,7 @@ async function produceOne({
  *
  * `revalidatePath` only works inside a Next.js request or render context. The
  * same pipeline also runs from `npm run generate`, where there is no such
- * context and the import would throw — so it is loaded lazily and failures are
+ * context and the import would throw, so it is loaded lazily and failures are
  * logged rather than raised. In the CLI case the pages refresh on their own
  * revalidate interval instead.
  */
@@ -562,7 +562,7 @@ async function revalidatePost(category: CategoryRef & { parent?: { slug: string 
     revalidatePath(postPath({ slug, category }));
     revalidatePath('/sitemap.xml');
   } catch {
-    log.info('revalidate: skipped (no Next.js request context — CLI run)');
+    log.info('revalidate: skipped (no Next.js request context, CLI run)');
   }
 }
 

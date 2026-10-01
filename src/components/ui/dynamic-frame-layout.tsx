@@ -11,7 +11,7 @@ import { useIsMobile, usePrefersReducedMotion } from '@/hooks/use-motion';
  * Adapted from the supplied `dynamic-frame-layout` reference. Changes:
  *   - media is a discriminated union (`image` | `video` | `node`) instead of
  *     video-only, because a text blog has category art, not showreels;
- *   - the decorative corner/edge sprites are optional — the default look uses
+ *   - the decorative corner/edge sprites are optional, the default look uses
  *     a CSS border, so the grid needs no image assets to render correctly;
  *   - grid position is derived from an explicit row/col rather than pixel
  *     coordinates, which removes the `/4` magic numbers;
@@ -33,7 +33,7 @@ export interface Frame {
   row: 0 | 1 | 2;
   col: 0 | 1 | 2;
   media: FrameMedia;
-  /** Overlay rendered above the media — title, count, link. */
+  /** Overlay rendered above the media, title, count, link. */
   overlay?: ReactNode;
   href?: string;
   /** Zoom applied to the media itself; 1 = fit. */
@@ -65,7 +65,7 @@ export function DynamicFrameLayout({
   const [hovered, setHovered] = useState<{ row: number; col: number } | null>(null);
   const reducedMotion = usePrefersReducedMotion();
   // Below md there is no hover, and three columns would make each tile
-  // unreadable — the grid becomes a plain stack with fixed-height cells.
+  // unreadable, the grid becomes a plain stack with fixed-height cells.
   const isStacked = useIsMobile(767);
 
   const trackSizes = (axis: 'row' | 'col') => {
@@ -119,7 +119,7 @@ function FrameCell({ frame, isHovered }: { frame: Frame; isHovered: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const reducedMotion = usePrefersReducedMotion();
 
-  // Video only plays while its cell is hovered — nine autoplaying loops would
+  // Video only plays while its cell is hovered, nine autoplaying loops would
   // saturate the main thread and destroy INP.
   useEffect(() => {
     const video = videoRef.current;

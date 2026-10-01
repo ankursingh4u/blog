@@ -6,7 +6,7 @@ import type { ResearchSource } from '@/pipeline/research';
 import { slugify } from '@/lib/utils';
 
 /**
- * Step 5 — generation.
+ * Step 5, generation.
  *
  * The output shape is enforced by the API's structured-output support, so there
  * is no fence-stripping or JSON repair here. What this module owns is the
@@ -21,14 +21,14 @@ export const DraftSchema = z.object({
     .min(20)
     // Raised from 90. The cap is enforced server-side by strict structured
     // outputs, and at 90 the model squeezed under it by mangling a word rather
-    // than rewriting — one draft shipped "amid game injury" in place of "amid
+    // than rewriting, one draft shipped "amid game injury" in place of "amid
     // game industry crash", with the correct phrase still in its own slug. The
     // headroom plus the instruction below removes the incentive to truncate.
     // `metaTitle` keeps its own 60-character SEO limit; this is the H1.
     .max(110)
     .describe(
       'H1. The target keyword phrased the way a person would type it. No clickbait. ' +
-        'If it will not fit, rewrite it shorter in whole words — never abbreviate, ' +
+        'If it will not fit, rewrite it shorter in whole words, never abbreviate, ' +
         'truncate, or drop letters from a word to fit the limit.',
     ),
   slug: z
@@ -44,14 +44,14 @@ export const DraftSchema = z.object({
   body: z
     .string()
     // ~9,000 characters is roughly 1,500 words, the floor in structure.ts.
-    // Characters, not words — an earlier min(800) was characters too and allowed
+    // Characters, not words, an earlier min(800) was characters too and allowed
     // ~130-word posts, so the unit is worth stating.
     .min(9000)
     .describe(
       'Markdown body, 1500-2000 words. Opens with a 2-3 paragraph introduction (hook, then ' +
         'what the piece covers), then H2 sections, then a "Conclusion" H2 that summarises ' +
-        'and tells the reader what to do next. No H1 — the title is rendered separately. ' +
-        'No FAQ section — separate field.',
+        'and tells the reader what to do next. No H1, the title is rendered separately. ' +
+        'No FAQ section, separate field.',
     ),
   affectedBuilds: z
     .array(z.string())
@@ -92,7 +92,7 @@ const UNIVERSAL_STRUCTURE = `Every article on this site follows the same shape:
    to do next.
 6. Three to five FAQ entries (a separate field, not part of the body).
 
-Length — 1500 to 2000 words in the body. Reach it by covering more ground, never
+Length, 1500 to 2000 words in the body. Reach it by covering more ground, never
 by saying the same thing twice. A rough budget that lands in the band:
 - Introduction: 120-180 words.
 - Five to seven H2 sections at roughly 220 words each.
@@ -104,8 +104,8 @@ long one that circles. Repetition is checked automatically after you finish:
 restating a point under a second heading, or echoing a sentence you have already
 written, fails the draft outright. Padding costs more than being brief.
 
-Formatting rules for the body — these exist so the page can be skimmed:
-- Markdown only. No raw HTML — it is stripped before rendering.
+Formatting rules for the body, these exist so the page can be skimmed:
+- Markdown only. No raw HTML, it is stripped before rendering.
 - No H1 anywhere; the title is rendered separately.
 - Keep every paragraph to at most 4-5 sentences. Break longer ones up.
 - Use bullet or numbered lists wherever you are listing things. Every article
@@ -164,7 +164,7 @@ const HARD_RULES = `Absolute rules:
  */
 const PROSE_RULES = `How to write, so the result does not read as machine-written:
 
-- Do not use the em-dash (—) as a general-purpose connector. Use a comma, a colon,
+- Do not use the em-dash (-) as a general-purpose connector. Use a comma, a colon,
   a full stop or brackets. At most one em-dash per 300 words.
 - Avoid this vocabulary entirely: crucial, pivotal, vital, key (as an adjective),
   delve, landscape, tapestry, testament, underscore, showcase, foster, robust,
@@ -214,7 +214,7 @@ export async function generateDraft({
     '',
     `Author voice: ${author.stylePrompt}`,
     '',
-    `Category: ${category.name} — ${category.description}`,
+    `Category: ${category.name}, ${category.description}`,
     '',
     UNIVERSAL_STRUCTURE,
     '',
@@ -232,10 +232,10 @@ export async function generateDraft({
     `TARGET KEYWORD: ${keyword.phrase}`,
     verified.length > 0
       ? `VERIFIED IDENTIFIERS (these are confirmed real and may be used): ${verified.join(', ')}`
-      : 'VERIFIED IDENTIFIERS: none — do not name any KB, build, or error code.',
+      : 'VERIFIED IDENTIFIERS: none, do not name any KB, build, or error code.',
     '',
     'SOURCES:',
-    sourceBlock || '(no sources were reachable — do not invent specifics; write only what is uncontroversially true, and name no identifiers, figures or dates)',
+    sourceBlock || '(no sources were reachable, do not invent specifics; write only what is uncontroversially true, and name no identifiers, figures or dates)',
     '',
     `Write the guide for "${keyword.phrase}".`,
   ].join('\n');
@@ -248,7 +248,7 @@ export async function generateDraft({
     // Covers reasoning *and* the response. A 2,000-word body is ~2,700 output
     // tokens; the reasoning is the larger share, and the request throws rather
     // than truncating when it runs out. The ceiling stays at 28000 after the
-    // drop to 'medium' — it costs nothing unspent, and a throw here wastes the
+    // drop to 'medium', it costs nothing unspent, and a throw here wastes the
     // whole call.
     // Empty setting keeps OPENAI_MODEL. This is the call worth pointing at a
     // cheaper model: it writes the article, and output is most of the bill.
@@ -258,7 +258,7 @@ export async function generateDraft({
      * Dropped from 'high' on 2026-10-01 to cut the bill.
      *
      * Reasoning tokens bill as output, and at 'high' they outweighed the article
-     * itself — this was the largest single line in the per-article cost. The
+     * itself, this was the largest single line in the per-article cost. The
      * quality gate still reads every draft against its sources, so a weaker
      * first pass is caught rather than published.
      *

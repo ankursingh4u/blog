@@ -8,7 +8,7 @@ import path from 'node:path';
  * Next.js reads the public directory once, at boot, and serves from that list.
  * A cover baked into the image is in it; a picture a contributor uploaded two
  * minutes ago is not, so it returned 404 until the next deploy restarted the
- * container and rebuilt the list. The file was on disk the whole time — every
+ * container and rebuilt the list. The file was on disk the whole time, every
  * upload through /write and /admin was invisible until something unrelated
  * happened to redeploy.
  *

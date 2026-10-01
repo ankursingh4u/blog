@@ -11,7 +11,7 @@ import type { ImageCandidate } from '@/lib/images';
  * Picks an openly-licensed photograph for the article cover.
  *
  * Searches Openverse, which needs no API key and costs nothing. Every result is
- * already filtered to a licence that permits commercial use — the site carries
+ * already filtered to a licence that permits commercial use, the site carries
  * advertising, so a non-commercial image is not an option however good it looks.
  *
  * Choosing one copies it into local storage and records its creator and licence

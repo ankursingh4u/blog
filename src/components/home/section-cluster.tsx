@@ -9,7 +9,7 @@ import { SaveButton } from '@/components/save-button';
 /**
  * A per-section block: one lead with an image, then the next few as headlines.
  * Repeating this shape down the page is what makes an aggregator homepage
- * scannable — the reader learns the pattern once and then only reads headlines.
+ * scannable, the reader learns the pattern once and then only reads headlines.
  */
 export function SectionCluster({
   name,

@@ -7,7 +7,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
  * someone their article.
  *
  * Written after a contributor lost 1,533 words. The form has no account behind
- * it and no server-side draft, so the browser tab was the only copy — and a tab
+ * it and no server-side draft, so the browser tab was the only copy, and a tab
  * is a fragile place to keep an hour's work. Three ways it goes: a reload, a
  * crash, or a deploy, which deletes the JavaScript chunks an open tab is still
  * running and turns the next click into a hard error.
@@ -37,7 +37,7 @@ type Draft = Partial<Record<(typeof FIELDS)[number], string>>;
 /**
  * Writes a value the way a user typing would, so React sees it.
  *
- * Assigning `.value` on a controlled input updates the DOM and nothing else —
+ * Assigning `.value` on a controlled input updates the DOM and nothing else -
  * React's state still holds the old value and overwrites it on the next render.
  * Going through the prototype's setter and then dispatching the event React
  * actually listens for makes a restore indistinguishable from typing, which is
@@ -86,7 +86,7 @@ export function useWriteDraft(
     setRestored(false);
   }, []);
 
-  /** Throws the draft away and empties the form — "start fresh". */
+  /** Throws the draft away and empties the form, "start fresh". */
   const discard = useCallback(() => {
     clear();
     const element = form.current;
@@ -127,7 +127,7 @@ export function useWriteDraft(
     if (filled) setRestored(true);
   }, [form]);
 
-  // Save on any edit, debounced — this runs on every keystroke otherwise.
+  // Save on any edit, debounced, this runs on every keystroke otherwise.
   useEffect(() => {
     const element = form.current;
     if (!element) return;
@@ -166,7 +166,7 @@ export function useWriteDraft(
    *
    * React resets an uncontrolled field once a form action returns, so a
    * submission the server rejects comes back with the headline, name and email
-   * blank — and worse, that reset fires input events, so the debounced save
+   * blank, and worse, that reset fires input events, so the debounced save
    * then writes the emptied form over a perfectly good draft. The body escapes
    * only because the editor holds it in React state.
    *
@@ -198,7 +198,7 @@ export function useWriteDraft(
   }, [form]);
 
   // Runs on every action result, because useActionState hands back a new object
-  // each time — two rejections in a row are two separate restores.
+  // each time, two rejections in a row are two separate restores.
   useEffect(() => {
     if (result.ok) {
       // The article is with the editors; the local copy has done its job.

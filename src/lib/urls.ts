@@ -9,7 +9,7 @@
  *   post in a top-level    /tech/some-post
  *   post in a child        /tech/windows/some-post
  *
- * Nothing outside this module should build a category or post path by hand —
+ * Nothing outside this module should build a category or post path by hand -
  * that is how the two shapes drift apart across sitemap, feed, cards and admin.
  */
 
@@ -42,7 +42,7 @@ export function authorPath(author: { slug: string }): string {
  * Route params for a post, matching the App Router segment names.
  *
  * Next.js requires the same param name at the same depth, so the routes are
- * `[category]/[slug]` and `[category]/[slug]/[post]` — meaning `slug` is the
+ * `[category]/[slug]` and `[category]/[slug]/[post]`, meaning `slug` is the
  * article for a top-level post and the sub-section for a nested one.
  */
 export function postRouteParams(post: PostRef): {

@@ -6,7 +6,7 @@ import { fixedBylineFor } from '@/lib/bylines';
 import { log } from '@/pipeline/log';
 
 /**
- * Steps 2 and 3 — keyword selection and author assignment.
+ * Steps 2 and 3, keyword selection and author assignment.
  */
 
 export interface SelectedJob {
@@ -19,7 +19,7 @@ export interface SelectedJob {
  * Picks up to `count` queued keywords, spread across categories.
  *
  * The spread rule from the brief is "never 3 posts in the same category on one
- * day" — implemented as at most 2 per category per run, which is the same thing
+ * day", implemented as at most 2 per category per run, which is the same thing
  * at the default of 2-3 posts per day and holds if the setting is raised.
  *
  * **Source-bearing keywords come first, then newest.** A keyword discovered from
@@ -32,7 +32,7 @@ export interface SelectedJob {
  * Ordering by date alone put this exactly backwards. Ingest writes the feeds,
  * then news, then autocomplete, so newest-first served the autocomplete phrases
  * every time and the run burned its whole candidate pool on keywords that could
- * never be sourced — a full run of six skips and nothing generated.
+ * never be sourced, a full run of six skips and nothing generated.
  */
 export async function selectKeywords(
   count: number,
@@ -114,7 +114,7 @@ export async function assignAuthor(
     if (author) return author;
     log.warn(
       `select: "${categorySlug}" is assigned to "${standing}" but no house author has ` +
-        'that slug — falling back to the rotation. Run the seed-authors task.',
+        'that slug, falling back to the rotation. Run the seed-authors task.',
     );
   }
 
@@ -124,12 +124,12 @@ export async function assignAuthor(
       where: { slug: pinnedSlug, isGuest: false },
     });
     if (pinned) return pinned;
-    // Naming an author who does not exist yet is the expected order of events —
-    // the setting ships with a default and the row is created afterwards — so
+    // Naming an author who does not exist yet is the expected order of events -
+    // the setting ships with a default and the row is created afterwards, so
     // this falls through to the rotation rather than failing the run. Said out
     // loud, because silently ignoring it is how the byline quietly stays wrong.
     log.warn(
-      `select: AI_AUTHOR_SLUG is "${pinnedSlug}" but no house author has that slug — ` +
+      `select: AI_AUTHOR_SLUG is "${pinnedSlug}" but no house author has that slug, ` +
         'falling back to the author rotation. Create the author in /admin/authors.',
     );
   }
@@ -140,7 +140,7 @@ export async function assignAuthor(
    * Guests are readers whose submitted article was accepted. The fallback below
    * widens the pool to every author when none matches the category, so without
    * this filter a contributor's name would eventually appear on a generated
-   * article they never wrote — which is a lie about a real, named person.
+   * article they never wrote, which is a lie about a real, named person.
    */
   const authors = await prisma.author.findMany({ where: { isGuest: false } });
   if (authors.length === 0) return null;

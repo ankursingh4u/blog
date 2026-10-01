@@ -2,7 +2,7 @@
  * Locates an H2 section inside a markdown body.
  *
  * Split out of the actions module because a `'use server'` file may only
- * export async functions — and because this is pure string work worth testing
+ * export async functions, and because this is pure string work worth testing
  * on its own.
  */
 export function extractSection(

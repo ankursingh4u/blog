@@ -93,7 +93,7 @@ export function LastRun({
               </span>
               {' · '}
               {outcome.keyword}
-              {outcome.error ? ` — ${outcome.error}` : ''}
+              {outcome.error ? `, ${outcome.error}` : ''}
             </li>
           ))}
         </ul>

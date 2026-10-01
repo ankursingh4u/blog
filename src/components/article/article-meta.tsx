@@ -74,7 +74,7 @@ export function ArticleMeta({
 
         There is deliberately no "verification pending" counterpart any more. It
         rendered on every article without a build recorded, which is every
-        general-interest story on the site — a match report cannot be run on a
+        general-interest story on the site, a match report cannot be run on a
         Windows build, so the label warned readers about a check that was never
         going to apply and made finished articles look unfinished. The editorial
         policy already scoped this to the Windows pages; the code did not.

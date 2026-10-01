@@ -4,7 +4,7 @@
  * The form is a client component and needs these to tell a contributor what is
  * allowed before they spend time writing. Reading them from `lib/submissions`
  * dragged Prisma and `node:fs` into the browser bundle, which fails the build
- * outright — `UnhandledSchemeError: Reading from "node:crypto"`.
+ * outright, `UnhandledSchemeError: Reading from "node:crypto"`.
  *
  * Kept free of imports so both sides can use it. `lib/submissions` enforces
  * them; this only states them.
@@ -23,7 +23,7 @@ export const MAX_BODY_CHARS = 40_000;
  * There is deliberately no word limit to check this against. A long piece is an
  * editorial question, not a validation one, and a writer who has finished
  * should not be told to cut it by a form. `MAX_BODY_CHARS` remains the only
- * ceiling, and it is there to bound abuse rather than length — this count is
+ * ceiling, and it is there to bound abuse rather than length, this count is
  * shown so a writer knows where they are, not to gate them.
  */
 export function countWords(markdown: string): number {

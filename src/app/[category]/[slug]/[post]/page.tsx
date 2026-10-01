@@ -11,12 +11,12 @@ export const dynamicParams = true;
 /**
  * Articles in a sub-section: /tech/windows/fix-0x800f0922-windows-11.
  *
- * Segment names must match the sibling route at the same depth — Next.js rejects
+ * Segment names must match the sibling route at the same depth, Next.js rejects
  * `[category]/[sub]/[slug]` alongside `[category]/[slug]`. So `slug` here is the
  * sub-section and `post` is the article.
  *
  * The post is looked up by its own (child) category, then the parent segment is
- * verified against that category's actual parent — otherwise /money/windows/x
+ * verified against that category's actual parent, otherwise /money/windows/x
  * would serve the same article as /tech/windows/x and duplicate it.
  */
 async function resolve(category: string, sub: string, slug: string) {

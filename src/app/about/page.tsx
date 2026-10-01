@@ -14,7 +14,7 @@ import { SITE } from '@/lib/site';
  *
  * The masthead is built from the database, and the page was last rendered in
  * the gap between a deploy and the task that created seven of the eight
- * authors — so the live site showed one person and a stale bio for a full day
+ * authors, so the live site showed one person and a stale bio for a full day
  * while the data behind it was correct the whole time. An hour keeps this
  * effectively static while making an editorial change to a bio visible in a
  * reasonable time rather than tomorrow.
@@ -29,7 +29,7 @@ export const metadata: Metadata = buildMetadata({
 });
 
 // Stock photography stands in for the newsroom shots. Replace both with your
-// own assets before launch — see README, "Placeholder assets".
+// own assets before launch, see README, "Placeholder assets".
 const HERO_MEDIA =
   'https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=1600&auto=format&fit=crop';
 const HERO_BG =
@@ -65,13 +65,13 @@ export default async function AboutPage() {
             A story breaks, and the first ten search results are the same wire copy reworded ten
             times, padded out to hit a word count. That is the gap this site covers: a page that
             says what actually happened, what is confirmed and what is not, and why it matters to
-            you — in that order, across tech, entertainment, sport, money, health, gaming, travel
+            you, in that order, across tech, entertainment, sport, money, health, gaming, travel
             and education.
           </p>
           <p className="mt-5 text-lg text-muted-foreground">
             Every article leads with a quick answer you can read in under a minute. The detail sits
             below it for anyone who wants it. Where a source did not say something, the page says
-            so rather than filling the gap — you will see plain sentences like &ldquo;the report did
+            so rather than filling the gap, you will see plain sentences like &ldquo;the report did
             not give a time&rdquo; instead of a confident guess.
           </p>
         </div>
@@ -88,7 +88,7 @@ export default async function AboutPage() {
           <Rule title="No source, no article">
             Before anything is written, we look for published reporting that is actually about the
             story. If we cannot find it, the topic is dropped and no page is produced. That is not a
-            rare event — most trending topics we look at never become an article, because a
+            rare event, most trending topics we look at never become an article, because a
             plausible page with nothing behind it is worse than no page.
           </Rule>
           <Rule title="Figures are never invented">
@@ -112,7 +112,7 @@ export default async function AboutPage() {
           <SectionHeading
             eyebrow="Bylines"
             title="Who writes here"
-            description="The people behind the site. Every article is drafted with AI assistance and approved by a person before it publishes — the editorial policy sets out exactly which parts are which."
+            description="The people behind the site. Every article is drafted with AI assistance and approved by a person before it publishes, the editorial policy sets out exactly which parts are which."
           />
 
           <div className="mt-10 grid gap-6 md:grid-cols-3">

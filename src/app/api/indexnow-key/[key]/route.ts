@@ -17,7 +17,7 @@ import { getSetting } from '@/lib/settings';
  * what made it look configured for as long as it did. Path params substitute
  * reliably; query params, on this version, do not.
  *
- * The root path cannot be `app/[key]/route.ts` — that collides with
+ * The root path cannot be `app/[key]/route.ts`, that collides with
  * `app/[category]`, and Next.js does not allow two differently-named dynamic
  * segments at the same level. Nested under /api it is unambiguous.
  */

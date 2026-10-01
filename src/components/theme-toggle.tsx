@@ -22,7 +22,7 @@ export function ThemeToggle() {
     try {
       localStorage.setItem('theme', next);
     } catch {
-      // Private mode / storage disabled — the toggle still works for this visit.
+      // Private mode / storage disabled, the toggle still works for this visit.
     }
   };
 

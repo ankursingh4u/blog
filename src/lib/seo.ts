@@ -245,7 +245,7 @@ export function collectionLd(input: {
   };
 }
 
-/** Wraps a set of nodes into one `@graph` document — one script tag per page. */
+/** Wraps a set of nodes into one `@graph` document, one script tag per page. */
 export function jsonLdGraph(...nodes: Array<Json | null | undefined>) {
   return {
     '@context': 'https://schema.org',

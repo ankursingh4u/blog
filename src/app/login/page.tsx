@@ -29,7 +29,7 @@ export default async function AdminLoginPage({ searchParams }: { searchParams: S
             <p className="font-medium">No password is configured.</p>
             <p className="mt-1.5">
               Set <code className="font-mono">ADMIN_PASSWORD</code> in <code className="font-mono">.env</code>{' '}
-              and restart. Until then the admin is closed rather than open — there is no way in, by
+              and restart. Until then the admin is closed rather than open, there is no way in, by
               design.
             </p>
           </div>

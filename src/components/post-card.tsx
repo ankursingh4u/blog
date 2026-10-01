@@ -9,11 +9,11 @@ import { categoryPath } from '@/lib/urls';
 
 /**
  * Article card. Every variant reserves its cover box with an explicit aspect
- * ratio, so nothing can shift the grid — the CLS budget for a listing page is
+ * ratio, so nothing can shift the grid, the CLS budget for a listing page is
  * spent almost entirely here.
  *
  * The cover is a licensed photograph when one has been chosen, and drawn art
- * otherwise (see `CoverArt`) — never the OG card, which has the headline baked
+ * otherwise (see `CoverArt`), never the OG card, which has the headline baked
  * into it. The old `priority` prop went when the drawn fallback arrived and
  * there was no longer always an image request to prioritise.
  */
@@ -146,7 +146,7 @@ export function PostCard({
               <time dateTime={isoDate(post.publishedAt)}>{published}</time>
             </>
           ) : null}
-          {/* No "verification pending" counterpart — see article-meta.tsx. */}
+          {/* No "verification pending" counterpart, see article-meta.tsx. */}
           {verified ? (
             <span className="inline-flex items-center gap-1 text-ok">
               <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />

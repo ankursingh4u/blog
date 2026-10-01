@@ -10,12 +10,12 @@ import { useIsMobile, usePrefersReducedMotion } from '@/hooks/use-motion';
  * Scroll-expansion hero: a small media card that grows to fill the frame as
  * the reader scrolls, while the split title slides apart.
  *
- * Adapted from the supplied `scroll-expansion-hero` reference — with one
+ * Adapted from the supplied `scroll-expansion-hero` reference, with one
  * deliberate behavioural change.
  *
  * The reference drives the effect by hijacking the page: it calls
  * `preventDefault()` on every wheel event and forces `window.scrollTo(0, 0)`
- * on every scroll until the animation completes. That traps the reader — Page
+ * on every scroll until the animation completes. That traps the reader, Page
  * Down, Home/End, spacebar, screen-reader navigation and find-in-page all stop
  * working until the sequence finishes, and there is no way out with the
  * keyboard at all. On a site whose job is to get someone to a fix quickly,
@@ -105,7 +105,7 @@ export function ScrollExpandMedia({
       aria-label={title}
     >
       <div className="sticky top-0 flex h-[100svh] w-full items-center justify-center overflow-hidden">
-        {/* Background plate — fades out as the media takes over. */}
+        {/* Background plate, fades out as the media takes over. */}
         <motion.div style={{ opacity: bgOpacity }} className="absolute inset-0 z-0" aria-hidden="true">
           <Image
             src={bgImageSrc}

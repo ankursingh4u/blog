@@ -5,7 +5,7 @@ import { findGeneralSources, findSolutionSources } from '@/pipeline/discovery';
 import { botUserAgent } from '@/lib/site';
 
 /**
- * Step 4 — research.
+ * Step 4, research.
  *
  * Collects the source material an article is allowed to be written from. The
  * generator sees only what comes back from here, and the quality gate checks
@@ -14,9 +14,9 @@ import { botUserAgent } from '@/lib/site';
  * There are two routes, because the two kinds of content have different
  * authorities:
  *
- *   - **Windows troubleshooting** — Microsoft's own documentation, found through
+ *   - **Windows troubleshooting**, Microsoft's own documentation, found through
  *     Learn search and a handful of fixed fallback pages. Unchanged.
- *   - **The seven general verticals** — the publisher and official-body feeds in
+ *   - **The seven general verticals**, the publisher and official-body feeds in
  *     `findGeneralSources`. These used to fall through the Windows route, which
  *     handed a travel or sport keyword two Windows Update pages as its sources:
  *     always fetchable, always irrelevant, and dangerous precisely because the
@@ -35,7 +35,7 @@ const MAX_CHARS_PER_SOURCE = 12_000;
  * Raised from 5 alongside the 1500-word floor.
  *
  * Length has to come from somewhere. Asked for 2,000 words off three sources,
- * the model has nothing left to say by the halfway point and starts restating —
+ * the model has nothing left to say by the halfway point and starts restating -
  * which `checkPadding` then fails, burning the generation call. More source
  * material is the cheaper half of that trade.
  */
@@ -52,7 +52,7 @@ const TARGET_SOURCES = 7;
  */
 function keywordUrl(keyword: Keyword): string[] {
   // Keywords discovered from autocomplete or trends carry a `discovery:` marker
-  // rather than a URL — there is no source page behind a search query.
+  // rather than a URL, there is no source page behind a search query.
   if (!keyword.sourceUrl || keyword.sourceUrl.startsWith('discovery:')) return [];
 
   try {
@@ -104,7 +104,7 @@ export async function research(
   const isTroubleshooting = categorySlug === 'windows';
 
   // Pages specifically about this topic, found by search, ahead of any
-  // fallbacks. The Windows route is restricted to Microsoft-owned domains — see
+  // fallbacks. The Windows route is restricted to Microsoft-owned domains, see
   // the note in discovery.ts for why forum results are deliberately discarded.
   const discovered = isTroubleshooting
     ? await findSolutionSources(keyword.phrase)
@@ -134,7 +134,7 @@ export async function research(
       }
       sources.push(source);
     } catch (error) {
-      log.warn(`research: ${url} failed — ${error instanceof Error ? error.message : error}`);
+      log.warn(`research: ${url} failed, ${error instanceof Error ? error.message : error}`);
     }
   }
 
@@ -143,7 +143,7 @@ export async function research(
 }
 
 /**
- * Exported so a post's sources can be re-fetched after the fact — the post
+ * Exported so a post's sources can be re-fetched after the fact, the post
  * stores each source's URL and title but not its text, so re-running the
  * quality gate on an already-generated draft has to go back to the page.
  */

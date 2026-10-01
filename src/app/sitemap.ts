@@ -8,7 +8,7 @@ import { categoryPath, postPath } from '@/lib/urls';
  *
  * A cached sitemap is a sitemap that lies. It was `revalidate = 3600`, and
  * staying correct then depended on remembering to call `revalidatePath` from
- * every action that changes what is published — of the thirty write paths in
+ * every action that changes what is published, of the thirty write paths in
  * the admin, exactly one did. Publishing from anywhere else, deleting a post,
  * renaming an author or accepting a submission all left it an hour out of date,
  * and nothing surfaced that.
@@ -39,7 +39,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
      *
      * Without it a crawler has nothing to judge a listing page by and re-reads
      * it on its own schedule. With it, a section that gained an article today
-     * says so, and one that has not changed in a month says that too — which is
+     * says so, and one that has not changed in a month says that too, which is
      * the entire purpose of the field.
      */
     prisma.category.findMany({
@@ -59,7 +59,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
      * Only authors with something published.
      *
      * Guest contributors get an author profile the moment their submission is
-     * accepted, which is before the draft is published — and a profile listing
+     * accepted, which is before the draft is published, and a profile listing
      * no articles is a thin page. Listing it invites a crawl of a page with
      * nothing on it and, at scale, is the sort of empty-profile sprawl that
      * drags a site's quality signals down.

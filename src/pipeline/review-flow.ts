@@ -21,7 +21,7 @@ import {
 /**
  * Drives the review queue: show one draft, wait, show the next.
  *
- * Kept out of the webhook route so the admin UI can advance the same queue —
+ * Kept out of the webhook route so the admin UI can advance the same queue -
  * approving in /admin has to move the cursor too, or the chat would sit waiting
  * on a draft that was decided somewhere else.
  *
@@ -43,7 +43,7 @@ export async function sendNextForReview(): Promise<boolean> {
   });
 
   /**
-   * A draft that has gone — deleted, or already decided in /admin — must not
+   * A draft that has gone, deleted, or already decided in /admin, must not
    * stall the queue. Step over it and show the next one instead.
    */
   if (!post || post.status !== 'REVIEW') {
@@ -92,8 +92,8 @@ export async function recordReviewDecision(postId: string, outcome: Outcome): Pr
 /**
  * Everything has been decided: report, then regenerate what came back empty.
  *
- * The summary goes first so the chat reads as a conclusion — what was kept,
- * what was not — before the replacements start arriving.
+ * The summary goes first so the chat reads as a conclusion, what was kept,
+ * what was not, before the replacements start arriving.
  */
 async function finishCycle(cycle: ReviewCycle): Promise<boolean> {
   const rejected = rejectedEntries(cycle);
@@ -109,7 +109,7 @@ async function finishCycle(cycle: ReviewCycle): Promise<boolean> {
     lines.push('', `*${escapeMarkdown('Rejected')}*`);
     for (const entry of rejected) {
       lines.push(
-        `· ${escapeMarkdown(entry.categoryName)} — [${escapeMarkdown(
+        `· ${escapeMarkdown(entry.categoryName)}, [${escapeMarkdown(
           entry.title.slice(0, 70),
         )}](${absoluteUrl(`/admin/posts/${entry.postId}`)})`,
       );
@@ -122,7 +122,7 @@ async function finishCycle(cycle: ReviewCycle): Promise<boolean> {
     lines.push(
       '',
       escapeMarkdown(
-        `Nothing was kept in: ${toRegenerate.join(', ')}. Writing replacements now — ` +
+        `Nothing was kept in: ${toRegenerate.join(', ')}. Writing replacements now, ` +
           'they will arrive here shortly.',
       ),
     );
@@ -145,7 +145,7 @@ async function finishCycle(cycle: ReviewCycle): Promise<boolean> {
    * response; failures are logged rather than thrown into a dead request.
    */
   void regenerateCategories(toRegenerate, cycle).catch((error) => {
-    log.error(`cycle: regeneration failed — ${error instanceof Error ? error.message : error}`);
+    log.error(`cycle: regeneration failed, ${error instanceof Error ? error.message : error}`);
   });
 
   return true;
@@ -196,7 +196,7 @@ async function regenerateCategories(slugs: string[], previous: ReviewCycle): Pro
   if (produced.length === 0) {
     await sendNotice(
       escapeMarkdown(
-        'No replacement could be written — the feeds had nothing else citable for those ' +
+        'No replacement could be written, the feeds had nothing else citable for those ' +
           'sections. Nothing is waiting on you.',
       ),
     );

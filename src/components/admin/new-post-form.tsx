@@ -27,7 +27,7 @@ export interface SectionOption {
  *
  * Choosing a topic carries its section and its sources across, which is the
  * part that is tedious to reproduce by hand. Neither path calls a language
- * model — the whole point of writing here rather than generating is that it
+ * model, the whole point of writing here rather than generating is that it
  * costs nothing.
  */
 export function NewPostForm({
@@ -69,7 +69,7 @@ export function NewPostForm({
       {mode === 'topic' ? (
         topics.length === 0 ? (
           <div className="surface p-6 text-sm text-muted-foreground">
-            No topics queued. Run the ingest from the dashboard — it reads Google News and costs
+            No topics queued. Run the ingest from the dashboard, it reads Google News and costs
             nothing.
           </div>
         ) : (
@@ -101,7 +101,7 @@ export function NewPostForm({
                       {topic.hasSource ? (
                         <span className="text-ok">sources available</span>
                       ) : (
-                        <span>no article link — you supply the sources</span>
+                        <span>no article link, you supply the sources</span>
                       )}
                     </span>
                   </button>

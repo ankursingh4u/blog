@@ -36,7 +36,7 @@ export function SaveButton({
       }}
       aria-pressed={saved}
       aria-label={saved ? `Remove "${title}" from saved` : `Save "${title}" for later`}
-      title={saved ? 'Saved — click to remove' : 'Save for later'}
+      title={saved ? 'Saved, click to remove' : 'Save for later'}
       className={cn(
         'inline-grid shrink-0 place-items-center rounded-full border transition-colors',
         box,

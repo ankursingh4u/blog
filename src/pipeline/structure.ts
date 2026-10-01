@@ -1,7 +1,7 @@
 /**
  * Deterministic editorial-structure check.
  *
- * The generation prompt asks for a specific shape — introduction, scannable H2
+ * The generation prompt asks for a specific shape, introduction, scannable H2
  * sections, at least one list, a conclusion with a call to action, and a real
  * word count. Asking the model to grade its own compliance is unreliable, and
  * these properties are all mechanically checkable, so they are checked here
@@ -141,7 +141,7 @@ export function checkStructure(body: string): StructureReport {
 
   // The band is 1500-2000; a deep dive on a competitive topic may run further.
   // There is no way to tell mechanically which was intended, so overshooting is
-  // a note for the editor rather than a failure — the floor is the rule worth
+  // a note for the editor rather than a failure, the floor is the rule worth
   // blocking on, and `checkPadding` is what judges whether the extra words are
   // substance or repetition.
   if (wordCount > STANDARD_MAX_WORDS) {
@@ -172,6 +172,6 @@ export function checkStructure(body: string): StructureReport {
 export function describeStructure(report: StructureReport): string {
   if (report.issues.length === 0) return `Structure OK (${report.wordCount} words).`;
   return `Structure (${report.wordCount} words): ${report.issues
-    .map((i) => `${i.blocking ? 'BLOCKING' : 'note'} ${i.rule} — ${i.detail}`)
+    .map((i) => `${i.blocking ? 'BLOCKING' : 'note'} ${i.rule}, ${i.detail}`)
     .join(' ')}`;
 }

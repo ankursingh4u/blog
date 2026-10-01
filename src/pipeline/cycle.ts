@@ -15,8 +15,8 @@ import { sendNextForReview } from '@/pipeline/review-flow';
  * A cycle: every vertical covered once, then handed to the review queue.
  *
  * Runs on a schedule (four times a day by default) and asks each top-level
- * category for POSTS_PER_CATEGORY drafts. The alternative — one run told to
- * produce sixteen — would let the sections that source most easily take the
+ * category for POSTS_PER_CATEGORY drafts. The alternative, one run told to
+ * produce sixteen, would let the sections that source most easily take the
  * whole quota, which is exactly how this site ended up as a Windows blog with
  * seven empty verticals.
  *
@@ -55,11 +55,11 @@ export async function runCycle(
      * Refuse to start a second cycle on top of an unfinished one.
      *
      * Opening a new cycle would overwrite the queue and silently abandon every
-     * draft still waiting for a decision — paid for, written, and never seen.
+     * draft still waiting for a decision, paid for, written, and never seen.
      * Better to skip a cycle than to throw one away.
      */
     log.warn(
-      `cycle: ${open.entries.length - open.cursor} draft(s) still awaiting review — ` +
+      `cycle: ${open.entries.length - open.cursor} draft(s) still awaiting review, ` +
         'skipping this cycle. Finish the queue in Telegram or /admin.',
     );
     return {
@@ -109,7 +109,7 @@ export async function runCycle(
     counts[category.slug] = result.outcomes.filter((o) => o.status === 'REVIEW').length;
     if (result.budgetStopped) {
       budgetStopped = true;
-      log.warn(`cycle: stopped at ${category.slug} — daily token cap reached.`);
+      log.warn(`cycle: stopped at ${category.slug}, daily token cap reached.`);
     }
   }
 

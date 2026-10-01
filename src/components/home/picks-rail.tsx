@@ -10,7 +10,7 @@ import { SaveButton } from '@/components/save-button';
  * aggregator surfaces "more for you" beside the lead cluster.
  *
  * On a single-publisher site the source favicon has no equivalent, so the
- * category acts as the label instead — it is the thing that actually tells a
+ * category acts as the label instead, it is the thing that actually tells a
  * reader whether the item is for them.
  */
 export function PicksRail({

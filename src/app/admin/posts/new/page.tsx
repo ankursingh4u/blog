@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
  * Start a new article by hand.
  *
  * The topic list is the same Google News queue the pipeline draws from, so the
- * discovery work is shared — but nothing on this page spends anything. Ingest
+ * discovery work is shared, but nothing on this page spends anything. Ingest
  * is RSS, the sources are ordinary HTTP, and the cover is rendered locally.
  *
  * Source-bearing topics are offered first. A keyword discovered from

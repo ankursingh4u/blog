@@ -1,6 +1,6 @@
 /**
  * How an article gets from a source to a published page.
- * This is the public-facing version of the pipeline in src/pipeline — keep the
+ * This is the public-facing version of the pipeline in src/pipeline, keep the
  * two in step when the pipeline changes.
  *
  * This was a sticky-scroll reveal: a fixed-height box with its own scrollbar and
@@ -24,7 +24,7 @@ const STEPS = [
   {
     title: 'We read the primary sources',
     description:
-      'Before a word is drafted, three to five sources are collected — official documentation, published research and primary reporting first. Every claim has to trace back to one of them, and they are all listed at the bottom of the article.',
+      'Before a word is drafted, three to five sources are collected, official documentation, published research and primary reporting first. Every claim has to trace back to one of them, and they are all listed at the bottom of the article.',
   },
   {
     title: 'A quality gate scores the draft',

@@ -56,12 +56,12 @@ export function AnatomyShowcase() {
         </div>
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          <Panel icon={<ListOrdered className="h-3.5 w-3.5" aria-hidden="true" />} title="Method 1 — Free space on System Reserved">
+          <Panel icon={<ListOrdered className="h-3.5 w-3.5" aria-hidden="true" />} title="Method 1, Free space on System Reserved">
             <Line w="92%" />
             <Line w="78%" />
             <Line w="85%" />
           </Panel>
-          <Panel icon={<ListOrdered className="h-3.5 w-3.5" aria-hidden="true" />} title="Method 2 — Reset the update components">
+          <Panel icon={<ListOrdered className="h-3.5 w-3.5" aria-hidden="true" />} title="Method 2, Reset the update components">
             <Line w="88%" />
             <Line w="70%" />
             <Line w="80%" />

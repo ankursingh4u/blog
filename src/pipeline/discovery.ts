@@ -6,7 +6,7 @@ import { botUserAgent } from '@/lib/site';
 /**
  * Topic discovery: what is trending right now, across all eight verticals.
  *
- * The primary source is Google News, read through its public RSS endpoints —
+ * The primary source is Google News, read through its public RSS endpoints -
  * per-section feeds where Google publishes one, search feeds where it does not,
  * plus top stories. See `fetchTrendingByVertical`, which is the entry point.
  *
@@ -21,7 +21,7 @@ import { botUserAgent } from '@/lib/site';
  *
  *   - **There is no official Google Trends API either.** There is a public daily
  *     trending-searches RSS feed, which `fetchGoogleTrends` reads. Daily trends
- *     are dominated by sport, film and celebrity — which this site now covers,
+ *     are dominated by sport, film and celebrity, which this site now covers,
  *     so it is a useful source rather than the near-always-empty one it was when
  *     the only vertical was Windows.
  *
@@ -149,7 +149,7 @@ export const VERTICAL_SOURCES: readonly VerticalSource[] = [
 
 /**
  * Keyword signals per vertical, used to classify a term that arrives with no
- * section attached — Google Trends and autocomplete, mainly.
+ * section attached, Google Trends and autocomplete, mainly.
  *
  * Order matters: the first vertical whose pattern matches wins, so the narrower
  * patterns are listed before the broad ones. `windows` is checked ahead of
@@ -185,7 +185,7 @@ const VERTICAL_PATTERNS: ReadonlyArray<{ slug: CategorySlug; pattern: RegExp }> 
   },
   {
     slug: 'health',
-    // "lose weight" as well as "weight loss" — both phrasings are common, and
+    // "lose weight" as well as "weight loss", both phrasings are common, and
     // matching only the noun form misses the way people actually search.
     pattern:
       /\b(health|diet|nutrition|calorie|sleep|fitness|workout|exercise|vitamin|disease|symptom|doctor|mental health|weight loss|lose weight|obesity)\b/i,
@@ -210,7 +210,7 @@ const VERTICAL_PATTERNS: ReadonlyArray<{ slug: CategorySlug; pattern: RegExp }> 
 /**
  * Terms that match a vertical but never make a worthwhile page.
  *
- * Trending searches skew hard towards individual people and one-off events —
+ * Trending searches skew hard towards individual people and one-off events -
  * "who won", a footballer's name, a death announcement. Those are news, and this
  * site does not do breaking news; it does the explainer behind it.
  */
@@ -272,13 +272,13 @@ export async function fetchGoogleNews(
     const items = parseFeed(xml).slice(0, limit);
     return items.map((item) => ({ ...item, title: stripPublisher(item.title) }));
   } catch (error) {
-    log.warn(`discovery: Google News "${query}" (${edition.id}) failed — ${describe(error)}`);
+    log.warn(`discovery: Google News "${query}" (${edition.id}) failed, ${describe(error)}`);
     return [];
   }
 }
 
 /**
- * A Google News **section** feed — the curated "Technology", "Sports" and so on
+ * A Google News **section** feed, the curated "Technology", "Sports" and so on
  * that the site's front page shows as tabs.
  *
  * Preferred over a search query wherever a section exists: the ordering is
@@ -302,12 +302,12 @@ export async function fetchGoogleNewsTopic(
     const items = parseFeed(xml).slice(0, limit);
     return items.map((item) => ({ ...item, title: stripPublisher(item.title) }));
   } catch (error) {
-    log.warn(`discovery: Google News topic ${topic} (${edition.id}) failed — ${describe(error)}`);
+    log.warn(`discovery: Google News topic ${topic} (${edition.id}) failed, ${describe(error)}`);
     return [];
   }
 }
 
-/** Google News top stories — the "Your briefing" feed, unfiltered by section. */
+/** Google News top stories, the "Your briefing" feed, unfiltered by section. */
 export async function fetchTopStories(
   limit = 12,
   edition: NewsEdition = NEWS_EDITIONS[0],
@@ -319,7 +319,7 @@ export async function fetchTopStories(
     const items = parseFeed(xml).slice(0, limit);
     return items.map((item) => ({ ...item, title: stripPublisher(item.title) }));
   } catch (error) {
-    log.warn(`discovery: Google News top stories (${edition.id}) failed — ${describe(error)}`);
+    log.warn(`discovery: Google News top stories (${edition.id}) failed, ${describe(error)}`);
     return [];
   }
 }
@@ -379,7 +379,7 @@ export async function fetchTrendingByVertical(
       }
     }
 
-    // Mixed feed — classify, and drop what fits nowhere.
+    // Mixed feed, classify, and drop what fits nowhere.
     for (const item of await fetchTopStories(limit, edition)) {
       const slug = classifyVertical(item.title);
       if (slug) out.push({ item, slug, origin: `news-top:${edition.id}` });
@@ -393,9 +393,17 @@ export async function fetchTrendingByVertical(
   return out;
 }
 
-/** "KB5044284 breaks printing - Ars Technica" -> "KB5044284 breaks printing" */
+/**
+ * "KB5044284 breaks printing - Ars Technica" -> "KB5044284 breaks printing"
+ *
+ * Google News appends the publisher after a dash, and which dash depends on the
+ * publisher: hyphen, en dash or em dash all appear. The separators are written
+ * as unicode escapes because a pass that removed em-dashes from this codebase
+ * rewrote this class into `[-–-]`, an invalid range that left every em-dash
+ * headline carrying its publisher into the keyword queue.
+ */
 export function stripPublisher(title: string): string {
-  return title.replace(/\s+[-–—]\s+[^-–—]{2,40}$/, '').trim();
+  return title.replace(/\s+[—–-]\s+[^—–-]{2,40}$/, '').trim();
 }
 
 /* --------------------------------------------------------- Google Suggest */
@@ -405,7 +413,7 @@ const SuggestResponse = z.tuple([z.string(), z.array(z.string())]).rest(z.unknow
 /**
  * Autocomplete expansion for one seed phrase.
  *
- * `client=firefox` returns plain JSON — `["seed", ["suggestion", …]]` — rather
+ * `client=firefox` returns plain JSON, `["seed", ["suggestion", …]]`, rather
  * than the JSONP the browser client returns.
  */
 export async function fetchGoogleSuggest(seed: string): Promise<string[]> {
@@ -422,7 +430,7 @@ export async function fetchGoogleSuggest(seed: string): Promise<string[]> {
     }
     return parsed.data[1].map((s) => s.trim()).filter(Boolean);
   } catch (error) {
-    log.warn(`discovery: Google Suggest "${seed}" failed — ${describe(error)}`);
+    log.warn(`discovery: Google Suggest "${seed}" failed, ${describe(error)}`);
     return [];
   }
 }
@@ -436,8 +444,8 @@ export interface SuggestedPhrase {
  * Runs every seed across every vertical and returns the deduped union.
  *
  * A suggestion inherits the vertical of the seed that produced it, falling back
- * to classifying the phrase itself. The seed is the better signal — "best
- * settings for" is a gaming seed even when the completion never says "game" —
+ * to classifying the phrase itself. The seed is the better signal, "best
+ * settings for" is a gaming seed even when the completion never says "game" -
  * but the classifier catches completions that have drifted off their seed, which
  * autocomplete does often.
  */
@@ -472,7 +480,7 @@ export async function fetchAllSuggestions(): Promise<SuggestedPhrase[]> {
 }
 
 /**
- * Autocomplete returns long ladders of the same query — "admission last date",
+ * Autocomplete returns long ladders of the same query, "admission last date",
  * "admission last date 2026", "admission last date school", and six more.
  *
  * Exact-match deduping keeps every one of them, and each would become its own
@@ -491,7 +499,7 @@ function isNearDuplicate(kept: string, candidate: string): boolean {
 /**
  * Daily trending searches for a region, classified into verticals.
  *
- * Returns terms only — the feed's item links point back to Trends itself, which
+ * Returns terms only, the feed's item links point back to Trends itself, which
  * is no use as a research source.
  *
  * This used to be filtered down to Windows terms and so was empty almost every
@@ -518,7 +526,7 @@ export async function fetchGoogleTrends(geo = 'IN'): Promise<SuggestedPhrase[]> 
     }
     return out;
   } catch (error) {
-    log.warn(`discovery: Google Trends (${geo}) failed — ${describe(error)}`);
+    log.warn(`discovery: Google Trends (${geo}) failed, ${describe(error)}`);
     return [];
   }
 }
@@ -544,7 +552,7 @@ export interface SolutionSource {
  *   2. The premise of this site is that the existing search results for these
  *      queries are scraped forum posts repeating each other. Feeding those back
  *      into the generator would reproduce exactly the content the site exists to
- *      replace — and the quality gate could not tell the difference, because a
+ *      replace, and the quality gate could not tell the difference, because a
  *      confidently-worded forum answer looks just like a source.
  *
  * Results are still host-checked on the way out. Learn search should only ever
@@ -576,7 +584,7 @@ export function isTrustedHost(url: string): boolean {
 /**
  * A trusted *host* is not enough.
  *
- * `learn.microsoft.com/answers/` is community Q&A — user-submitted threads that
+ * `learn.microsoft.com/answers/` is community Q&A, user-submitted threads that
  * happen to sit on a Microsoft domain. It is precisely the forum content the
  * host allow-list exists to keep out, and the host check waves it through.
  *
@@ -621,7 +629,7 @@ export function isUsefulSolutionUrl(url: string, title: string, query: string): 
  *
  * The first row is the Windows-troubleshooting vocabulary this started as. The
  * rest are ordinary English words long enough to survive the four-character
- * filter — needed once matching moved beyond Windows, where "about", "after" and
+ * filter, needed once matching moved beyond Windows, where "about", "after" and
  * "their" appear in nearly every headline and would match anything.
  */
 const GENERIC = new Set([
@@ -676,7 +684,7 @@ function distinctiveOverlap(query: string, haystack: string): number {
  * These feeds, by contrast, publish the publisher's own article URLs, which are
  * fetchable, citable and stable. Every one was checked live before being listed.
  *
- * `windows` is absent deliberately — that vertical has its own path through
+ * `windows` is absent deliberately, that vertical has its own path through
  * `findSolutionSources`, which prefers Microsoft's own documentation.
  */
 export const VERTICAL_FEEDS: Partial<Record<CategorySlug, readonly string[]>> = {
@@ -719,7 +727,7 @@ export const GENERAL_FEEDS: readonly string[] = [
  *
  * Two groups: the publishers behind the feeds above, and the official bodies
  * that are the primary authority for a vertical. The same principle as
- * `TRUSTED_HOSTS` for Windows — an allow-list means a stray URL cannot become a
+ * `TRUSTED_HOSTS` for Windows, an allow-list means a stray URL cannot become a
  * citation, and it keeps the "official sources first" rule enforceable rather
  * than aspirational.
  */
@@ -755,7 +763,7 @@ export function isTrustedGeneralHost(url: string): boolean {
  *
  * The threshold is deliberately high. A first cut accepted two shared terms, and
  * fell back to one when nothing scored better; probing it showed what that
- * produces — a story about festive-season airfares matched a credit-card review,
+ * produces, a story about festive-season airfares matched a credit-card review,
  * and a lung-surgery study matched an article about a powerlifter. A genuine
  * match scores far higher (a cricket final matched its report on six terms), so
  * three separates signal from coincidence cleanly.
@@ -763,7 +771,7 @@ export function isTrustedGeneralHost(url: string): boolean {
  * Returning nothing is a valid and common outcome: a publisher feed carries only
  * the last few dozen items, so most specific stories will not be in it. That is
  * the right answer. An unrelated source is worse than no source, because the
- * generator is instructed to write only what its sources say — hand it the wrong
+ * generator is instructed to write only what its sources say, hand it the wrong
  * article and it will confidently write that article's facts into this one.
  */
 const MIN_TERM_OVERLAP = 3;
@@ -782,7 +790,7 @@ export async function findGeneralSources(
       const xml = await fetchText(feed, 'application/rss+xml, application/xml, text/xml');
       items = parseFeed(xml);
     } catch (error) {
-      log.warn(`discovery: feed ${feed} failed — ${describe(error)}`);
+      log.warn(`discovery: feed ${feed} failed, ${describe(error)}`);
       continue;
     }
 
@@ -822,7 +830,7 @@ export async function findSolutionSources(query: string, limit = 4): Promise<Sol
     const xml = await fetchText(url, 'application/rss+xml, application/xml, text/xml');
     items = parseFeed(xml);
   } catch (error) {
-    log.warn(`discovery: Learn search "${query}" failed — ${describe(error)}`);
+    log.warn(`discovery: Learn search "${query}" failed, ${describe(error)}`);
     return [];
   }
 
@@ -841,7 +849,7 @@ export async function findSolutionSources(query: string, limit = 4): Promise<Sol
 
   if (rejected > 0) {
     log.info(
-      `discovery: "${query}" — ${rejected} result(s) discarded (community Q&A or off-topic)`,
+      `discovery: "${query}", ${rejected} result(s) discarded (community Q&A or off-topic)`,
     );
   }
   return trusted;
@@ -854,8 +862,8 @@ function describe(error: unknown) {
 /**
  * Headlines straight from publisher RSS, for the briefing.
  *
- * Google News is the better discovery channel — more sections, more editions,
- * far more volume — but its links are opaque redirects. The article id is a
+ * Google News is the better discovery channel, more sections, more editions,
+ * far more volume, but its links are opaque redirects. The article id is a
  * token (`AU_yqLPk…`) that Google resolves server-side, not an encoded URL, so
  * there is no way to turn one into the publisher's own address offline. A
  * briefing built on them would send every reader to google.com and credit
@@ -879,7 +887,7 @@ export async function fetchPublisherHeadlines(perFeed = 10): Promise<TrendingIte
         const xml = await fetchText(feed, 'application/rss+xml, application/xml, text/xml');
         items = parseFeed(xml);
       } catch (error) {
-        log.warn(`discovery: publisher feed ${feed} failed — ${describe(error)}`);
+        log.warn(`discovery: publisher feed ${feed} failed, ${describe(error)}`);
         continue;
       }
 

@@ -1,7 +1,7 @@
 /**
  * Brings the database up to date when the server starts.
  *
- * This project has no migrations directory — the schema is applied with
+ * This project has no migrations directory, the schema is applied with
  * `prisma db push`, which needs a connection from a developer's machine. In
  * production the database is deliberately not reachable from outside the
  * Docker network, and the documented way round that was to make it public for

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type RefObject } from 'react';
 
 /**
  * True when the visitor has asked for reduced motion. Every animated component
- * on the site reads this and renders its static end-state instead — the
+ * on the site reads this and renders its static end-state instead, the
  * animations are decoration, never the only way to reach the content.
  *
  * Starts `true` so the first paint is the calm one; the effect relaxes it.

@@ -3,10 +3,10 @@
  *
  * Encodes two external standards:
  *
- * - Wikipedia:Signs of AI writing — the tells that mark text as machine-written:
+ * - Wikipedia:Signs of AI writing, the tells that mark text as machine-written:
  *   a characteristic vocabulary, copula avoidance, negative parallelisms,
  *   significance-inflation, and em-dash overuse.
- * - Wikipedia:Writing better articles — concision, no puffery or weasel words,
+ * - Wikipedia:Writing better articles, concision, no puffery or weasel words,
  *   no editorialising, no self-reference.
  *
  * Two rules from those pages are deliberately NOT enforced: the bans on second
@@ -60,7 +60,7 @@ const AI_VOCAB = [
   "it's worth noting", 'furthermore', 'moreover',
 ];
 
-/** Puffery and peacock terms — Writing better articles. */
+/** Puffery and peacock terms, Writing better articles. */
 const PUFFERY = [
   'boasts a', 'boasts', 'groundbreaking', 'renowned', 'diverse array',
   'nestled', 'in the heart of', 'game-changing', 'cutting-edge',
@@ -68,7 +68,7 @@ const PUFFERY = [
   'rich history', 'profound',
 ];
 
-/** Significance inflation — the "stands as a testament" family. */
+/** Significance inflation, the "stands as a testament" family. */
 const SIGNIFICANCE = [
   'stands as', 'serves as a testament', 'is a testament', 'crucial role',
   'pivotal role', 'vital role', 'key turning point', 'indelible mark',
@@ -87,14 +87,14 @@ const WEASEL = [
   'some say', 'is considered to be', 'is regarded as', 'arguably',
 ];
 
-/** Self-reference — Writing better articles explicitly calls these out. */
+/** Self-reference, Writing better articles explicitly calls these out. */
 const SELF_REFERENCE = [
   'note that', 'as mentioned above', 'as noted above', 'as discussed earlier',
   'in this article', 'this article will', 'we will explore', 'let us',
 ];
 
 /**
- * References to the research material itself — the strongest tell of the lot,
+ * References to the research material itself, the strongest tell of the lot,
  * and the one the vocabulary lists missed completely.
  *
  * 24 of the first 34 articles contained one. They read like an audit of their own
@@ -163,7 +163,7 @@ export function checkStyle(markdown: string): StyleReport {
     ),
   );
 
-  // "Not just X, but Y" / "It is not X, it is Y" — negative parallelism.
+  // "Not just X, but Y" / "It is not X, it is Y", negative parallelism.
   const negParallel =
     text.match(/\bnot (just|only|merely|simply)\b[^.!?]{0,80}?\bbut\b/gi) ?? [];
   push(
@@ -174,13 +174,21 @@ export function checkStyle(markdown: string): StyleReport {
     ),
   );
 
-  // Em-dash density. Occasional use is fine; clusters are a tell.
-  const emDashes = (text.match(/—/g) ?? []).length;
+  /*
+   * Em-dash density. The house style is now none at all, so any occurrence is
+   * worth seeing; a cluster is still the stronger tell.
+   *
+   * Written as a unicode escape, not the literal character. A pass that
+   * stripped em-dashes from this codebase rewrote this very pattern into /-/,
+   * which matches every hyphen and would have flagged every article ever
+   * written. A detector for a character must not contain that character.
+   */
+  const emDashes = (text.match(/\u2014/g) ?? []).length;
   const emDashesPer1000 = wordCount ? (emDashes / wordCount) * 1000 : 0;
   if (emDashesPer1000 > 6) {
     hits.push({
       rule: 'em-dash-overuse',
-      matches: ['—'],
+      matches: ['\u2014'],
       count: emDashes,
       note: `${emDashesPer1000.toFixed(1)} per 1,000 words. Prefer commas, colons or a full stop.`,
     });

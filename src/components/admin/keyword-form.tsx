@@ -50,7 +50,7 @@ export function KeywordForm({ categories }: { categories: Array<{ id: string; na
         <legend className="mb-2 text-sm font-medium">
           Verified identifiers{' '}
           <span className="font-normal text-muted-foreground">
-            — only fill these in if you have confirmed them against Microsoft
+           , only fill these in if you have confirmed them against Microsoft
           </span>
         </legend>
 
@@ -72,7 +72,7 @@ export function KeywordForm({ categories }: { categories: Array<{ id: string; na
 
       <p className="text-xs text-muted-foreground">
         Anything you enter here becomes an identifier the generator is allowed to use. Leave a
-        field blank rather than guessing — the quality gate blocks unverified identifiers, and a
+        field blank rather than guessing, the quality gate blocks unverified identifiers, and a
         wrong one entered here would sail straight through it.
       </p>
 

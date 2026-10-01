@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 /**
  * Abstract cover art for in-page article cards.
  *
- * Posts have no photography — their only image is the generated OG card, which
+ * Posts have no photography, their only image is the generated OG card, which
  * has the headline drawn into the PNG. That card is the right asset for
  * `og:image`, where the text is the whole point, but it is the wrong asset for
  * an in-page thumbnail: every card ended up showing the headline twice, once
@@ -12,13 +12,13 @@ import { cn } from '@/lib/utils';
  * text was unreadable noise. The lead card was worse still, cropping the
  * headline mid-word and printing the site's own hostname across the bottom.
  *
- * So in-page imagery is drawn, not fetched. The hue is derived from the seed —
- * the category slug — so a section keeps one identity across the whole site and
+ * So in-page imagery is drawn, not fetched. The hue is derived from the seed -
+ * the category slug, so a section keeps one identity across the whole site and
  * two sections next to each other never collide. Being CSS rather than an image
  * also means no extra request, nothing to go stale when a title is edited, and
  * no contribution to LCP, which matters given the Core Web Vitals budget.
  *
- * Fills its parent, so the parent needs `position: relative` and a size —
+ * Fills its parent, so the parent needs `position: relative` and a size -
  * the same contract as `next/image` with `fill`.
  */
 
@@ -32,7 +32,7 @@ import { cn } from '@/lib/utils';
  *
  * This used to ask whether the image carried a licence, on the assumption that
  * a real photograph always does. Stock photos do. A picture a contributor
- * uploaded with their own article does not — so every reader submission showed
+ * uploaded with their own article does not, so every reader submission showed
  * a gradient on every card and on the article itself, while the file sat in
  * storage and the row pointed straight at it.
  */
@@ -79,8 +79,8 @@ export function CoverArt({ seed, className }: { seed: string; className?: string
  * if it does not.
  *
  * This exists because the choice was originally made at each call site, and only
- * `post-card` ever made it. Every homepage component — the lead story, the picks
- * rail, each section cluster — rendered `CoverArt` unconditionally, so when the
+ * `post-card` ever made it. Every homepage component, the lead story, the picks
+ * rail, each section cluster, rendered `CoverArt` unconditionally, so when the
  * articles finally got photographs the homepage carried on showing gradients and
  * nothing looked broken enough to notice. Putting the decision in one place
  * means a caller cannot forget it.
@@ -113,7 +113,7 @@ export function Cover({
       sizes={sizes}
       /*
        * `contain`, not `cover`. The cover boxes are 16/9, 16/10 and 4/3 while
-       * a cover is whatever shape the contributor uploaded — usually a 1200x630
+       * a cover is whatever shape the contributor uploaded, usually a 1200x630
        * banner with the headline set into it. `cover` filled the box by slicing
        * the sides off, which on a banner means cutting through the artwork.
        *

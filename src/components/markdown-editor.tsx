@@ -83,7 +83,7 @@ export function MarkdownEditor({
   const [pending, startTransition] = useTransition();
 
   // Shown so a writer knows where they are. There is no upper limit to enforce
-  // — see the note on countWords.
+  //, see the note on countWords.
   const words = countWords(value);
 
   const apply = useCallback((tool: ToolId) => {
@@ -148,7 +148,7 @@ export function MarkdownEditor({
    * Reads the rest of the form so the preview is the article, not just the body.
    *
    * The headline, section, byline and pictures live in sibling fields, and a
-   * preview that showed the prose alone answered the wrong question — a writer
+   * preview that showed the prose alone answered the wrong question, a writer
    * wants to know how the piece will look on the site, cover and all. Reading
    * them off the form element at preview time avoids lifting four more pieces
    * of state into the parent for something that is only needed on a click.
@@ -187,7 +187,7 @@ export function MarkdownEditor({
     startTransition(async () => setHtml(await previewSubmission(value)));
   }
 
-  // Revoking on unmount as well as on replacement — a form that is submitted
+  // Revoking on unmount as well as on replacement, a form that is submitted
   // successfully unmounts this whole subtree without ever leaving preview.
   useEffect(() => {
     if (!article) return;
@@ -285,8 +285,8 @@ interface ArticleShell {
 /**
  * The submission as it would run on the site.
  *
- * Deliberately mirrors `article/article-view.tsx` — section badge, headline,
- * byline, then the cover at 1200x630, then the prose — because the point of the
+ * Deliberately mirrors `article/article-view.tsx`, section badge, headline,
+ * byline, then the cover at 1200x630, then the prose, because the point of the
  * preview is to answer "where does my headline sit, and how is my picture
  * cropped", which a bare block of rendered markdown cannot.
  *
@@ -323,7 +323,7 @@ function ArticlePreview({ article, html }: { article: ArticleShell | null; html:
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center px-6 text-center text-xs text-muted-foreground">
-              No cover chosen — this is the space it would fill, on cards and
+              No cover chosen, this is the space it would fill, on cards and
               when the article is shared.
             </div>
           )}

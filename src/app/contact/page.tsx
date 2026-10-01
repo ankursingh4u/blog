@@ -37,7 +37,7 @@ export default function ContactPage() {
             <Row
               icon={<MessageSquareWarning className="h-5 w-5 text-brand" aria-hidden="true" />}
               title="Report an error in an article"
-              body="Include the URL and which claim is wrong. If you have a source that contradicts it, send that too — it is the quickest way to get the page fixed."
+              body="Include the URL and which claim is wrong. If you have a source that contradicts it, send that too, it is the quickest way to get the page fixed."
               href="mailto:corrections@favo.news"
               label="corrections@favo.news"
             />

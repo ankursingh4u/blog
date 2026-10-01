@@ -1,11 +1,11 @@
 import { prisma } from '@/lib/db';
 
 /**
- * Step 7 — internal links.
+ * Step 7, internal links.
  *
  * Matches the generator's free-text suggestions to posts that actually exist,
  * then tops up from the same category. The editor confirms the final set, so
- * this only needs to be a good starting point — but it must never emit a slug
+ * this only needs to be a good starting point, but it must never emit a slug
  * for a post that is not published, or the article renders a dead rail.
  */
 

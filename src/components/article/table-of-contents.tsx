@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 /**
  * Sidebar contents with scroll-spy. The list is server-rendered from the
  * markdown source, so it exists (and the links work) before this component
- * hydrates — the only thing JavaScript adds is the active highlight.
+ * hydrates, the only thing JavaScript adds is the active highlight.
  */
 export function TableOfContents({ entries }: { entries: TocEntry[] }) {
   const [activeId, setActiveId] = useState<string | null>(entries[0]?.id ?? null);

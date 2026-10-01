@@ -23,7 +23,7 @@ export interface SubmitState {
   message: string;
   /** Field-level problems, keyed by input name. */
   errors?: Record<string, string>;
-  /** Images that could not be stored — the article was still accepted. */
+  /** Images that could not be stored, the article was still accepted. */
   warnings?: string[];
 }
 
@@ -38,7 +38,7 @@ export async function submitArticle(
    * written.
    */
   if (String(formData.get('website') ?? '').trim() !== '') {
-    return { ok: true, message: 'Thanks — your article has been sent to the editors.' };
+    return { ok: true, message: 'Thanks, your article has been sent to the editors.' };
   }
 
   const parsed = SubmissionInput.safeParse({
@@ -110,7 +110,7 @@ export async function submitArticle(
   return {
     ok: true,
     message:
-      'Thanks — your article is with the editors. If it runs, it will be published under your name.',
+      'Thanks, your article is with the editors. If it runs, it will be published under your name.',
     warnings: [...hero.skipped, ...skipped].length > 0 ? [...hero.skipped, ...skipped] : undefined,
   };
 }

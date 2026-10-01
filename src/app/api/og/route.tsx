@@ -3,7 +3,7 @@ import { SITE } from '@/lib/site';
 
 // Edge keeps first-byte low and avoids booting Prisma for an image that only
 // needs its query string. `next/og` is the same renderer as @vercel/og,
-// bundled with Next 15 — one fewer dependency to keep in step.
+// bundled with Next 15, one fewer dependency to keep in step.
 export const runtime = 'edge';
 
 const WIDTH = 1200;
@@ -113,7 +113,7 @@ export async function GET(request: Request) {
           {/*
             `build` is only ever set for the /tech/windows back-catalogue. The
             fallback used to read "Tested on a real build", which was printed
-            across sports, travel and money cards alike — a claim that made no
+            across sports, travel and money cards alike, a claim that made no
             sense outside troubleshooting. Outside that section the slot simply
             stays empty.
           */}

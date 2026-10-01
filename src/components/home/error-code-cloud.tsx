@@ -10,7 +10,7 @@ import { useInView, usePrefersReducedMotion } from '@/hooks/use-motion';
  *
  * Matter.js is ~85 KB of client JavaScript for a decorative section, so it is
  * code-split and only requested once the section is within 300px of the
- * viewport. The server-rendered HTML — and therefore what a crawler sees — is
+ * viewport. The server-rendered HTML, and therefore what a crawler sees, is
  * always the plain wrapped list of links. Anyone with reduced motion on, or
  * who never scrolls this far, keeps that version permanently.
  *

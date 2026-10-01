@@ -17,7 +17,7 @@
  *     involved is the one thing this file exists to prevent.
  *
  * The AI disclosure is NOT repeated in each bio. It was, and eight copies of
- * the same sentence turned the masthead into a wall of text nobody would read —
+ * the same sentence turned the masthead into a wall of text nobody would read -
  * including the disclosure itself. It is stated once in the section heading
  * above the cards, where a reader actually takes it in, and in full on
  * /editorial-policy.
@@ -38,14 +38,14 @@ export interface HouseByline {
    * easiest thing in a bio to make up and the easiest for a reader to catch.
    */
   interests: string[];
-  /** One line. Kept short on purpose — see the note at the top of this file. */
+  /** One line. Kept short on purpose, see the note at the top of this file. */
   bio: string;
   /**
    * The full biography, for that person's own page.
    *
    * Written individually. Eight identical paragraphs saying "is a real person
    * answerable for what appears here" is boilerplate, and boilerplate is what a
-   * reader skips — so the one page about a person said nothing about them.
+   * reader skips, so the one page about a person said nothing about them.
    *
    * Evocative is fine. Invented is not: every line here is drawn from what the
    * person said they do, and nothing claims an achievement, a history or a
@@ -58,7 +58,7 @@ export interface HouseByline {
    * Things this person makes or runs, elsewhere.
    *
    * Listed only where the person has given them. A news byline that also builds
-   * things is a disclosure as much as a credit — a reader who meets an article
+   * things is a disclosure as much as a credit, a reader who meets an article
    * about software should be able to see what its author ships.
    */
   links?: Array<{ label: string; href: string; note?: string }>;
@@ -79,7 +79,7 @@ export const FIXED_BYLINES: Record<string, string> = {
   entertainment: 'anushka-kumari',
 };
 
-/** Sections with no standing byline — these flip between authors. */
+/** Sections with no standing byline, these flip between authors. */
 export const ROTATING_CATEGORIES = ['sports', 'health', 'education'];
 
 export const HOUSE_BYLINES: HouseByline[] = [
@@ -91,13 +91,13 @@ export const HOUSE_BYLINES: HouseByline[] = [
     bio: 'Founded Favo News and edits it. Software engineer; writes on tech, money and travel.',
     biography:
       'Ankur Singh started Favo News and still edits it, which means nothing goes out of here ' +
-      'without a last read from the person who began it. An engineer first — and the habit an ' +
+      'without a last read from the person who began it. An engineer first, and the habit an ' +
       'engineer builds, of opening a system up until it admits how it actually works, turns out ' +
       'to be the same habit a decent article needs. Philosophy is the other half of the shelf, ' +
       'and not for decoration: under most technology stories sits an older question about what ' +
       'we hand over and what we keep. Writes on technology, money and travel, and is answerable ' +
-      'for every word of it. Builds software when not editing it: SEO4AI, PalmInsights — live ' +
-      'on the Play Store — and Demand Radar, a Shopify app. Which is the useful disclosure ' +
+      'for every word of it. Builds software when not editing it: SEO4AI, PalmInsights, live ' +
+      'on the Play Store, and Demand Radar, a Shopify app. Which is the useful disclosure ' +
       'here: the technology written about on this site is written about by someone who ships.',
     focus: ['tech', 'windows', 'money', 'travel'],
     links: [
@@ -123,7 +123,7 @@ export const HOUSE_BYLINES: HouseByline[] = [
     biography:
       'Kiran Varma co-founded Favo News and helps steer what it turns into. Mentoring and ' +
       'consulting come down, stripped of the job titles, to asking the question someone has ' +
-      'been walking around for weeks — which is the same question a good editor puts to a ' +
+      'been walking around for weeks, which is the same question a good editor puts to a ' +
       'draft. Curious to a fault about anything new enough to be worth the trouble: a tool, a ' +
       'technology, a country. Whatever survives that curiosity tends to end up on this site.',
     focus: ['sports', 'health', 'education'],
@@ -136,7 +136,7 @@ export const HOUSE_BYLINES: HouseByline[] = [
     bio: 'CEO at CodersHive. Travels, and writes about what it actually cost.',
     biography:
       'Aakash Sharma runs CodersHive, and spends whatever the calendar will spare somewhere ' +
-      'else. Most travel writing sells you the postcard; this is the other kind — what the ' +
+      'else. Most travel writing sells you the postcard; this is the other kind, what the ' +
       'ticket actually cost, how long the queue really was, whether the detour earned its ' +
       'place. The list of places still unseen grows faster than the list behind, which is ' +
       'either a problem or the entire point.',
@@ -163,7 +163,7 @@ export const HOUSE_BYLINES: HouseByline[] = [
     bio: 'Software engineer and writer. Takes a thing apart, then explains it plainly.',
     biography:
       'Sushil Kumar Bharti is an engineer who writes, or a writer who debugs; the order has ' +
-      'never much mattered. Both jobs reduce to the same move — open it up, find the part ' +
+      'never much mattered. Both jobs reduce to the same move, open it up, find the part ' +
       'doing the actual work, then say plainly what it does. Learning something unrelated is ' +
       'the default setting, and the gym is where most of the thinking gets done.',
     focus: ['sports', 'health', 'education'],
@@ -202,7 +202,7 @@ export const HOUSE_BYLINES: HouseByline[] = [
     bio: 'Writes on entertainment and the arts, and consults in finance.',
     biography:
       'Anushka Kumari writes about what people make, and advises on what pays for it. ' +
-      'Entertainment and the arts on one side of the desk, finance on the other — less two ' +
+      'Entertainment and the arts on one side of the desk, finance on the other, less two ' +
       'careers than one subject approached from both ends, because money is rarely silent ' +
       'about what gets made and who gets to make it. Comes to a film the way one comes to a ' +
       'balance sheet: interested, above all, in what it is not saying.',

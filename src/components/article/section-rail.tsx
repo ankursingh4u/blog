@@ -5,14 +5,14 @@ import { cn } from '@/lib/utils';
  * Sticky section navigation down the left of an article.
  *
  * The article page is a wide three-column layout and the left gutter was dead
- * space — the reading column and the "on this page" rail both sat to the right
+ * space, the reading column and the "on this page" rail both sat to the right
  * of it. This puts the eight sections there, so a reader who finishes a piece
  * can move sideways into another beat without going back to the nav or the
  * home page.
  *
  * Hidden below `xl`. Narrower than that there is not room for three columns,
  * and the same links are already in the header and the footer, so nothing is
- * lost — this is a convenience for wide screens, not the only route to a
+ * lost, this is a convenience for wide screens, not the only route to a
  * section.
  */
 export interface RailSection {

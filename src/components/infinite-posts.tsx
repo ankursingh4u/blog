@@ -14,8 +14,8 @@ import type { PostCard as PostCardData } from '@/lib/posts';
  *
  *   - The first page is rendered on the server by the page that mounts this,
  *     and passed in as `initial`. Nothing here is needed to see it.
- *   - The sentinel is only observed after mount, so a crawler — or anyone with
- *     JavaScript disabled — gets the server page plus the "Load more" link,
+ *   - The sentinel is only observed after mount, so a crawler, or anyone with
+ *     JavaScript disabled, gets the server page plus the "Load more" link,
  *     which is a real `<a href>` to the numbered route. Infinite scroll that
  *     hides its content behind an event handler is invisible to search, which
  *     matters rather a lot for a site whose whole purpose is organic traffic.

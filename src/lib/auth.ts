@@ -71,7 +71,7 @@ async function equalsConstantTime(a: string, b: string): Promise<boolean> {
 
 export async function passwordMatches(candidate: string): Promise<boolean> {
   const expected = process.env.ADMIN_PASSWORD?.trim();
-  // No password configured means no way in — never treat it as "anything goes".
+  // No password configured means no way in, never treat it as "anything goes".
   if (!expected) return false;
   return equalsConstantTime(candidate, expected);
 }

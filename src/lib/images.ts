@@ -30,7 +30,7 @@ const ENDPOINT = 'https://api.openverse.org/v1/images/';
 const UA = botUserAgent();
 /**
  * Openverse regularly takes well over 15 seconds for a cold query, and an
- * aborted search is indistinguishable from "no results" to the caller — which
+ * aborted search is indistinguishable from "no results" to the caller, which
  * silently produced empty picks for half a batch.
  */
 const TIMEOUT_MS = 45_000;
@@ -152,14 +152,14 @@ const STORE_WIDTH = 1600;
 /**
  * Re-encodes an original down to something sane to serve.
  *
- * Openverse returns archive masters — 4000px and 5 MB is normal, and one run
+ * Openverse returns archive masters, 4000px and 5 MB is normal, and one run
  * left 53 MB of covers on disk for 34 articles. That weight is not harmless
  * here: `public/uploads` is committed to the repo and baked into the deployment
  * image, and `next/image` has to read the full file before it can resize it on
  * first request.
  *
  * WebP at 1600px keeps a cover sharp on a 2x display while cutting a typical
- * file by well over 90%. Failure is non-fatal — if sharp cannot decode
+ * file by well over 90%. Failure is non-fatal, if sharp cannot decode
  * something, the original is stored as it was rather than losing the image.
  */
 async function downscale(

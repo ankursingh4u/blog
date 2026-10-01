@@ -16,7 +16,7 @@ import { usePrefersReducedMotion } from '@/hooks/use-motion';
  *
  * The animation is CSS, not JavaScript. It used to start at `opacity: 0` and
  * wait for an IntersectionObserver callback to make it visible, which meant the
- * text was invisible to anything that never ran that callback — a crawler, a
+ * text was invisible to anything that never ran that callback, a crawler, a
  * failed hydration, a browser where the observer did not fire. The symptom was
  * an author page whose hero showed no name at all, which is also how the
  * person's name went missing from a page about them. `animation-fill-mode:

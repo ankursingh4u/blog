@@ -2,7 +2,7 @@ import { searchImages, storeImage, type ImageCandidate, type StoredImage } from 
 import { log } from '@/pipeline/log';
 
 /**
- * Step 8b — an openly-licensed photograph for the cover.
+ * Step 8b, an openly-licensed photograph for the cover.
  *
  * `featuredImage` holds one of two things: the branded card rendered by /api/og,
  * which carries no credit, or a real photograph, which does. `coverPhoto()` in
@@ -14,8 +14,8 @@ import { log } from '@/pipeline/log';
  * same code rather than two implementations that drift.
  *
  * **On honesty.** Openly-licensed archives essentially never hold a photograph
- * of this week's event. What is achievable is topical and credited — a stadium
- * for a match report, a trading floor for a markets piece — and what must never
+ * of this week's event. What is achievable is topical and credited, a stadium
+ * for a match report, a trading floor for a markets piece, and what must never
  * happen is an image that looks like it depicts the event when it does not. That
  * is why the subject comes from TOPIC_RULES rather than free-text search on the
  * headline, why nothing is stored when no rule and no fallback returns anything
@@ -42,7 +42,7 @@ const STOPWORDS = new Set([
  * the index is Flickr and Wikimedia Commons where titles are things like
  * "Project 365 #200". Two failure modes showed up immediately: no match at all
  * (an admissions story returned sand dunes, the largest unrelated image in the
- * set), and false friends — "Transfer news LIVE" about football matched a
+ * set), and false friends, "Transfer news LIVE" about football matched a
  * photograph of a money-transfer counter, which is worse than no match because
  * it looks deliberate.
  *
@@ -57,14 +57,14 @@ export interface TopicRule {
   /**
    * Verticals this rule is meant for. A rule whose `cats` contains the post's
    * own category is preferred over one that merely matched a word, which is what
-   * stops "Google's AI mode for tracking flight prices" — a travel story — from
+   * stops "Google's AI mode for tracking flight prices", a travel story, from
    * being illustrated with a data centre because `ai` appears in the headline.
    */
   cats?: string[];
 }
 
 export const TOPIC_RULES: TopicRule[] = [
-  // Sport — the code has to distinguish cricket from football before the generic
+  // Sport, the code has to distinguish cricket from football before the generic
   // "transfer"/"match" words send both to the same place.
   { test: /\b(cricket|test match|odi|t20|pietersen|white-?ball|wicket|batting)\b/i, query: 'cricket match stadium', cats: ['sports'] },
   { test: /\b(liverpool|arsenal|chelsea|milan|madrid|premier league|football|soccer|endrick|transfer)\b/i, query: 'football stadium match', cats: ['sports'] },
@@ -78,7 +78,7 @@ export const TOPIC_RULES: TopicRule[] = [
   // Tech
   // Kept deliberately broad. A narrower "smartphone screen close up hand"
   // returned one usable image and then fell through to the tech fallback, so
-  // phone stories ended up illustrated with laptops — further off-topic than the
+  // phone stories ended up illustrated with laptops, further off-topic than the
   // dated-but-correct handsets this query returns. Openverse's commercially
   // licensed pool simply has little recent phone photography.
   { test: /\b(iphone|apple|samsung|galaxy|oppo|xiaomi|huawei|pixel|foldable|fold|smartphone|phone)\b/i, query: 'smartphone mobile phone', cats: ['tech','windows'] },
@@ -160,12 +160,12 @@ function overlap(query: string, c: ImageCandidate): number {
  * it accounted for every one of the 14 articles that still had no image after
  * the fall-through was added. The licence permits the copy; the CDN just will
  * not serve it to a bot. Rather than dress the crawler up as Chrome to get
- * around that, these are ranked last — still tried, but only once the sources
+ * around that, these are ranked last, still tried, but only once the sources
  * that will actually serve us are exhausted.
  */
 const BLOCKS_BOTS = /flickr/i;
 
-/** Landscape and large wins — these are rendered 1200px wide and cropped wide. */
+/** Landscape and large wins, these are rendered 1200px wide and cropped wide. */
 function quality(c: ImageCandidate): number {
   const ratio = c.height > 0 ? c.width / c.height : 0;
   const landscape = ratio >= 1.2 && ratio <= 2.4 ? 1200 : 0;
@@ -180,7 +180,7 @@ async function search(q: string, sources?: string[]): Promise<ImageCandidate[]> 
       return await searchImages(q, 20, sources);
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
-      if (attempt === 2) log.warn(`cover: search "${q}" failed twice — ${msg}`);
+      if (attempt === 2) log.warn(`cover: search "${q}" failed twice, ${msg}`);
     }
   }
   return [];
@@ -189,8 +189,8 @@ async function search(q: string, sources?: string[]): Promise<ImageCandidate[]> 
 export interface CoverPick {
   /**
    * Ranked, best first. Storing can fail for reasons only discoverable by
-   * fetching — the file turns out to be larger than the 8 MB cap, or the host
-   * returns 403 to a hotlinked request — and on the first full run that killed
+   * fetching, the file turns out to be larger than the 8 MB cap, or the host
+   * returns 403 to a hotlinked request, and on the first full run that killed
    * 22 of 34 posts. Keeping the whole shortlist lets the caller fall through to
    * the next usable image instead of leaving the article with none.
    */
@@ -216,8 +216,8 @@ export function subjectQueryFor(
   categorySlug: string,
 ): { subject: string | null; category: string } {
   // Every rule that matches, with the ones meant for this vertical first. The
-  // preference is what stops "Google's AI mode for tracking flight prices" — a
-  // travel story — being illustrated with a data centre because `ai` matched.
+  // preference is what stops "Google's AI mode for tracking flight prices", a
+  // travel story, being illustrated with a data centre because `ai` matched.
   const matching = TOPIC_RULES.filter((r) => r.test.test(title));
   const preferred = matching.filter((r) => !r.cats || r.cats.includes(categorySlug));
   const rule = preferred[0] ?? matching[0];
@@ -246,7 +246,7 @@ export async function findCoverPhoto(
 
   // Every attempt contributes to one shortlist rather than the first non-empty
   // one winning outright. Returning early looked reasonable but meant that when
-  // an attempt came back entirely Flickr — unfetchable — the store loop burned
+  // an attempt came back entirely Flickr, unfetchable, the store loop burned
   // through all of it and gave up without ever running the Wikimedia attempt
   // queued behind it.
   const shortlist: ImageCandidate[] = [];
@@ -259,7 +259,7 @@ export async function findCoverPhoto(
 
     // Fetchability first: a perfectly relevant image we cannot download is worth
     // less than a slightly looser one we can. Then relevance, then how well it
-    // renders at 1200px. A zero-overlap result is still acceptable here — the
+    // renders at 1200px. A zero-overlap result is still acceptable here, the
     // query is already a concrete subject, so anything it returned is on-topic
     // even when the photographer's title does not repeat the words.
     const ranked = [...results].sort(
@@ -270,7 +270,7 @@ export async function findCoverPhoto(
     );
 
     // Skip anything already given to another post. Several articles legitimately
-    // share a subject — two admissions stories, three football ones — and
+    // share a subject, two admissions stories, three football ones, and
     // handing them all the same stadium photograph makes the site look
     // automated, which it is, but not like that.
     //
@@ -314,7 +314,7 @@ export async function attachCoverPhoto({
 }): Promise<StoredImage | null> {
   const pick = await findCoverPhoto(title, categorySlug, used);
   if (!pick) {
-    log.info(`cover: no usable photograph for "${title}" — keeping the generated card`);
+    log.info(`cover: no usable photograph for "${title}", keeping the generated card`);
     return null;
   }
 
@@ -332,14 +332,14 @@ export async function attachCoverPhoto({
       return stored;
     } catch (error) {
       log.warn(
-        `cover: "${candidate.title}" could not be stored — ` +
+        `cover: "${candidate.title}" could not be stored, ` +
           `${error instanceof Error ? error.message : error}`,
       );
     }
   }
 
   log.warn(
-    `cover: all ${pick.candidates.length} candidate(s) for "${title}" failed to download — ` +
+    `cover: all ${pick.candidates.length} candidate(s) for "${title}" failed to download, ` +
       'keeping the generated card',
   );
   return null;

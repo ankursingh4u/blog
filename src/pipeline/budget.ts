@@ -7,7 +7,7 @@ import type { UsageTally } from '@/lib/ai';
  *
  * This is the thing that makes an unattended schedule supervisable. A cron
  * entry that generates articles is a cron entry that spends money, and without
- * a hard stop the failure mode is not a bad article — it is a bill nobody saw
+ * a hard stop the failure mode is not a bad article, it is a bill nobody saw
  * coming, discovered a month later.
  *
  * Counted in tokens because tokens are what the API reports. A price per token
@@ -16,7 +16,7 @@ import type { UsageTally } from '@/lib/ai';
  * authoritative is worse than no rate at all.
  *
  * The window is a calendar day in the server's timezone. Precise enough for a
- * spend guard, and it needs no scheduler of its own — the counter resets the
+ * spend guard, and it needs no scheduler of its own, the counter resets the
  * first time it is read on a new date.
  */
 
@@ -92,7 +92,7 @@ export async function readBudget(): Promise<BudgetState> {
  * Optional cost estimate, in whatever currency the rates were given in.
  *
  * Returns null when no rates are configured, and callers render nothing rather
- * than a zero — "$0.00 spent today" reads as a fact and would be a lie.
+ * than a zero, "$0.00 spent today" reads as a fact and would be a lie.
  */
 export function estimateCost(
   usage: Pick<StoredUsage, 'inputTokens' | 'outputTokens'>,
@@ -108,6 +108,6 @@ export function describeBudget(state: BudgetState): string {
   if (state.limit <= 0) return `${state.spent.toLocaleString()} tokens today (no cap set)`;
   return (
     `${state.spent.toLocaleString()} of ${state.limit.toLocaleString()} tokens today` +
-    (state.exhausted ? ' — cap reached' : '')
+    (state.exhausted ? ', cap reached' : '')
   );
 }

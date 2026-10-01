@@ -36,7 +36,7 @@ export async function generateMetadata(): Promise<Metadata> {
     // The full description here made a 122-character title. Google shows roughly
     // the first 60, so the tail was cut off in results and the brand was the only
     // part reliably visible. The description already carries the vertical list.
-    title: `${SITE.name} — trending stories, explained properly`,
+    title: `${SITE.name}, trending stories, explained properly`,
     description: settings.SITE_TAGLINE || SITE.description,
     path: '/',
   });
@@ -75,7 +75,7 @@ export default async function HomePage() {
   /**
    * Newest cover photograph per section, for the browse tiles.
    *
-   * Only photographs qualify — a non-empty `imageCredit` is what distinguishes
+   * Only photographs qualify, a non-empty `imageCredit` is what distinguishes
    * one from a generated OG card, and a card would put a full article headline
    * underneath the tile's own section label.
    *
@@ -162,7 +162,7 @@ export default async function HomePage() {
         Per-section clusters, the way an aggregator lays out its front page.
 
         `items-start` matters: grid items stretch to the tallest in their row by
-        default, so a section holding a single article — Entertainment, today —
+        default, so a section holding a single article, Entertainment, today -
         was drawn as a card the height of a three-article neighbour with the
         remainder left empty. Each cluster sizes to its own content instead.
       */}

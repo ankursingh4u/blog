@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   if (!author) return { title: 'Not found', robots: { index: false, follow: false } };
 
   return buildMetadata({
-    title: `${author.name} — author`,
+    title: `${author.name}, author`,
     description: author.bio,
     path: `/author/${author.slug}`,
     image: author.avatar,
@@ -65,7 +65,7 @@ export default async function AuthorPage({ params }: { params: Params }) {
         The name used to be set at 15vw across a 30rem-tall hero: it filled the
         screen, pushed everything the page is actually about below the fold, and
         left the right-hand half of the layout empty. A profile is a person,
-        their work and their writing — sized so you can see all three at once.
+        their work and their writing, sized so you can see all three at once.
       */}
       <div className="grid-bg border-b border-border">
         <Container className="flex flex-col gap-6 py-12 sm:flex-row sm:items-center">
@@ -106,7 +106,7 @@ export default async function AuthorPage({ params }: { params: Params }) {
           */}
           <p className="mt-6 text-xs text-muted-foreground">
           Articles under this byline are drafted with AI assistance and checked against their
-          sources before a person approves them —{' '}
+          sources before a person approves them -{' '}
           <Link href="/editorial-policy" className="underline hover:text-foreground">
             the editorial policy
           </Link>{' '}
@@ -126,7 +126,7 @@ export default async function AuthorPage({ params }: { params: Params }) {
            * An empty byline page still has to be a finished page.
            *
            * "Nothing published yet" and a wall of white space reads as a broken
-           * site rather than a new one — and most of the masthead will sit at
+           * site rather than a new one, and most of the masthead will sit at
            * zero until the pipeline has been round a few times. Point the
            * reader at the sections this person writes on instead of at nothing.
            */
@@ -191,7 +191,7 @@ export default async function AuthorPage({ params }: { params: Params }) {
           {/*
             What this person builds, where they have said so. On a site that
             covers technology, an author who ships software is a disclosure as
-            much as a credit — the reader should be able to see it.
+            much as a credit, the reader should be able to see it.
           */}
           {profile?.links?.length ? (
             <section>

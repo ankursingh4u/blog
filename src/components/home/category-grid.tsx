@@ -16,7 +16,7 @@ export interface CategoryTile {
 
 /**
  * The nine-cell frame grid: the eight sections plus one editorial tile.
- * Cells are plain links — the hover-expand is a flourish on top of a layout
+ * Cells are plain links, the hover-expand is a flourish on top of a layout
  * that is fully navigable without it.
  *
  * Each tile shows the newest cover photograph from its section. That was not

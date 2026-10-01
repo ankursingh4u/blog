@@ -14,7 +14,7 @@ import { MAX_CAPTION_CHARS, MAX_IMAGES, MAX_IMAGE_BYTES } from '@/lib/submission
  * That shape had a defect that was invisible until you skipped a row: the
  * server pairs `images` with `imageTitles` by position, but an untouched file
  * input still submits a zero-byte File, which the store drops. Fill rows two
- * and four and the captions slide onto the wrong pictures — row two's caption
+ * and four and the captions slide onto the wrong pictures, row two's caption
  * lands on row four's image and row four's caption is lost. Nothing in the UI
  * showed it, because nothing in the UI showed the pictures at all.
  *
@@ -23,9 +23,9 @@ import { MAX_CAPTION_CHARS, MAX_IMAGES, MAX_IMAGE_BYTES } from '@/lib/submission
  * a caption to fall through. The list the contributor arranges is the list that
  * is sent, and they can see it.
  *
- * Both halves still reach the action as ordinary form fields — a `files` list
+ * Both halves still reach the action as ordinary form fields, a `files` list
  * on one hidden input and a hidden text input per caption, emitted in card
- * order — so `submitArticle` keeps taking a plain FormData and knows nothing
+ * order, so `submitArticle` keeps taking a plain FormData and knows nothing
  * about any of this.
  */
 
@@ -39,7 +39,7 @@ interface Item {
   file: File;
   caption: string;
   previewUrl: string;
-  /** Set when the file itself is unusable — too big, or not an image we take. */
+  /** Set when the file itself is unusable, too big, or not an image we take. */
   problem: string | null;
 }
 
@@ -69,7 +69,7 @@ export function SubmissionImages() {
    * Mirrors the ordered state onto the real file input the form submits.
    *
    * A file input's value cannot be assigned, but its `files` can be handed a
-   * FileList built from a DataTransfer — which is the only way to submit files
+   * FileList built from a DataTransfer, which is the only way to submit files
    * in an order the contributor chose rather than the order they picked them.
    */
   useEffect(() => {
@@ -95,7 +95,7 @@ export function SubmissionImages() {
     setItems((current) => {
       const room = MAX_IMAGES - current.length;
       if (room <= 0) {
-        setNotice(`That is the limit — ${MAX_IMAGES} pictures. Remove one to add another.`);
+        setNotice(`That is the limit, ${MAX_IMAGES} pictures. Remove one to add another.`);
         return current;
       }
       const incoming = Array.from(files).slice(0, room);
@@ -144,7 +144,7 @@ export function SubmissionImages() {
     <fieldset className="space-y-4">
       <legend className="text-sm font-medium">Pictures for the article</legend>
       <p className="text-xs text-muted-foreground">
-        Optional, up to {MAX_IMAGES}, {MAX_MB}MB each. Give each one a description — it is published
+        Optional, up to {MAX_IMAGES}, {MAX_MB}MB each. Give each one a description, it is published
         as the caption underneath, and read out to anyone using a screen reader. Drag the cards to
         set the order they appear in the article. Only send pictures you have the right to publish.
       </p>
@@ -179,7 +179,7 @@ export function SubmissionImages() {
           <ImagePlus className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
           <span className="text-sm font-medium">Add pictures</span>
           <span className="text-xs text-muted-foreground">
-            PNG, JPEG, WebP, AVIF or GIF — up to {MAX_IMAGES}
+            PNG, JPEG, WebP, AVIF or GIF, up to {MAX_IMAGES}
           </span>
         </button>
       ) : (
@@ -406,8 +406,8 @@ function IconButton({
 }
 
 /**
- * The cover picture, kept separate because it does a different job — it is what
- * appears on cards, in the feed and in a social preview — but it gets the same
+ * The cover picture, kept separate because it does a different job, it is what
+ * appears on cards, in the feed and in a social preview, but it gets the same
  * courtesy of showing you what you picked.
  */
 export function HeroImageField() {

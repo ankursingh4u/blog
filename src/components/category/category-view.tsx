@@ -22,7 +22,7 @@ export interface CategoryViewModel {
 /**
  * Listing page for a category, shared by top-level categories (/tech) and
  * sub-sections (/tech/windows). A top-level listing includes posts from its
- * children — see whereFor() in src/lib/posts.ts.
+ * children, see whereFor() in src/lib/posts.ts.
  */
 export async function CategoryView({
   category,
@@ -65,7 +65,7 @@ export async function CategoryView({
       <JsonLd data={structuredData} />
 
       {/*
-        The masthead was py-20 over a content block that opens with py-12 —
+        The masthead was py-20 over a content block that opens with py-12 -
         about 130px of nothing between the section name and the first story it
         is introducing, on a page whose job is to show articles. Tightened so
         the first row of cards is visible without scrolling.

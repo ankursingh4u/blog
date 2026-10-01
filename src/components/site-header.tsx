@@ -45,7 +45,7 @@ export function SiteHeader({ categories, siteName }: { categories: NavItem[]; si
             {/*
               The site icon, not a drawn letter. `icon.png` is already the
               favicon and the touch icon, so the header, the browser tab and a
-              bookmark all show the same mark — which is the whole point of
+              bookmark all show the same mark, which is the whole point of
               having one.
             */}
             <Image
