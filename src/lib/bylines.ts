@@ -15,6 +15,15 @@
  *   - A name only ever appears on work produced under the process that name
  *     signed up to. Re-bylining old articles onto a real person who was not
  *     involved is the one thing this file exists to prevent.
+ *
+ * The AI disclosure is NOT repeated in each bio. It was, and eight copies of
+ * the same sentence turned the masthead into a wall of text nobody would read —
+ * including the disclosure itself. It is stated once in the section heading
+ * above the cards, where a reader actually takes it in, and in full on
+ * /editorial-policy.
+ *
+ * Bios are one line each. A masthead is a list of people, not eight paragraphs.
+ * Array order is display order, set by the owner.
  */
 
 export interface HouseByline {
@@ -29,14 +38,11 @@ export interface HouseByline {
    * easiest thing in a bio to make up and the easiest for a reader to catch.
    */
   interests: string[];
+  /** One line. Kept short on purpose — see the note at the top of this file. */
   bio: string;
   /** Categories this byline may be used for. Empty means rotation only. */
   focus: string[];
 }
-
-const DISCLOSURE =
-  'Articles under this byline are drafted with AI assistance and checked against ' +
-  'their sources before they are published.';
 
 /**
  * Categories with a standing byline.
@@ -60,26 +66,25 @@ export const HOUSE_BYLINES: HouseByline[] = [
   {
     slug: 'ankur-singh',
     name: 'Ankur Singh',
-    roles: ['Founder', 'Editor', 'Software engineer', 'Writer', 'Thinker'],
+    roles: ['Founder', 'Editor', 'Software engineer', 'Writer'],
     interests: ['Philosophy', 'Writing', 'Building things'],
-    bio:
-      'Ankur Singh founded Favo News and edits it. A software engineer by trade and a reader ' +
-      'of philosophy by habit, and the two meet in how this site reads: what a thing does ' +
-      'first, then what it changes for the people using it. Writes here on technology, money ' +
-      `and travel, and is accountable for everything published under this byline. ${DISCLOSURE}`,
+    bio: 'Founded Favo News and edits it. Software engineer; writes on tech, money and travel.',
     focus: ['tech', 'windows', 'money', 'travel'],
   },
   {
     slug: 'kiran-varma',
     name: 'Kiran Varma',
     roles: ['Founder', 'Editor', 'Mentor', 'Consultant'],
-    interests: ['Experimenting with new things', 'Technology', 'Travel'],
-    bio:
-      'Kiran Varma co-founded Favo News and helps run it. Works as a mentor and consultant, ' +
-      'which is largely the business of asking better questions than the ones people arrive ' +
-      'with — the same instinct that decides what is worth publishing here. Drawn to whatever ' +
-      'is new enough to be worth trying, whether that is a tool, a technology or a country, ' +
-      `and comes back with the useful part. ${DISCLOSURE}`,
+    interests: ['Trying new things', 'Technology', 'Travel'],
+    bio: 'Co-founded Favo News. Mentor and consultant, and a reliable asker of harder questions.',
+    focus: ['sports', 'health', 'education'],
+  },
+  {
+    slug: 'aakash-sharma',
+    name: 'Aakash Sharma',
+    roles: ['CEO at CodersHive', 'Traveller'],
+    interests: ['Travel'],
+    bio: 'CEO at CodersHive. Travels, and writes about what it actually cost.',
     focus: ['sports', 'health', 'education'],
   },
   {
@@ -87,32 +92,15 @@ export const HOUSE_BYLINES: HouseByline[] = [
     name: 'Adarsh Singh',
     roles: ['Software engineer', 'Project manager', 'Gamer'],
     interests: ['Gaming', 'PC hardware'],
-    bio:
-      'Adarsh Singh is a software engineer and project manager who ships software during the ' +
-      'day and plays it at night. Covers games, the hardware they run on, and the patches ' +
-      `that quietly change both. ${DISCLOSURE}`,
+    bio: 'Software engineer and project manager. Ships software by day, plays it by night.',
     focus: ['gaming'],
   },
   {
-    slug: 'anushka-kumari',
-    name: 'Anushka Kumari',
-    roles: ['Writer', 'Author', 'Finance', 'Consultant'],
-    interests: ['Art'],
-    bio:
-      'Anushka Kumari writes on entertainment and the arts, and consults in finance. The two ' +
-      'halves explain each other more often than you would think: who pays for a thing tends ' +
-      `to shape what it ends up saying. ${DISCLOSURE}`,
-    focus: ['entertainment'],
-  },
-  {
-    slug: 'aakash-sharma',
-    name: 'Aakash Sharma',
-    roles: ['CEO at CodersHive', 'Traveller'],
-    interests: ['Travel'],
-    bio:
-      'Aakash Sharma is the CEO of CodersHive and a traveller with a longer list of places ' +
-      'still to see than ones already seen. Writes about the going, the getting there, and ' +
-      `what it actually cost. ${DISCLOSURE}`,
+    slug: 'sushil-kumar-bharti',
+    name: 'Sushil Kumar Bharti',
+    roles: ['Software engineer', 'Problem solver', 'Writer'],
+    interests: ['The gym', 'Learning new things'],
+    bio: 'Software engineer and writer. Takes a thing apart, then explains it plainly.',
     focus: ['sports', 'health', 'education'],
   },
   {
@@ -120,23 +108,7 @@ export const HOUSE_BYLINES: HouseByline[] = [
     name: 'Kirti Sisodiya',
     roles: ['Writer', 'Author', 'Accountant'],
     interests: ['Cooking', 'The gym', 'Reading'],
-    bio:
-      'Kirti Sisodiya writes, and keeps the books. An accountant notices the number that does ' +
-      'not add up, which turns out to be a useful habit to bring to a newsroom that publishes ' +
-      'figures. Cooks, trains, and keeps a reading list that never gets any shorter. ' +
-      `${DISCLOSURE}`,
-    focus: ['sports', 'health', 'education'],
-  },
-  {
-    slug: 'sushil-kumar-bharti',
-    name: 'Sushil Kumar Bharti',
-    roles: ['Software engineer', 'Problem solver', 'Writer', 'Author'],
-    interests: ['The gym', 'Learning new things'],
-    bio:
-      'Sushil Kumar Bharti is a software engineer and a writer, which turn out to be the same ' +
-      'instinct pointed at different things: take it apart, work out why it does that, explain ' +
-      'it plainly. Writes across the sections that rotate — sport, health and education — and ' +
-      `is usually learning something unrelated on the side. ${DISCLOSURE}`,
+    bio: 'Writer and accountant. Notices the number that does not add up.',
     focus: ['sports', 'health', 'education'],
   },
   {
@@ -144,12 +116,16 @@ export const HOUSE_BYLINES: HouseByline[] = [
     name: 'Diksha Ganglani',
     roles: ['Writer', 'Author', 'Team lead'],
     interests: ['Leading teams', 'Meeting people', 'Style'],
-    bio:
-      'Diksha Ganglani writes and leads teams, and is reliably the person in the room who ' +
-      'already knows everyone else in it. Writes across the sections that rotate — sport, ' +
-      'health and education — and has a good eye for how a thing is put together, clothes ' +
-      `included. ${DISCLOSURE}`,
+    bio: 'Writer and team lead. Usually knows everyone in the room already.',
     focus: ['sports', 'health', 'education'],
+  },
+  {
+    slug: 'anushka-kumari',
+    name: 'Anushka Kumari',
+    roles: ['Writer', 'Author', 'Finance', 'Consultant'],
+    interests: ['Art'],
+    bio: 'Writes on entertainment and the arts, and consults in finance.',
+    focus: ['entertainment'],
   },
 ];
 

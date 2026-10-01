@@ -137,17 +137,17 @@ export const getAuthorBySlug = cache(async (slug: string) =>
 export const getAuthors = cache(async () => prisma.author.findMany({ orderBy: { name: 'asc' } }));
 
 /**
- * The masthead, busiest byline first.
+ * The masthead, in the order the owner set.
  *
- * Two deliberate choices. It is restricted to the named house bylines, so the
- * pre-pivot persona rows that still own the back catalogue do not appear as
- * people who write here — they are historical bylines, not members of the
- * masthead, and nothing re-attributes their articles to anyone real.
+ * Restricted to the named house bylines, so the pre-pivot persona rows that
+ * still own the back catalogue do not appear as people who write here — they
+ * are historical bylines, not members of the masthead, and nothing
+ * re-attributes their articles to anyone real.
  *
- * And it is ordered by how much each person has actually published, not
- * alphabetically: the top of this list is earned by writing, and a name that
- * stops appearing on articles drifts down it. Ties fall back to name order so
- * the page does not reshuffle at random between builds.
+ * Ordered by `HOUSE_BYLINES`, not by article count. It was by count, on the
+ * idea that the top spot should be earned by publishing; the owner wants a
+ * fixed sequence, and a masthead that reshuffles itself is a strange thing for
+ * a reader to meet twice. The published count is still loaded and shown.
  */
 export const getHouseBylines = cache(async () => {
   const authors = await prisma.author.findMany({
@@ -157,8 +157,9 @@ export const getHouseBylines = cache(async () => {
     },
   });
 
+  const position = new Map(HOUSE_SLUGS.map((slug, index) => [slug, index]));
   return authors.sort(
-    (a, b) => b._count.posts - a._count.posts || a.name.localeCompare(b.name),
+    (a, b) => (position.get(a.slug) ?? 99) - (position.get(b.slug) ?? 99),
   );
 });
 

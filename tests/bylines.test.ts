@@ -48,11 +48,25 @@ describe('house bylines', () => {
     expect(new Set(HOUSE_SLUGS).size).toBe(HOUSE_SLUGS.length);
   });
 
-  it('discloses AI assistance in every bio', () => {
-    // The editorial policy says every byline carries this. If a bio here ever
-    // stops saying it, that page becomes untrue for that author.
+  it('keeps every bio to a single short line', () => {
+    // A masthead is a list of people. Eight paragraphs is the state this was
+    // in when the cards grew taller than the section around them.
     for (const author of HOUSE_BYLINES) {
-      expect(author.bio).toContain('drafted with AI assistance');
+      expect(author.bio.length).toBeLessThanOrEqual(120);
+      expect(author.bio).not.toContain('drafted with AI assistance');
     }
+  });
+
+  it('is in the display order the owner set', () => {
+    expect(HOUSE_SLUGS).toEqual([
+      'ankur-singh',
+      'kiran-varma',
+      'aakash-sharma',
+      'adarsh-singh',
+      'sushil-kumar-bharti',
+      'kirti-sisodiya',
+      'diksha-ganglani',
+      'anushka-kumari',
+    ]);
   });
 });
