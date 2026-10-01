@@ -73,11 +73,13 @@ export const HOUSE_BYLINES: HouseByline[] = [
     slug: 'kiran-varma',
     name: 'Kiran Varma',
     roles: ['Founder', 'Editor', 'Mentor', 'Consultant'],
-    interests: [],
+    interests: ['Experimenting with new things', 'Technology', 'Travel'],
     bio:
       'Kiran Varma co-founded Favo News and helps run it. Works as a mentor and consultant, ' +
       'which is largely the business of asking better questions than the ones people arrive ' +
-      `with — the same instinct that decides what is worth publishing here. ${DISCLOSURE}`,
+      'with — the same instinct that decides what is worth publishing here. Drawn to whatever ' +
+      'is new enough to be worth trying, whether that is a tool, a technology or a country, ' +
+      `and comes back with the useful part. ${DISCLOSURE}`,
     focus: ['sports', 'health', 'education'],
   },
   {
@@ -117,31 +119,36 @@ export const HOUSE_BYLINES: HouseByline[] = [
     slug: 'kirti-sisodiya',
     name: 'Kirti Sisodiya',
     roles: ['Writer', 'Author', 'Accountant'],
-    interests: [],
+    interests: ['Cooking', 'The gym', 'Reading'],
     bio:
       'Kirti Sisodiya writes, and keeps the books. An accountant notices the number that does ' +
       'not add up, which turns out to be a useful habit to bring to a newsroom that publishes ' +
-      `figures. ${DISCLOSURE}`,
+      'figures. Cooks, trains, and keeps a reading list that never gets any shorter. ' +
+      `${DISCLOSURE}`,
     focus: ['sports', 'health', 'education'],
   },
   {
     slug: 'sushil-kumar-bharti',
     name: 'Sushil Kumar Bharti',
-    roles: ['Writer', 'Author'],
-    interests: [],
+    roles: ['Software engineer', 'Problem solver', 'Writer', 'Author'],
+    interests: ['The gym', 'Learning new things'],
     bio:
-      'Sushil Kumar Bharti is a writer and author, and writes across the sections of Favo News ' +
-      `that rotate between us — sport, health and education. ${DISCLOSURE}`,
+      'Sushil Kumar Bharti is a software engineer and a writer, which turn out to be the same ' +
+      'instinct pointed at different things: take it apart, work out why it does that, explain ' +
+      'it plainly. Writes across the sections that rotate — sport, health and education — and ' +
+      `is usually learning something unrelated on the side. ${DISCLOSURE}`,
     focus: ['sports', 'health', 'education'],
   },
   {
     slug: 'diksha-ganglani',
     name: 'Diksha Ganglani',
-    roles: ['Writer', 'Author'],
-    interests: [],
+    roles: ['Writer', 'Author', 'Team lead'],
+    interests: ['Leading teams', 'Meeting people', 'Style'],
     bio:
-      'Diksha Ganglani is a writer and author, and writes across the sections of Favo News ' +
-      `that rotate between us — sport, health and education. ${DISCLOSURE}`,
+      'Diksha Ganglani writes and leads teams, and is reliably the person in the room who ' +
+      'already knows everyone else in it. Writes across the sections that rotate — sport, ' +
+      'health and education — and has a good eye for how a thing is put together, clothes ' +
+      `included. ${DISCLOSURE}`,
     focus: ['sports', 'health', 'education'],
   },
 ];
