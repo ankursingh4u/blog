@@ -114,20 +114,30 @@ export default async function AuthorPage({ params }: { params: Params }) {
         ) : null}
 
         {/*
-          This used to read "a section byline, not an individual journalist",
-          which was true of the invented personas and is a plain falsehood now
-          that every byline is a named, real person who is answerable for what
-          appears under it. The disclosure it carried is still owed to the
-          reader, so it is kept — and made accurate.
+          The biography is the page. It used to be one identical paragraph on
+          all eight — "is a real person answerable for what appears here" —
+          which is boilerplate, and boilerplate is the thing a reader skips. The
+          one page about a person said nothing about them.
         */}
-        <p className="mt-6 max-w-2xl rounded-md border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
-          {profile ? `${author.name} is` : 'This byline belongs to'} a real person who is
-          answerable for what appears here. Articles below are drafted with AI assistance and
-          checked against their sources before a person approves them —{' '}
+        {profile ? (
+          <p className="mt-8 max-w-2xl text-lg leading-relaxed text-foreground/90">
+            {profile.biography}
+          </p>
+        ) : (
+          <p className="mt-8 max-w-2xl text-lg leading-relaxed text-foreground/90">{author.bio}</p>
+        )}
+
+        {/*
+          The disclosure is still owed to the reader, but it is a footnote about
+          the process, not a description of the person. It reads as one now.
+        */}
+        <p className="mt-6 max-w-2xl text-xs text-muted-foreground">
+          Articles under this byline are drafted with AI assistance and checked against their
+          sources before a person approves them —{' '}
           <Link href="/editorial-policy" className="underline hover:text-foreground">
             the editorial policy
           </Link>{' '}
-          sets out exactly which parts are which.
+          sets out which parts are which.
         </p>
 
         <h2 className="mt-10 text-2xl font-bold tracking-tight">

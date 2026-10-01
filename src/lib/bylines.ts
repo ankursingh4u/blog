@@ -40,6 +40,18 @@ export interface HouseByline {
   interests: string[];
   /** One line. Kept short on purpose — see the note at the top of this file. */
   bio: string;
+  /**
+   * The full biography, for that person's own page.
+   *
+   * Written individually. Eight identical paragraphs saying "is a real person
+   * answerable for what appears here" is boilerplate, and boilerplate is what a
+   * reader skips — so the one page about a person said nothing about them.
+   *
+   * Evocative is fine. Invented is not: every line here is drawn from what the
+   * person said they do, and nothing claims an achievement, a history or a
+   * place that nobody has told us about.
+   */
+  biography: string;
   /** Categories this byline may be used for. Empty means rotation only. */
   focus: string[];
 }
@@ -69,6 +81,14 @@ export const HOUSE_BYLINES: HouseByline[] = [
     roles: ['Founder', 'Editor', 'Software engineer', 'Writer'],
     interests: ['Philosophy', 'Writing', 'Building things'],
     bio: 'Founded Favo News and edits it. Software engineer; writes on tech, money and travel.',
+    biography:
+      'Ankur Singh started Favo News and still edits it, which means nothing goes out of here ' +
+      'without a last read from the person who began it. An engineer first — and the habit an ' +
+      'engineer builds, of opening a system up until it admits how it actually works, turns out ' +
+      'to be the same habit a decent article needs. Philosophy is the other half of the shelf, ' +
+      'and not for decoration: under most technology stories sits an older question about what ' +
+      'we hand over and what we keep. Writes on technology, money and travel, and is answerable ' +
+      'for every word of it.',
     focus: ['tech', 'windows', 'money', 'travel'],
   },
   {
@@ -77,6 +97,12 @@ export const HOUSE_BYLINES: HouseByline[] = [
     roles: ['Founder', 'Editor', 'Mentor', 'Consultant'],
     interests: ['Trying new things', 'Technology', 'Travel'],
     bio: 'Co-founded Favo News. Mentor and consultant, and a reliable asker of harder questions.',
+    biography:
+      'Kiran Varma co-founded Favo News and helps steer what it turns into. Mentoring and ' +
+      'consulting come down, stripped of the job titles, to asking the question someone has ' +
+      'been walking around for weeks — which is the same question a good editor puts to a ' +
+      'draft. Curious to a fault about anything new enough to be worth the trouble: a tool, a ' +
+      'technology, a country. Whatever survives that curiosity tends to end up on this site.',
     focus: ['sports', 'health', 'education'],
   },
   {
@@ -85,6 +111,12 @@ export const HOUSE_BYLINES: HouseByline[] = [
     roles: ['CEO at CodersHive', 'Traveller'],
     interests: ['Travel'],
     bio: 'CEO at CodersHive. Travels, and writes about what it actually cost.',
+    biography:
+      'Aakash Sharma runs CodersHive, and spends whatever the calendar will spare somewhere ' +
+      'else. Most travel writing sells you the postcard; this is the other kind — what the ' +
+      'ticket actually cost, how long the queue really was, whether the detour earned its ' +
+      'place. The list of places still unseen grows faster than the list behind, which is ' +
+      'either a problem or the entire point.',
     focus: ['sports', 'health', 'education'],
   },
   {
@@ -93,6 +125,11 @@ export const HOUSE_BYLINES: HouseByline[] = [
     roles: ['Software engineer', 'Project manager', 'Gamer'],
     interests: ['Gaming', 'PC hardware'],
     bio: 'Software engineer and project manager. Ships software by day, plays it by night.',
+    biography:
+      'Adarsh Singh builds software for a living and plays it for pleasure, which makes for a ' +
+      'sharp eye on the distance between a patch note and an actual patch. Covers games, the ' +
+      'hardware they lean on, and the quiet updates that change how a thing feels in the hand ' +
+      'without ever making the headline.',
     focus: ['gaming'],
   },
   {
@@ -101,6 +138,11 @@ export const HOUSE_BYLINES: HouseByline[] = [
     roles: ['Software engineer', 'Problem solver', 'Writer'],
     interests: ['The gym', 'Learning new things'],
     bio: 'Software engineer and writer. Takes a thing apart, then explains it plainly.',
+    biography:
+      'Sushil Kumar Bharti is an engineer who writes, or a writer who debugs; the order has ' +
+      'never much mattered. Both jobs reduce to the same move — open it up, find the part ' +
+      'doing the actual work, then say plainly what it does. Learning something unrelated is ' +
+      'the default setting, and the gym is where most of the thinking gets done.',
     focus: ['sports', 'health', 'education'],
   },
   {
@@ -109,6 +151,11 @@ export const HOUSE_BYLINES: HouseByline[] = [
     roles: ['Writer', 'Author', 'Accountant'],
     interests: ['Cooking', 'The gym', 'Reading'],
     bio: 'Writer and accountant. Notices the number that does not add up.',
+    biography:
+      'Kirti Sisodiya writes and keeps the books, which makes for an unusually hard reader of ' +
+      'other people’s numbers. A figure that refuses to reconcile is not a detail to be ' +
+      'smoothed over here; more often it is the story. Away from the desk: a kitchen, a ' +
+      'barbell, and a reading list that comfortably outpaces the hours available to it.',
     focus: ['sports', 'health', 'education'],
   },
   {
@@ -117,6 +164,11 @@ export const HOUSE_BYLINES: HouseByline[] = [
     roles: ['Writer', 'Author', 'Team lead'],
     interests: ['Leading teams', 'Meeting people', 'Style'],
     bio: 'Writer and team lead. Usually knows everyone in the room already.',
+    biography:
+      'Diksha Ganglani writes and leads, and the second explains the first: running a team ' +
+      'teaches you quickly that clarity is a form of kindness. Walks into a room and leaves ' +
+      'it knowing everyone in it. Has a good eye for how a thing is put together, whether ' +
+      'that thing is a sentence or an outfit.',
     focus: ['sports', 'health', 'education'],
   },
   {
@@ -125,6 +177,12 @@ export const HOUSE_BYLINES: HouseByline[] = [
     roles: ['Writer', 'Author', 'Finance', 'Consultant'],
     interests: ['Art'],
     bio: 'Writes on entertainment and the arts, and consults in finance.',
+    biography:
+      'Anushka Kumari writes about what people make, and advises on what pays for it. ' +
+      'Entertainment and the arts on one side of the desk, finance on the other — less two ' +
+      'careers than one subject approached from both ends, because money is rarely silent ' +
+      'about what gets made and who gets to make it. Comes to a film the way one comes to a ' +
+      'balance sheet: interested, above all, in what it is not saying.',
     focus: ['entertainment'],
   },
 ];

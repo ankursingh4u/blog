@@ -57,6 +57,18 @@ describe('house bylines', () => {
     }
   });
 
+  it('gives every byline its own biography, not boilerplate', () => {
+    const texts = HOUSE_BYLINES.map((a) => a.biography);
+    // Eight identical paragraphs is what this replaced.
+    expect(new Set(texts).size).toBe(texts.length);
+    for (const author of HOUSE_BYLINES) {
+      expect(author.biography.length).toBeGreaterThan(200);
+      // The biography describes the person; the process note lives on the page.
+      expect(author.biography).not.toContain('drafted with AI assistance');
+      expect(author.biography).toContain(author.name.split(' ')[0]);
+    }
+  });
+
   it('is in the display order the owner set', () => {
     expect(HOUSE_SLUGS).toEqual([
       'ankur-singh',
