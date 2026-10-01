@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useMemo, type CSSProperties } from 'react';
 import { cn } from '@/lib/utils';
 import { usePrefersReducedMotion } from '@/hooks/use-motion';
 
@@ -12,9 +12,16 @@ import { usePrefersReducedMotion } from '@/hooks/use-motion';
  *   - the full string is rendered into a visually hidden node and the animated
  *     spans are `aria-hidden`, so assistive tech and search crawlers read one
  *     clean sentence instead of a pile of one-letter spans;
- *   - the IntersectionObserver cleanup captures the node instead of reading
- *     `ref.current` at teardown, which is stale by then and silently leaks;
  *   - honours `prefers-reduced-motion` by rendering the final state directly.
+ *
+ * The animation is CSS, not JavaScript. It used to start at `opacity: 0` and
+ * wait for an IntersectionObserver callback to make it visible, which meant the
+ * text was invisible to anything that never ran that callback — a crawler, a
+ * failed hydration, a browser where the observer did not fire. The symptom was
+ * an author page whose hero showed no name at all, which is also how the
+ * person's name went missing from a page about them. `animation-fill-mode:
+ * both` holds the final frame, so the resting state is visible text and the
+ * worst case is text that appears without animating.
  */
 
 interface BlurTextProps {
@@ -36,25 +43,7 @@ export function BlurText({
   style,
   as: Tag = 'p',
 }: BlurTextProps) {
-  const [inView, setInView] = useState(false);
-  const ref = useRef<HTMLElement>(null);
   const reducedMotion = usePrefersReducedMotion();
-
-  useEffect(() => {
-    const node = ref.current;
-    if (!node) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setInView(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.1 },
-    );
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, []);
 
   const segments = useMemo(
     () => (animateBy === 'words' ? text.split(' ') : [...text]),
@@ -69,34 +58,24 @@ export function BlurText({
     );
   }
 
-  const shown = inView;
-
   return (
-    <Tag
-      ref={ref as React.Ref<never>}
-      className={cn('inline-flex flex-wrap', className)}
-      style={style}
-    >
+    <Tag className={cn('inline-flex flex-wrap', className)} style={style}>
       {/* Real, uninterrupted text for screen readers and crawlers. */}
       <span className="sr-only">{text}</span>
       {segments.map((segment, i) => (
         <span
           key={`${segment}-${i}`}
           aria-hidden="true"
-          style={{
-            display: 'inline-block',
-            filter: shown ? 'blur(0px)' : 'blur(10px)',
-            opacity: shown ? 1 : 0,
-            transform: shown
-              ? 'translateY(0)'
-              : `translateY(${direction === 'top' ? '-20px' : '20px'})`,
-            transition: `filter 0.5s ease-out ${i * delay}ms, opacity 0.5s ease-out ${
-              i * delay
-            }ms, transform 0.5s ease-out ${i * delay}ms`,
-          }}
+          style={
+            {
+              display: 'inline-block',
+              animation: `blur-in 0.5s ease-out ${i * delay}ms both`,
+              '--blur-in-from': direction === 'top' ? '-20px' : '20px',
+            } as CSSProperties
+          }
         >
           {segment}
-          {animateBy === 'words' && i < segments.length - 1 ? ' ' : ''}
+          {animateBy === 'words' && i < segments.length - 1 ? ' ' : ''}
         </span>
       ))}
     </Tag>

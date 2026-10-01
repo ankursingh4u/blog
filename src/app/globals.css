@@ -61,6 +61,29 @@
     --danger: 350 90% 68%;
   }
 
+  /*
+   * The blur-in used by the profile hero.
+   *
+   * A CSS animation rather than a JavaScript one, deliberately. It used to be
+   * opacity:0 until an IntersectionObserver callback flipped it — which meant
+   * the author's name was invisible to anything that did not run that script:
+   * a crawler, a reader whose JS failed, or a hydration error. An author page
+   * rendered with no visible name at all. `both` holds the final frame, so the
+   * worst case here is text that appears without animating.
+   */
+  @keyframes blur-in {
+    from {
+      opacity: 0;
+      filter: blur(10px);
+      transform: translateY(var(--blur-in-from, -20px));
+    }
+    to {
+      opacity: 1;
+      filter: blur(0);
+      transform: translateY(0);
+    }
+  }
+
   * {
     @apply border-border;
   }

@@ -9,6 +9,7 @@ import { ProfileHero } from '@/components/ui/profile-hero';
 import { getAuthorBySlug, getAuthors, getCategories, getPublishedPosts } from '@/lib/posts';
 import { StringArray, parseJson } from '@/lib/json';
 import { breadcrumbLd, buildMetadata, jsonLdGraph, personLd } from '@/lib/seo';
+import { HOUSE_BYLINES } from '@/lib/bylines';
 
 export const revalidate = 3600;
 
@@ -51,6 +52,8 @@ export default async function AuthorPage({ params }: { params: Params }) {
 
   const focusSlugs = parseJson(author.categoryFocus, StringArray, []);
   const focus = categories.filter((c) => focusSlugs.includes(c.slug));
+  // Null for the pre-pivot persona rows that still own the back catalogue.
+  const profile = HOUSE_BYLINES.find((p) => p.slug === author.slug) ?? null;
 
   const structuredData = jsonLdGraph(
     personLd(author),
@@ -77,9 +80,31 @@ export default async function AuthorPage({ params }: { params: Params }) {
       </div>
 
       <Container className="py-12">
+        {/*
+          Roles and interests come from the masthead list, not the database:
+          they describe the person, where categoryFocus describes what the
+          pipeline routes to them. A page about someone should lead with the
+          first and mention the second.
+        */}
+        {profile ? (
+          <div className="mb-6 space-y-2">
+            <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+              {profile.roles.join(' · ')}
+            </p>
+            {profile.interests.length > 0 ? (
+              <p className="text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">Off the clock: </span>
+                {profile.interests.join(', ')}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+
         {focus.length > 0 ? (
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm text-muted-foreground">Covers:</span>
+            <span className="text-sm text-muted-foreground">
+              {profile ? 'Writes on:' : 'Covers:'}
+            </span>
             {focus.map((category) => (
               <Badge key={category.slug} tone="brand">
                 {category.name}
@@ -88,14 +113,17 @@ export default async function AuthorPage({ params }: { params: Params }) {
           </div>
         ) : null}
 
-        {/* Stated plainly rather than buried. A named byline on a news site
-            reads as a person; here it marks a beat and the standard that beat
-            is written to, and the articles beneath it are AI-drafted and
-            human-approved. Leaving that to be inferred would be misleading. */}
+        {/*
+          This used to read "a section byline, not an individual journalist",
+          which was true of the invented personas and is a plain falsehood now
+          that every byline is a named, real person who is answerable for what
+          appears under it. The disclosure it carried is still owed to the
+          reader, so it is kept — and made accurate.
+        */}
         <p className="mt-6 max-w-2xl rounded-md border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
-          This is a section byline, not an individual journalist. It marks the beat and the
-          standard the articles below are written to. Every one is drafted with AI assistance and
-          approved by a person before publishing —{' '}
+          {profile ? `${author.name} is` : 'This byline belongs to'} a real person who is
+          answerable for what appears here. Articles below are drafted with AI assistance and
+          checked against their sources before a person approves them —{' '}
           <Link href="/editorial-policy" className="underline hover:text-foreground">
             the editorial policy
           </Link>{' '}
