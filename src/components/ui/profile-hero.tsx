@@ -106,14 +106,20 @@ export function ProfileHero({
         ) : null}
       </div>
 
+      {/*
+        Plain text, not BlurText.
+
+        The tagline is a person's one-line bio. Animating it word by word means
+        every word becomes its own inline-block, and the spaces between them
+        depend on how the browser treats whitespace between those boxes — which
+        is how "Writer and accountant." shipped twice as
+        "Writerandaccountant.". There is nothing to gain here that is worth a
+        sentence about a real person rendering as one unbroken word.
+      */}
       <div className="mt-10 flex w-full justify-center px-6">
-        <BlurText
-          text={tagline}
-          delay={90}
-          animateBy="words"
-          direction="top"
-          className="max-w-2xl justify-center text-center text-base text-muted-foreground sm:text-lg"
-        />
+        <p className="max-w-2xl text-center text-base text-muted-foreground sm:text-lg">
+          {tagline}
+        </p>
       </div>
     </section>
   );
