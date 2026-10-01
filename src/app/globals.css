@@ -4,6 +4,17 @@
 
 @layer base {
   :root {
+    /*
+     * Tells the browser which theme to paint native controls in — the select
+     * dropdown list, scrollbars, focus rings, date pickers. Without it the
+     * browser uses the OS preference, so a reader on a dark desktop got a
+     * dropdown painted in dark-mode text colours on top of this light page:
+     * one option in the admin status filter rendered near-white on white and
+     * was effectively invisible. Our CSS cannot reach inside that popup, so
+     * this declaration is the only lever.
+     */
+    color-scheme: light;
+
     /* Light reading surface. Articles are long; the body stays near-white. */
     --background: 0 0% 100%;
     --foreground: 240 10% 8%;
@@ -30,6 +41,7 @@
   }
 
   .dark {
+    color-scheme: dark;
     --background: 240 14% 5%;
     --foreground: 240 20% 97%;
     --muted: 240 12% 12%;

@@ -86,8 +86,11 @@ export function Field({
   );
 }
 
+// `text-foreground` is not decoration: the control forces `bg-background`, so
+// leaving the text colour to inheritance is what lets a mismatched browser
+// theme paint pale text on our own light background.
 export const inputClass =
-  'w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-brand';
+  'w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-brand';
 
 export const textareaClass = `${inputClass} font-mono leading-relaxed`;
 

@@ -86,7 +86,7 @@ export default async function AdminPostsPage({ searchParams }: { searchParams: S
             id="status"
             name="status"
             defaultValue={status}
-            className="mt-1 h-9 rounded-md border border-input bg-background px-2 text-sm"
+            className="mt-1 h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground"
           >
             {STATUSES.map((s) => (
               <option key={s} value={s}>
@@ -104,7 +104,7 @@ export default async function AdminPostsPage({ searchParams }: { searchParams: S
             id="category"
             name="category"
             defaultValue={categorySlug}
-            className="mt-1 h-9 rounded-md border border-input bg-background px-2 text-sm"
+            className="mt-1 h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground"
           >
             <option value="">All</option>
             {categories.map((c) => (

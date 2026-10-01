@@ -142,7 +142,7 @@ export function NewPostForm({
             name="categoryId"
             value={categoryId}
             onChange={(e) => setCategoryId(e.target.value)}
-            className="mt-2 h-10 w-full rounded-md border border-input bg-background px-2 text-sm"
+            className="mt-2 h-10 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground"
           >
             {sections.map((section) => (
               <option key={section.id} value={section.id}>
