@@ -3,6 +3,7 @@ import { ingest } from '@/pipeline/ingest';
 import { runPipeline } from '@/pipeline/run';
 import { runCycle } from '@/pipeline/cycle';
 import {
+  applyRunningPlan,
   pingAllPublished,
   refreshSeoFields,
   regradeAllFailed,
@@ -154,6 +155,7 @@ const BACKFILLS = {
   'regrade-all': regradeAllFailed,
   'refresh-seo': refreshSeoFields,
   'seed-authors': seedHouseBylines,
+  'apply-plan': applyRunningPlan,
 } as const;
 
 type BackfillName = keyof typeof BACKFILLS;

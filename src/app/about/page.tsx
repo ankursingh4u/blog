@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { Container, JsonLd, SectionHeading, buttonClass } from '@/components/ui/primitives';
 import { ScrollExpandMedia } from '@/components/ui/scroll-expansion-hero';
 import { getHouseBylines } from '@/lib/posts';
+import { HOUSE_BYLINES } from '@/lib/bylines';
 import { StringArray, parseJson } from '@/lib/json';
 import { breadcrumbLd, buildMetadata, jsonLdGraph, personLd } from '@/lib/seo';
 import { SITE } from '@/lib/site';
@@ -106,7 +107,12 @@ export default async function AboutPage() {
 
           <div className="mt-10 grid gap-6 md:grid-cols-3">
             {authors.map((author) => {
-              const focus = parseJson(author.categoryFocus, StringArray, []);
+              // Roles and interests come from the masthead list rather than the
+              // database: they are who the person is, not what the pipeline
+              // routes to them, and the category slugs shown here before were
+              // pipeline plumbing leaking onto a page about people.
+              const profile = HOUSE_BYLINES.find((p) => p.slug === author.slug);
+              const focus = profile?.roles ?? parseJson(author.categoryFocus, StringArray, []);
               return (
                 <article key={author.id} className="surface p-6">
                   <span
@@ -129,6 +135,12 @@ export default async function AboutPage() {
                       : `${author._count.posts} published article${author._count.posts === 1 ? '' : 's'}`}
                   </p>
                   <p className="mt-4 text-sm text-muted-foreground">{author.bio}</p>
+                  {profile?.interests.length ? (
+                    <p className="mt-3 text-xs text-muted-foreground">
+                      <span className="font-medium text-foreground">Off the clock: </span>
+                      {profile.interests.join(', ')}
+                    </p>
+                  ) : null}
                 </article>
               );
             })}

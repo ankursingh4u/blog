@@ -304,14 +304,16 @@ async function produceOne({
     (v): v is string => Boolean(v),
   );
 
-  const quality = await runQualityGate({
-    draft,
-    sources,
-    verifiedIdentifiers: verified,
-    keywordPhrase: keyword.phrase,
-    categorySlug: category.slug as CategorySlug,
-  });
-  log.info(`quality: score=${quality.score}${quality.blocked ? ' BLOCKED' : ''}`);
+  /**
+   * The free checks run first, before anything is paid for.
+   *
+   * These are string functions over the draft we already have; the quality gate
+   * below is a second API call. Running the gate first meant a draft that the
+   * `research-meta` rule throws away — and that rule hit 24 of the first 34
+   * articles — was scored by a model, paid for, and then discarded unread.
+   * Nothing is skipped by this reordering, it only stops buying a verdict on an
+   * article that is about to be thrown out.
+   */
 
   // Editorial shape is checked mechanically rather than trusted to the model:
   // length, an introduction, H2 sections, a conclusion, lists.
@@ -350,6 +352,22 @@ async function produceOne({
         'Write about the subject, not about what the sources did or did not contain.',
     );
   }
+
+  /**
+   * The paid check, on a draft that has survived the free ones.
+   *
+   * Not skipped when structure or padding flag: the identifier audit inside it
+   * is local string matching against the sources, it is what blocks a
+   * hallucinated figure from publishing, and it must run on everything.
+   */
+  const quality = await runQualityGate({
+    draft,
+    sources,
+    verifiedIdentifiers: verified,
+    keywordPhrase: keyword.phrase,
+    categorySlug: category.slug as CategorySlug,
+  });
+  log.info(`quality: score=${quality.score}${quality.blocked ? ' BLOCKED' : ''}`);
 
   const slug = await uniqueSlug(draft.slug);
 

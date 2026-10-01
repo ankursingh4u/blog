@@ -22,6 +22,13 @@ export interface HouseByline {
   name: string;
   /** Roles exactly as given by the person. Rendered under the name. */
   roles: string[];
+  /**
+   * What they do outside the job, where they have told us.
+   *
+   * Empty where nobody has said. It stays empty until they do: a hobby is the
+   * easiest thing in a bio to make up and the easiest for a reader to catch.
+   */
+  interests: string[];
   bio: string;
   /** Categories this byline may be used for. Empty means rotation only. */
   focus: string[];
@@ -53,68 +60,88 @@ export const HOUSE_BYLINES: HouseByline[] = [
   {
     slug: 'ankur-singh',
     name: 'Ankur Singh',
-    roles: ['Founder', 'Editor', 'Software engineer', 'Writer'],
+    roles: ['Founder', 'Editor', 'Software engineer', 'Writer', 'Thinker'],
+    interests: ['Philosophy', 'Writing', 'Building things'],
     bio:
-      'Ankur Singh founded Favo News and edits it. He is a software engineer, and writes ' +
-      `here on technology, money and travel, and on the thinking behind them. ${DISCLOSURE} ` +
-      'He is responsible for everything that appears under this byline.',
+      'Ankur Singh founded Favo News and edits it. A software engineer by trade and a reader ' +
+      'of philosophy by habit, and the two meet in how this site reads: what a thing does ' +
+      'first, then what it changes for the people using it. Writes here on technology, money ' +
+      `and travel, and is accountable for everything published under this byline. ${DISCLOSURE}`,
     focus: ['tech', 'windows', 'money', 'travel'],
   },
   {
     slug: 'kiran-varma',
     name: 'Kiran Varma',
     roles: ['Founder', 'Editor', 'Mentor', 'Consultant'],
+    interests: [],
     bio:
-      'Kiran Varma co-founded Favo News and helps run it, and works as a mentor and ' +
-      `consultant. ${DISCLOSURE}`,
+      'Kiran Varma co-founded Favo News and helps run it. Works as a mentor and consultant, ' +
+      'which is largely the business of asking better questions than the ones people arrive ' +
+      `with — the same instinct that decides what is worth publishing here. ${DISCLOSURE}`,
     focus: ['sports', 'health', 'education'],
   },
   {
     slug: 'adarsh-singh',
     name: 'Adarsh Singh',
     roles: ['Software engineer', 'Project manager', 'Gamer'],
+    interests: ['Gaming', 'PC hardware'],
     bio:
-      'Adarsh Singh is a software engineer and project manager. He covers games and the ' +
-      `hardware they run on. ${DISCLOSURE}`,
+      'Adarsh Singh is a software engineer and project manager who ships software during the ' +
+      'day and plays it at night. Covers games, the hardware they run on, and the patches ' +
+      `that quietly change both. ${DISCLOSURE}`,
     focus: ['gaming'],
   },
   {
     slug: 'anushka-kumari',
     name: 'Anushka Kumari',
-    roles: ['Writer', 'Consultant', 'Finance', 'Art'],
+    roles: ['Writer', 'Author', 'Finance', 'Consultant'],
+    interests: ['Art'],
     bio:
-      'Anushka Kumari writes on entertainment and the arts, and works in finance as a ' +
-      `consultant. ${DISCLOSURE}`,
+      'Anushka Kumari writes on entertainment and the arts, and consults in finance. The two ' +
+      'halves explain each other more often than you would think: who pays for a thing tends ' +
+      `to shape what it ends up saying. ${DISCLOSURE}`,
     focus: ['entertainment'],
   },
   {
     slug: 'aakash-sharma',
     name: 'Aakash Sharma',
     roles: ['CEO at CodersHive', 'Traveller'],
+    interests: ['Travel'],
     bio:
-      'Aakash Sharma is the CEO of CodersHive. He travels, and writes about where he has ' +
-      `been. ${DISCLOSURE}`,
+      'Aakash Sharma is the CEO of CodersHive and a traveller with a longer list of places ' +
+      'still to see than ones already seen. Writes about the going, the getting there, and ' +
+      `what it actually cost. ${DISCLOSURE}`,
     focus: ['sports', 'health', 'education'],
   },
   {
     slug: 'kirti-sisodiya',
     name: 'Kirti Sisodiya',
-    roles: ['Writer', 'Accountant'],
-    bio: `Kirti Sisodiya writes for Favo News and works as an accountant. ${DISCLOSURE}`,
+    roles: ['Writer', 'Author', 'Accountant'],
+    interests: [],
+    bio:
+      'Kirti Sisodiya writes, and keeps the books. An accountant notices the number that does ' +
+      'not add up, which turns out to be a useful habit to bring to a newsroom that publishes ' +
+      `figures. ${DISCLOSURE}`,
     focus: ['sports', 'health', 'education'],
   },
   {
     slug: 'sushil-kumar-bharti',
     name: 'Sushil Kumar Bharti',
-    roles: ['Writer'],
-    bio: `Sushil Kumar Bharti writes for Favo News. ${DISCLOSURE}`,
+    roles: ['Writer', 'Author'],
+    interests: [],
+    bio:
+      'Sushil Kumar Bharti is a writer and author, and writes across the sections of Favo News ' +
+      `that rotate between us — sport, health and education. ${DISCLOSURE}`,
     focus: ['sports', 'health', 'education'],
   },
   {
     slug: 'diksha-ganglani',
     name: 'Diksha Ganglani',
-    roles: ['Writer'],
-    bio: `Diksha Ganglani writes for Favo News. ${DISCLOSURE}`,
+    roles: ['Writer', 'Author'],
+    interests: [],
+    bio:
+      'Diksha Ganglani is a writer and author, and writes across the sections of Favo News ' +
+      `that rotate between us — sport, health and education. ${DISCLOSURE}`,
     focus: ['sports', 'health', 'education'],
   },
 ];

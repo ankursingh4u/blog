@@ -34,6 +34,43 @@ export interface BackfillResult {
 }
 
 /**
+ * Writes the agreed running configuration in one go.
+ *
+ * Six settings that only make sense together: the volume, the cap that has to
+ * accommodate it, the models that make it affordable, and the prices so the
+ * dashboard can show money. Set one without the others and you get either a
+ * pipeline that halts at lunchtime or a bill nobody predicted.
+ *
+ * The numbers: one draft per category per cycle, four cycles a day, eight
+ * verticals — 32 articles a day at roughly 20,000 tokens each, so a cap of
+ * 700,000 leaves headroom for retries without being a blank cheque.
+ *
+ * The prices are the drafting model's, because drafting is where the spend is.
+ * The review and metadata calls are cheaper, so the dashboard's figure reads
+ * slightly high — an estimate that errs upward is the safe direction for a
+ * number you are using to decide whether to keep going.
+ */
+export async function applyRunningPlan(): Promise<BackfillResult> {
+  const plan: Array<[Parameters<typeof setSetting>[0], string]> = [
+    ['POSTS_PER_CATEGORY', '1'],
+    ['DAILY_TOKEN_BUDGET', '700000'],
+    ['AI_MODEL_DRAFT', 'gpt-5.4-mini'],
+    ['AI_MODEL_REVIEW', 'gpt-5.4-mini'],
+    ['AI_MODEL_META', 'gpt-5.4-nano'],
+    ['AI_TOKEN_PRICES', '0.75,4.50'],
+  ];
+
+  const applied: string[] = [];
+  for (const [key, value] of plan) {
+    await setSetting(key, value);
+    applied.push(`${key}=${value}`);
+  }
+
+  log.info(`backfill: applied running plan — ${applied.join(', ')}`);
+  return { examined: plan.length, changed: plan.length, skipped: applied };
+}
+
+/**
  * Create or update the named house bylines, and hand the sections over to them.
  *
  * Idempotent: a rerun refreshes the fields that decide whether a byline works
