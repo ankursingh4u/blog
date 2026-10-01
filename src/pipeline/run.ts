@@ -59,7 +59,20 @@ export interface PipelineRunResult {
 }
 
 export async function runPipeline(
-  options: { skipIngest?: boolean; limit?: number; excludeCategorySlugs?: string[] } = {},
+  options: {
+    skipIngest?: boolean;
+    limit?: number;
+    excludeCategorySlugs?: string[];
+    /**
+     * Push each draft to Telegram as it is produced. True for a one-off run,
+     * where the draft is the only thing to look at.
+     *
+     * A cycle sets this false: it produces sixteen drafts and sending sixteen
+     * messages at once is the thing the review queue exists to avoid. It takes
+     * over the sending itself, one draft at a time. See `runCycle`.
+     */
+    notify?: boolean;
+  } = {},
 ): Promise<PipelineRunResult> {
   const startedAt = new Date().toISOString();
   log.reset();
@@ -156,6 +169,7 @@ export async function runPipeline(
         threshold,
         previousAuthorId,
         usedPhotoKeys,
+        notify: options.notify ?? true,
       });
       outcomes.push(outcome);
       produced += 1;
@@ -225,6 +239,7 @@ async function produceOne({
   threshold,
   previousAuthorId,
   usedPhotoKeys,
+  notify = true,
 }: {
   keywordId: string;
   autoPublish: boolean;
@@ -232,6 +247,8 @@ async function produceOne({
   previousAuthorId: string | null;
   /** Mutated as photographs are taken, so later posts in the run see them. */
   usedPhotoKeys: Set<string>;
+  /** False when a cycle will do the sending itself, one draft at a time. */
+  notify?: boolean;
 }): Promise<PipelineOutcome> {
   const stored = await prisma.keyword.findUniqueOrThrow({ where: { id: keywordId } });
 
@@ -475,7 +492,10 @@ async function produceOne({
      * and the /admin queue remains the authoritative place to act either way.
      */
     try {
-      const sent = await notifyDraft({
+      if (!notify) log.info('telegram: held for the review queue');
+      const sent =
+        notify &&
+        (await notifyDraft({
         postId: post.id,
         title: draft.title,
         category: category.name,
@@ -484,10 +504,10 @@ async function produceOne({
         score: quality.score,
         adminUrl: absoluteUrl(`/admin/posts/${post.id}`),
         imageUrl: featuredImage ? absoluteUrl(featuredImage) : null,
-        verdict: [describeStructure(structure), describePadding(padding)]
-          .join(' ')
-          .slice(0, 300),
-      });
+          verdict: [describeStructure(structure), describePadding(padding)]
+            .join(' ')
+            .slice(0, 300),
+        }));
       if (sent) log.info('telegram: sent for review');
     } catch (error) {
       log.warn(

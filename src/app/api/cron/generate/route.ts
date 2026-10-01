@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/db';
 import { ingest } from '@/pipeline/ingest';
 import { runPipeline } from '@/pipeline/run';
+import { runCycle } from '@/pipeline/cycle';
 
 /**
  * The scheduled entry point, hit by Coolify's cron (and Vercel Cron if the site
@@ -111,11 +112,37 @@ async function ingestAndGenerate(limit: number, only: string | null): Promise<Re
   });
 }
 
+/**
+ * A cycle: every vertical covered, then handed to the one-at-a-time queue.
+ *
+ * This is the scheduled mode. `?mode=generate` stays what it was — a small,
+ * aimed run that pushes each draft straight to Telegram — because "fill this
+ * one thin section now" and "do the rounds" are different jobs.
+ */
+async function runFullCycle(url: URL): Promise<Response> {
+  const asked = Number.parseInt(url.searchParams.get('perCategory') ?? '', 10);
+  const result = await runCycle(
+    Number.isFinite(asked) && asked > 0 ? { perCategory: Math.min(asked, MAX_GENERATE) } : {},
+  );
+  return Response.json({
+    ok: true,
+    mode: 'cycle',
+    ingested: result.ingested,
+    produced: result.produced,
+    perCategory: result.perCategory,
+    budgetStopped: result.budgetStopped,
+    cycleOpened: result.cycleOpened,
+    outcomes: result.outcomes,
+  });
+}
+
 async function trigger(request: Request): Promise<Response> {
   const url = new URL(request.url);
-  const generate = url.searchParams.get('mode') === 'generate';
+  const mode = url.searchParams.get('mode');
+  const generate = mode === 'generate';
 
   try {
+    if (mode === 'cycle') return await runFullCycle(url);
     if (!generate) return await ingestOnly();
 
     const asked = Number.parseInt(url.searchParams.get('limit') ?? '', 10);
@@ -136,7 +163,7 @@ export async function GET(request: Request) {
       ok: true,
       message: 'Send Authorization: Bearer <CRON_SECRET> to trigger a run.',
       configured: Boolean(process.env.CRON_SECRET?.trim()),
-      default: 'ingest only; add ?mode=generate to write articles',
+      default: 'ingest only; ?mode=generate writes articles, ?mode=cycle does the rounds',
     });
   }
   return trigger(request);

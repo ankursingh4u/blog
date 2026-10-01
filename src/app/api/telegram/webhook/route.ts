@@ -1,4 +1,5 @@
 import { applyStatus, archivePost } from '@/lib/admin/moderation';
+import { recordReviewDecision } from '@/pipeline/review-flow';
 import {
   TelegramUpdate,
   answerCallback,
@@ -78,6 +79,19 @@ export async function POST(request: Request) {
       : await archivePost(parsed.postId, 'rejected from Telegram');
 
   await answerCallback(query.id, result.message);
+
+  /**
+   * Move the review queue on, but only on a decision that actually took.
+   *
+   * A publish refused for a missing cover has not been decided, and advancing
+   * the cursor there would bury a draft that still needs an answer.
+   */
+  if (result.ok) {
+    await recordReviewDecision(
+      parsed.postId,
+      parsed.action === 'approve' ? 'APPROVED' : 'REJECTED',
+    ).catch(() => undefined);
+  }
 
   // Only retire the buttons when something actually happened. A failed publish
   // — no cover image, say — should stay actionable once the cause is fixed.

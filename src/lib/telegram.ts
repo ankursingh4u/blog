@@ -170,6 +170,24 @@ export async function notifyDraft(draft: DraftNotification): Promise<boolean> {
   });
 }
 
+/**
+ * A plain message with no buttons — cycle progress and the closing summary.
+ *
+ * Takes text already escaped for MarkdownV2 by the caller, because these
+ * messages are assembled from fragments and escaping the finished string would
+ * also escape the link syntax the caller just wrote.
+ */
+export async function sendNotice(markdown: string): Promise<boolean> {
+  const config = telegramConfig();
+  if (!config) return false;
+  return call(config.token, 'sendMessage', {
+    chat_id: config.chatId,
+    text: markdown,
+    parse_mode: 'MarkdownV2',
+    disable_web_page_preview: true,
+  });
+}
+
 /** Clears the button's loading spinner and shows a short toast. */
 export async function answerCallback(id: string, text: string): Promise<boolean> {
   const config = telegramConfig();

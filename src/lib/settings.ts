@@ -3,6 +3,15 @@ import { prisma } from '@/lib/db';
 
 export const SETTING_DEFAULTS = {
   POSTS_PER_DAY: '2',
+  /**
+   * Drafts a cycle asks for from each category.
+   *
+   * A cycle covers every vertical, so the run size is this times the number of
+   * top-level categories — 2 across 8 verticals is 16 drafts, and four cycles a
+   * day is 64. Lower this before lowering the cadence: fewer, better-sourced
+   * drafts per section beats the same total spread thinner.
+   */
+  POSTS_PER_CATEGORY: '2',
   AUTO_PUBLISH: 'false',
   QUALITY_THRESHOLD: '85',
   // Topic-discovery channels beyond the Microsoft release feeds. All keyless.
@@ -75,6 +84,11 @@ export const SETTING_DEFAULTS = {
    */
   USAGE_TODAY: '',
   LAST_RUN: '',
+  /**
+   * The open review cycle: its drafts, the cursor, and what has been decided.
+   * Written by the pipeline and the Telegram webhook. See lib/review-queue.ts.
+   */
+  REVIEW_CYCLE: '',
 } as const;
 
 export type SettingKey = keyof typeof SETTING_DEFAULTS;

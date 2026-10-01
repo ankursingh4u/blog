@@ -17,6 +17,7 @@ import { categoryPath, postPath } from '@/lib/urls';
 import { extractSection } from '@/lib/admin/section';
 import { SESSION_COOKIE, verifySessionToken } from '@/lib/auth';
 import { runPipeline, uniqueSlug, type PipelineRunResult } from '@/pipeline/run';
+import { recordReviewDecision } from '@/pipeline/review-flow';
 import { assignAuthor } from '@/pipeline/select';
 import { fetchSource, research, type ResearchSource } from '@/pipeline/research';
 import { runQualityGate } from '@/pipeline/quality-gate';
@@ -441,7 +442,10 @@ export async function approvePost(formData: FormData): Promise<void> {
   await requireAdmin();
   const id = String(formData.get('id') ?? '');
   if (!id) return;
-  await setPostStatus(id, 'PUBLISHED');
+  const result = await setPostStatus(id, 'PUBLISHED');
+  // Approving here has to move the same queue Telegram moves, or the chat sits
+  // waiting on a draft that was decided in the browser.
+  if (result.ok) await recordReviewDecision(id, 'APPROVED').catch(() => undefined);
   revalidatePath('/admin');
 }
 
@@ -465,7 +469,8 @@ export async function rejectPost(formData: FormData): Promise<void> {
   const id = String(formData.get('id') ?? '');
   if (!id) return;
   const reason = String(formData.get('reason') ?? '').slice(0, 500);
-  await archivePost(id, reason);
+  const result = await archivePost(id, reason);
+  if (result.ok) await recordReviewDecision(id, 'REJECTED').catch(() => undefined);
 }
 
 
