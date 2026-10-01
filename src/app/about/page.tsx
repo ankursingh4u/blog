@@ -112,7 +112,7 @@ export default async function AboutPage() {
           <SectionHeading
             eyebrow="Bylines"
             title="Who writes here"
-            description="The people behind the site, busiest first — the order is earned by publishing, not fixed. Every article is drafted with AI assistance and approved by a person before it publishes; the editorial policy sets out exactly which parts are which."
+            description="The people behind the site. Every article is drafted with AI assistance and approved by a person before it publishes — the editorial policy sets out exactly which parts are which."
           />
 
           <div className="mt-10 grid gap-6 md:grid-cols-3">
