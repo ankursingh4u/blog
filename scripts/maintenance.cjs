@@ -92,9 +92,73 @@ async function listAuthors(prisma) {
   console.log('AUTHOR_COUNT', authors.length);
 }
 
+/**
+ * Prints what a draft actually came out as.
+ *
+ * The admin UI is behind a password and the database behind localhost, so there
+ * was no way to answer "how long is it, did it get a photograph, what did the
+ * quality gate say" without a human opening a browser. That made the first real
+ * generation much harder to debug than it needed to be.
+ *
+ *   node scripts/maintenance.cjs show-post <slug>
+ *   node scripts/maintenance.cjs show-post            (most recent draft)
+ */
+async function showPost(prisma) {
+  const slug = process.argv[3];
+  const post = slug
+    ? await prisma.post.findUnique({ where: { slug }, include: { author: true, category: true } })
+    : await prisma.post.findFirst({
+        where: { status: { in: ['REVIEW', 'DRAFT'] } },
+        orderBy: { createdAt: 'desc' },
+        include: { author: true, category: true },
+      });
+
+  if (!post) {
+    console.log('POST_NOT_FOUND', slug || '(no draft in review)');
+    return;
+  }
+
+  // Same rule as structure.ts: fenced code must not count towards prose length.
+  const words = post.body
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/[#>*_`|-]/g, ' ')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean).length;
+
+  let credit = null;
+  try {
+    credit = post.imageCredit ? JSON.parse(post.imageCredit) : null;
+  } catch {
+    credit = { parseError: true };
+  }
+
+  console.log('SLUG        ', post.slug);
+  console.log('TITLE       ', post.title);
+  console.log('STATUS      ', post.status);
+  console.log('CATEGORY    ', post.category.name);
+  console.log('AUTHOR      ', post.author.name, `(${post.author.slug})`);
+  console.log('WORDS       ', words);
+  console.log('SCORE       ', post.qualityScore);
+  console.log('H2 COUNT    ', (post.body.match(/^##\s/gm) || []).length);
+  console.log('FAQ COUNT   ', (JSON.parse(post.faq || '[]') || []).length);
+  console.log('SOURCES     ', (JSON.parse(post.sourceUrls || '[]') || []).length);
+  console.log('RELATED     ', (JSON.parse(post.relatedSlugs || '[]') || []).length);
+  console.log('IMAGE       ', post.featuredImage);
+  console.log('IMAGE TYPE  ', credit && credit.license ? `photo (${credit.license})` : 'generated card');
+  if (credit && credit.creator) console.log('CREDIT      ', credit.creator, '|', credit.sourceName);
+  console.log('META TITLE  ', post.metaTitle);
+  console.log('QUICK ANSWER', post.quickAnswer);
+  console.log('--- QUALITY NOTES ---');
+  console.log(post.qualityNotes || '(none)');
+  console.log('--- FIRST 600 CHARS OF BODY ---');
+  console.log(post.body.slice(0, 600));
+}
+
 const TASKS = {
   'ensure-author': ensureAuthor,
   'list-authors': listAuthors,
+  'show-post': showPost,
 };
 
 async function main() {
