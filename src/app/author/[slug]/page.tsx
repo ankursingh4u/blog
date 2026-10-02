@@ -123,17 +123,18 @@ export default async function AuthorPage({ params }: { params: Params }) {
           </p>
 
           {/*
-            The disclosure is still owed to the reader, but it is a footnote about
-            the process, not a description of the person. It reads as one now.
+            The AI sentence was removed from here at the owner's request. The
+            link remains, because a byline page is exactly where a reader asks
+            how the work under it was produced, and /editorial-policy answers
+            that in full.
           */}
           <p className="mt-6 text-xs text-muted-foreground">
-          Articles under this byline are drafted with AI assistance and checked against their
-          sources before a person approves them -{' '}
-          <Link href="/editorial-policy" className="underline hover:text-foreground">
-            the editorial policy
-          </Link>{' '}
-          sets out which parts are which.
-        </p>
+            How articles here are researched, written and checked is set out in the{' '}
+            <Link href="/editorial-policy" className="underline hover:text-foreground">
+              editorial policy
+            </Link>
+            .
+          </p>
 
           <h2 className="mt-10 text-2xl font-bold tracking-tight">
             {posts.length === 0

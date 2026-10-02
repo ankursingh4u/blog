@@ -32,10 +32,16 @@ export async function SiteFooter() {
               <p className="mt-4 max-w-sm text-sm text-muted-foreground">
                 {settings.SITE_TAGLINE}
               </p>
+              {/*
+                The AI sentence was removed from here at the owner's request.
+                The link stays: how an article gets made is set out in full on
+                /editorial-policy, and that page is where the disclosure now
+                lives, so a reader still has one click to it from every page.
+              */}
               <p className="mt-4 max-w-sm text-xs text-muted-foreground">
                 Independent and not affiliated with any company or organisation covered here.
-                Articles are drafted with AI assistance and approved by a person before publishing -
-                see the <Link href="/editorial-policy" className="underline hover:text-foreground">editorial policy</Link>.
+                How an article here gets made is set out in the{' '}
+                <Link href="/editorial-policy" className="underline hover:text-foreground">editorial policy</Link>.
               </p>
               <p className="mt-3 max-w-sm text-xs text-muted-foreground">
                 An open publication: free to read with no account or paywall, anyone can{' '}
