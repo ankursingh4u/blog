@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { generateJson } from '@/lib/ai';
 import { getSetting, setSetting } from '@/lib/settings';
-import { HOUSE_BYLINES, fixedBylineFor } from '@/lib/bylines';
+import { HOUSE_BYLINES, HOUSE_SLUGS, fixedBylineFor } from '@/lib/bylines';
 import { assignAuthor } from '@/pipeline/select';
 import { parseJson, FaqArray, SourceRefArray, StringArray } from '@/lib/json';
 import { notifyPublished } from '@/lib/indexing';
@@ -166,7 +166,11 @@ export async function reassignDraftBylines(): Promise<BackfillResult> {
     const standing = fixedBylineFor(slug);
     const eligible = parseJson(post.author.categoryFocus, StringArray, []).includes(slug);
 
-    const wrong = standing ? post.author.slug !== standing : !eligible;
+    // A byline off the masthead is wrong whatever its focus says: the personas
+    // still carry an old categoryFocus, which is how one of them was handed a
+    // new article by the rotation.
+    const onMasthead = HOUSE_SLUGS.includes(post.author.slug);
+    const wrong = !onMasthead || (standing ? post.author.slug !== standing : !eligible);
     if (!wrong) {
       skipped.push(`${post.slug}: ${post.author.name} is a valid byline for ${slug}`);
       previousAuthorId = post.authorId;

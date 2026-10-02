@@ -2,7 +2,7 @@ import type { Author, Category, Keyword } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { StringArray, parseJson } from '@/lib/json';
 import { getSetting } from '@/lib/settings';
-import { fixedBylineFor } from '@/lib/bylines';
+import { HOUSE_SLUGS, fixedBylineFor } from '@/lib/bylines';
 import { log } from '@/pipeline/log';
 
 /**
@@ -142,7 +142,20 @@ export async function assignAuthor(
    * this filter a contributor's name would eventually appear on a generated
    * article they never wrote, which is a lie about a real, named person.
    */
-  const authors = await prisma.author.findMany({ where: { isGuest: false } });
+  /*
+   * The masthead, and nobody else.
+   *
+   * `isGuest: false` alone still includes the pre-pivot personas, who sit in
+   * the database because they own the back catalogue and who keep a
+   * categoryFocus from that era. The rotation duly picked one of them for a
+   * fresh article: a new piece bylined to a person who does not exist, on a
+   * site whose whole masthead change was about real names.
+   *
+   * They keep their own articles. They do not get given new ones.
+   */
+  const authors = await prisma.author.findMany({
+    where: { isGuest: false, slug: { in: HOUSE_SLUGS } },
+  });
   if (authors.length === 0) return null;
 
   const matching = authors.filter((author) =>
