@@ -4,6 +4,7 @@ import { runPipeline } from '@/pipeline/run';
 import { runCycle } from '@/pipeline/cycle';
 import {
   applyRunningPlan,
+  clearReviewQueue,
   pingAllPublished,
   reassignDraftBylines,
   refreshSeoFields,
@@ -158,6 +159,7 @@ const BACKFILLS = {
   'seed-authors': seedHouseBylines,
   'apply-plan': applyRunningPlan,
   'fix-bylines': reassignDraftBylines,
+  'clear-queue': clearReviewQueue,
 } as const;
 
 type BackfillName = keyof typeof BACKFILLS;

@@ -5,6 +5,7 @@ import { generateJson } from '@/lib/ai';
 import { getSetting, setSetting } from '@/lib/settings';
 import { HOUSE_BYLINES, HOUSE_SLUGS, fixedBylineFor } from '@/lib/bylines';
 import { assignAuthor } from '@/pipeline/select';
+import { clearCycle, readCycle } from '@/lib/review-queue';
 import { parseJson, FaqArray, SourceRefArray, StringArray } from '@/lib/json';
 import { notifyPublished } from '@/lib/indexing';
 import { postPath } from '@/lib/urls';
@@ -135,6 +136,33 @@ export async function seedHouseBylines(): Promise<BackfillResult> {
 
   log.info(`backfill: ${changed} house byline(s) written`);
   return { examined: HOUSE_BYLINES.length, changed, skipped };
+}
+
+/**
+ * Close the open review cycle without touching its drafts.
+ *
+ * The guard that stops a new cycle opening on top of an unfinished one is
+ * there so a timer cannot bin work nobody has read. Clearing is the deliberate
+ * version of the same decision, so it is a separate, named operation.
+ *
+ * The drafts themselves are left exactly as they are: still REVIEW, still in
+ * /admin, still approvable. Only the queue pointer goes.
+ */
+export async function clearReviewQueue(): Promise<BackfillResult> {
+  const cycle = await readCycle();
+  if (!cycle) return { examined: 0, changed: 0, skipped: ['no cycle was open'] };
+
+  const undecided = cycle.entries.filter((entry) => !cycle.outcomes[entry.postId]);
+  await clearCycle();
+
+  return {
+    examined: cycle.entries.length,
+    changed: 1,
+    skipped: [
+      `cycle closed; ${undecided.length} draft(s) left undecided`,
+      ...undecided.map((entry) => `still in /admin: ${entry.categoryName} - ${entry.title.slice(0, 60)}`),
+    ],
+  };
 }
 
 /**
