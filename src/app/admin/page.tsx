@@ -2,11 +2,9 @@ import Link from 'next/link';
 import { AlertTriangle, CheckCircle2, FileText, Inbox } from 'lucide-react';
 
 import { prisma } from '@/lib/db';
-import { asBool, asInt, getSettings } from '@/lib/settings';
-import { hasApiKey } from '@/lib/ai';
+import { getSettings } from '@/lib/settings';
 import { formatDate } from '@/lib/utils';
-import { Badge, buttonClass } from '@/components/ui/primitives';
-import { RunPipelineButton } from '@/components/admin/run-pipeline-button';
+import { buttonClass } from '@/components/ui/primitives';
 import { StatusPill } from '@/components/admin/status-pill';
 import { ReviewActions } from '@/components/admin/review-actions';
 import { LastRun, type StoredRun } from '@/components/admin/last-run';
@@ -59,8 +57,6 @@ export default async function AdminDashboard() {
     include: { category: true },
   });
 
-  const autoPublish = asBool(settings.AUTO_PUBLISH);
-
   // Persisted by runPipeline. A scheduled run leaves nothing on screen, so this
   // is the only record of what happened overnight.
   const [usage, budget] = await Promise.all([readTodayUsage(), readBudget()]);
@@ -99,27 +95,15 @@ export default async function AdminDashboard() {
         </div>
       </section>
 
-      <section className="surface p-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h2 className="text-lg font-semibold">Daily run</h2>
-            <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-              Ingests the feeds, then produces {asInt(settings.POSTS_PER_DAY, 2)} post
-              {asInt(settings.POSTS_PER_DAY, 2) === 1 ? '' : 's'}.{' '}
-              {autoPublish
-                ? `Auto-publish is ON, anything scoring ${asInt(settings.QUALITY_THRESHOLD, 85)}+ with clean identifiers goes live immediately.`
-                : 'Auto-publish is OFF, everything lands in review.'}
-            </p>
-          </div>
-          <Badge tone={autoPublish ? 'warn' : 'neutral'}>
-            AUTO_PUBLISH {autoPublish ? 'on' : 'off'}
-          </Badge>
-        </div>
-        <div className="mt-5">
-          <RunPipelineButton disabled={!hasApiKey()} />
-        </div>
-      </section>
+      {/*
+        The "Daily run" card is gone.
 
+        It described the pipeline as producing POSTS_PER_DAY articles, which
+        stopped being true when CYCLE_PLAN arrived: the schedule now writes
+        three each for sports, tech and money and one for everywhere else. A
+        panel that states the wrong number is worse than no panel, and the
+        schedule itself is the thing that runs, not a button on a dashboard.
+      */}
       <LastRun run={lastRun} usage={usage} budget={budget} prices={settings.AI_TOKEN_PRICES} />
 
       {verifyQueue.length > 0 ? (
