@@ -32,12 +32,29 @@ export default async function AdminDashboard() {
     include: { category: true, author: true },
   });
 
-  // Anything published today without a tested build still needs a human to run
-  // the fix, this is the "Published today, verify" queue from the brief.
+  /**
+   * Troubleshooting guides published today that nobody has run yet.
+   *
+   * "Tested build" means a person followed the fix on that Windows build and it
+   * worked. It is the one claim on this site that cannot be made by reading a
+   * source, which is why it needs a queue.
+   *
+   * It only applies to the /tech/windows back-catalogue. Before this filter the
+   * queue listed every article published today and offered "Record tested
+   * build" against a cricket result and a credit-card story, under a heading
+   * saying nobody had run the fix yet. There is no fix in a sports report. A
+   * leftover from the Windows-only era, like the section-byline line on the
+   * author pages.
+   */
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
   const verifyQueue = await prisma.post.findMany({
-    where: { status: 'PUBLISHED', publishedAt: { gte: startOfDay }, testedOnBuild: null },
+    where: {
+      status: 'PUBLISHED',
+      publishedAt: { gte: startOfDay },
+      testedOnBuild: null,
+      OR: [{ category: { slug: 'windows' } }, { category: { parent: { slug: 'windows' } } }],
+    },
     orderBy: { publishedAt: 'desc' },
     include: { category: true },
   });
@@ -107,10 +124,11 @@ export default async function AdminDashboard() {
 
       {verifyQueue.length > 0 ? (
         <section>
-          <h2 className="text-lg font-semibold">Published today, verify</h2>
+          <h2 className="text-lg font-semibold">Fix-it guides published today, verify</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Live, but nobody has run the fix yet. Each one shows &ldquo;verification
-            pending&rdquo; to readers until a tested build is recorded.
+            pending&rdquo; to readers until a tested build is recorded. Troubleshooting
+            guides only, there is nothing to test on a news report.
           </p>
           <ul className="surface mt-4 divide-y divide-border">
             {verifyQueue.map((post) => (
