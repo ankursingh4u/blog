@@ -86,24 +86,33 @@ export async function POST(request: Request) {
   }
 
   /*
-   * Who pressed the button.
+   * Editor of record, and who actually pressed.
    *
-   * Telegram sends the username with every callback. It mattered less when one
-   * person reviewed in a private chat; in a group, "a person approved this" is
-   * only true of somebody in particular, and /editorial-policy promises a
-   * person approves each article. An unset username falls back to the numeric
-   * id, which is still an identity, just a less readable one.
+   * These are two different facts and the site needs both. The editor is always
+   * Ankur Singh: he is accountable for everything published here, which is what
+   * his byline says and what /editorial-policy means by "approved by a person".
+   * That does not change with whoever happens to be holding the phone.
+   *
+   * But the press itself belongs to somebody in particular, and recording the
+   * editor as the presser would be writing down something that did not happen.
+   * So the card names the editor and the stored note carries both.
    */
-  const decidedBy = query.from?.username
+  const EDITOR_OF_RECORD = 'Ankur Singh (editor)';
+  const pressedBy = query.from?.username
     ? `@${query.from.username}`
     : query.from?.id
       ? `Telegram user ${query.from.id}`
-      : 'Telegram';
+      : 'an unidentified Telegram user';
+
+  const attribution =
+    pressedBy === 'an unidentified Telegram user'
+      ? EDITOR_OF_RECORD
+      : `${EDITOR_OF_RECORD}, pressed by ${pressedBy}`;
 
   const result =
     parsed.action === 'approve'
-      ? await applyStatus(parsed.postId, 'PUBLISHED', decidedBy)
-      : await archivePost(parsed.postId, `rejected from Telegram by ${decidedBy}`);
+      ? await applyStatus(parsed.postId, 'PUBLISHED', attribution)
+      : await archivePost(parsed.postId, `rejected from Telegram: ${attribution}`);
 
   await answerCallback(query.id, result.message);
 
@@ -127,8 +136,8 @@ export async function POST(request: Request) {
       query.message.chat.id,
       query.message.message_id,
       parsed.action === 'approve'
-        ? `✅ Published by ${decidedBy}`
-        : `✕ Rejected by ${decidedBy}`,
+        ? `✅ Published · ${EDITOR_OF_RECORD}`
+        : `✕ Rejected · ${EDITOR_OF_RECORD}`,
     );
   }
 

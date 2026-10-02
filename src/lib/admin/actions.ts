@@ -418,7 +418,13 @@ export async function setPostStatus(id: string, status: string): Promise<ActionS
   // "the admin" rather than a name: /admin is one shared password with no user
   // identity behind it. Claiming a specific person approved this would be an
   // invention, and the whole point of recording the decider is that it is true.
-  const result = await applyStatus(id, parsed.data.status as PostStatus, 'the admin (browser)');
+  // Same editor of record as the Telegram path, noting where the press came
+  // from. /admin is one shared password, so the browser identifies nobody.
+  const result = await applyStatus(
+    id,
+    parsed.data.status as PostStatus,
+    'Ankur Singh (editor), pressed in /admin',
+  );
   return result.ok ? OK(result.message) : FAIL(result.message);
 }
 
