@@ -82,6 +82,28 @@ export const TelegramUpdate = z.object({
         .optional(),
     })
     .optional(),
+  /**
+   * Plain messages, read for one purpose: learning a chat's id.
+   *
+   * Moving review into a group needs that id, and there is no way to look it up
+   * from outside: getUpdates only works with the webhook removed, and removing
+   * it breaks every Approve button until it is put back. Recording the id when
+   * somebody messages the bot turns a timing exercise into "send a message,
+   * then look".
+   *
+   * Nothing is acted on. The chat that may approve articles is still only the
+   * one in TELEGRAM_CHAT_ID.
+   */
+  message: z
+    .object({
+      chat: z.object({
+        id: z.union([z.number(), z.string()]),
+        type: z.string().optional(),
+        title: z.string().optional(),
+        username: z.string().optional(),
+      }),
+    })
+    .optional(),
 });
 export type TelegramUpdate = z.infer<typeof TelegramUpdate>;
 

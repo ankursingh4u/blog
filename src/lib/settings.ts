@@ -136,6 +136,8 @@ export const SETTING_DEFAULTS = {
    * Written by the pipeline and the Telegram webhook. See lib/review-queue.ts.
    */
   REVIEW_CYCLE: '',
+  /** Chats that have messaged the bot, so a group id can be looked up. */
+  TELEGRAM_SEEN_CHATS: '',
 } as const;
 
 export type SettingKey = keyof typeof SETTING_DEFAULTS;

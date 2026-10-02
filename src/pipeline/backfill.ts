@@ -158,6 +158,39 @@ export async function seedHouseBylines(): Promise<BackfillResult> {
 }
 
 /**
+ * Chats that have messaged the bot, so a group id can be found without taking
+ * the webhook down. Recorded by the webhook; this only reads them back.
+ */
+export async function rememberChat(chat: {
+  id: string;
+  type?: string;
+  title?: string;
+}): Promise<void> {
+  const row = await prisma.setting.findUnique({ where: { key: 'TELEGRAM_SEEN_CHATS' } });
+  const seen: Array<{ id: string; type?: string; title?: string }> = row?.value
+    ? JSON.parse(row.value)
+    : [];
+  if (seen.some((c) => c.id === chat.id)) return;
+  // Capped: this is a lookup aid, not a log.
+  await setSetting('TELEGRAM_SEEN_CHATS', JSON.stringify([chat, ...seen].slice(0, 10)));
+}
+
+export async function listSeenChats(): Promise<BackfillResult> {
+  const row = await prisma.setting.findUnique({ where: { key: 'TELEGRAM_SEEN_CHATS' } });
+  const seen: Array<{ id: string; type?: string; title?: string }> = row?.value
+    ? JSON.parse(row.value)
+    : [];
+  return {
+    examined: seen.length,
+    changed: 0,
+    skipped:
+      seen.length > 0
+        ? seen.map((c) => `${c.id}  type=${c.type ?? '?'}  ${c.title ?? ''}`)
+        : ['no chat has messaged the bot yet'],
+  };
+}
+
+/**
  * Close the open review cycle without touching its drafts.
  *
  * The guard that stops a new cycle opening on top of an unfinished one is

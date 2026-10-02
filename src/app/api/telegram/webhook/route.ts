@@ -1,5 +1,6 @@
 import { applyStatus, archivePost } from '@/lib/admin/moderation';
 import { recordReviewDecision } from '@/pipeline/review-flow';
+import { rememberChat } from '@/pipeline/backfill';
 import {
   TelegramUpdate,
   answerCallback,
@@ -56,6 +57,17 @@ export async function POST(request: Request) {
     update = TelegramUpdate.parse(await request.json());
   } catch {
     return ok({ ignored: 'unrecognised update shape' });
+  }
+
+  /*
+   * A plain message only ever teaches us a chat id, which is what moving review
+   * into a group needs. Recorded, never acted on: the chat allowed to approve
+   * articles is still only TELEGRAM_CHAT_ID, checked below.
+   */
+  if (update.message?.chat) {
+    const { id, type, title, username } = update.message.chat;
+    await rememberChat({ id: String(id), type, title: title ?? username }).catch(() => undefined);
+    return ok({ noted: 'chat recorded', chatId: String(id) });
   }
 
   const query = update.callback_query;

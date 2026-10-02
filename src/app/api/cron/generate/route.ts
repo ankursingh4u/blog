@@ -5,6 +5,7 @@ import { runCycle } from '@/pipeline/cycle';
 import {
   applyRunningPlan,
   clearReviewQueue,
+  listSeenChats,
   pingAllPublished,
   reassignDraftBylines,
   refreshSeoFields,
@@ -160,6 +161,7 @@ const BACKFILLS = {
   'apply-plan': applyRunningPlan,
   'fix-bylines': reassignDraftBylines,
   'clear-queue': clearReviewQueue,
+  'telegram-chats': listSeenChats,
 } as const;
 
 type BackfillName = keyof typeof BACKFILLS;
