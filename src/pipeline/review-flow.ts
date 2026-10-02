@@ -192,14 +192,35 @@ async function regenerateCategories(slugs: string[], previous: ReviewCycle): Pro
       where: { id: { in: ids }, status: 'REVIEW' },
       select: { id: true, title: true, category: { select: { slug: true, name: true } } },
     });
-    produced.push(
-      ...posts.map((post) => ({
-        postId: post.id,
-        categorySlug: post.category.slug,
-        categoryName: post.category.name,
-        title: post.title,
-      })),
-    );
+    const batch = posts.map((post) => ({
+      postId: post.id,
+      categorySlug: post.category.slug,
+      categoryName: post.category.name,
+      title: post.title,
+    }));
+    produced.push(...batch);
+
+    /**
+     * Queue and send each replacement as soon as it exists.
+     *
+     * This used to collect every rewrite first and only then open the queue, so
+     * rejecting three sections meant waiting for three articles, five to nine
+     * minutes, before a single message appeared. Nothing about the first
+     * replacement depends on the third being finished.
+     *
+     * The first batch opens the round and is sent. Later ones are appended to
+     * the open queue and arrive in turn, with no second send: a draft is
+     * already in front of the reviewer, and the queue advances on a decision.
+     */
+    const open = await readCycle();
+    if (!open || isComplete(open)) {
+      const round = newCycle(batch, true);
+      round.regenerated = [...previous.regenerated, ...slugs];
+      await writeCycle(round);
+      await sendNextForReview();
+    } else {
+      await writeCycle({ ...open, entries: [...open.entries, ...batch] });
+    }
   }
 
   if (produced.length === 0) {
@@ -210,11 +231,5 @@ async function regenerateCategories(slugs: string[], previous: ReviewCycle): Pro
       ),
     );
     await clearCycle();
-    return;
   }
-
-  const next = newCycle(produced, true);
-  next.regenerated = [...previous.regenerated, ...slugs];
-  await writeCycle(next);
-  await sendNextForReview();
 }
