@@ -45,17 +45,21 @@ export async function pingIndexNow(paths: string[]): Promise<PingResult> {
   }
 }
 
+/**
+ * Google retired sitemap pings in 2023. There is nothing to call.
+ *
+ * `https://www.google.com/ping?sitemap=` answers 404 now, and this ran on every
+ * publish and logged a failure for it. Google's replacement is the one already
+ * in place: a sitemap submitted once in Search Console, re-fetched on their own
+ * schedule, with `<lastmod>` telling them which entries moved. Nothing a site
+ * can send makes that happen sooner.
+ *
+ * Kept as a function so callers stay unchanged and the reason stays recorded,
+ * rather than someone re-adding the ping in a year.
+ */
 export async function pingSitemap(): Promise<PingResult> {
   if (isLocal()) return { ok: false, skipped: 'site URL is localhost' };
-  const sitemap = encodeURIComponent(absoluteUrl('/sitemap.xml'));
-  try {
-    const res = await fetch(`https://www.google.com/ping?sitemap=${sitemap}`, {
-      method: 'GET',
-    });
-    return { ok: res.ok, detail: `HTTP ${res.status}` };
-  } catch (error) {
-    return { ok: false, detail: error instanceof Error ? error.message : 'fetch failed' };
-  }
+  return { ok: false, skipped: 'Google retired sitemap pings; Search Console re-fetches it' };
 }
 
 /** Called from the publish action. Never throws, indexing must not block a publish. */
