@@ -55,6 +55,15 @@ export interface BackfillResult {
 export async function applyRunningPlan(): Promise<BackfillResult> {
   const plan: Array<[Parameters<typeof setSetting>[0], string]> = [
     ['POSTS_PER_CATEGORY', '1'],
+    /*
+     * Depth in three sections rather than presence in eight.
+     *
+     * Sports for constant search volume, tech and startups for the
+     * troubleshooting and how-to loops, money written as education. The other
+     * five keep one article each so they stay alive without diluting the
+     * effort. Twelve a day at nano is still well inside the token cap.
+     */
+    ['CYCLE_PLAN', 'sports:3,tech:3,money:3,entertainment:1,health:1,gaming:1,travel:1,education:1'],
     ['DAILY_TOKEN_BUDGET', '700000'],
     /*
      * Drafting dropped to nano on the owner's instruction: 0.20/1.25 per

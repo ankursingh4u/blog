@@ -12,6 +12,18 @@ export const SETTING_DEFAULTS = {
    * drafts per section beats the same total spread thinner.
    */
   POSTS_PER_CATEGORY: '2',
+  /**
+   * Drafts per section in a cycle, overriding POSTS_PER_CATEGORY per slug.
+   *
+   * `sports:3,tech:3,money:3,gaming:1` and so on. A section set to 0 is skipped
+   * entirely; one left out of the list falls back to POSTS_PER_CATEGORY. Empty
+   * means every section gets the same number, which is where this started.
+   *
+   * It exists because an even spread across eight verticals is eight thin
+   * sections, and thin sections do not rank. Depth in a few beats presence in
+   * all of them, and which few is an editorial decision rather than a code one.
+   */
+  CYCLE_PLAN: '',
   /* ------------------------------------------------------- model per task */
   /**
    * Which model does which job. Empty means "use OPENAI_MODEL".

@@ -150,6 +150,33 @@ Formatting rules for the body, these exist so the page can be skimmed:
 - Say what the reader should see or expect after a step, so they can tell whether
   it worked.`;
 
+/**
+ * Money, written to teach rather than to report.
+ *
+ * A rate decision reported as news is read once on the day and never found
+ * again. The same facts written as an explanation of what a rate decision does
+ * to a loan, a deposit and a monthly budget answers a question people type for
+ * years. The news event is the occasion for the article, not its subject.
+ */
+const MONEY_STRUCTURE = `This is personal finance and business, and the reader
+came with a question, not for a bulletin. Write it as teaching:
+
+- Explain the mechanism, not just the event. If a rate moved, the article is
+  about what that does to an EMI, a deposit, a mortgage and a monthly budget.
+- Define every term the first time it appears, in one clause, without
+  condescending. Assume an intelligent reader who does not work in finance.
+- Give a worked example with real arithmetic wherever a number is involved: on
+  a 30 lakh loan over 20 years, this change means X per month. Use figures from
+  the sources; where the sources give none, use a clearly labelled illustration
+  and say it is one.
+- Say plainly who this affects and who it does not. Most readers are in neither
+  the best nor the worst case.
+- End with what the reader can actually do, and be honest when the answer is
+  "nothing, and here is why that is fine".
+- Never give individual investment advice, never recommend a specific stock or
+  product, and never imply a guaranteed return. Explain the options and the
+  trade-offs and let the reader decide.`;
+
 /** Extra rules for troubleshooting content (the /tech/windows sub-section). */
 const TROUBLESHOOTING_STRUCTURE = `This is a troubleshooting guide, so additionally:
 
@@ -266,6 +293,7 @@ export async function generateDraft({
     '',
     PROSE_RULES,
     ...(isTroubleshooting ? ['', TROUBLESHOOTING_STRUCTURE] : []),
+    ...(category.slug === 'money' ? ['', MONEY_STRUCTURE] : []),
     '',
     HARD_RULES,
   ].join('\n');

@@ -103,13 +103,39 @@ export async function runCycle(
    */
   const usedAuthorIds: string[] = [];
 
+  /**
+   * How many drafts each section gets this cycle.
+   *
+   * CYCLE_PLAN is "slug:count" pairs; a section not named falls back to
+   * POSTS_PER_CATEGORY, and one set to 0 is skipped. An unknown slug is logged
+   * rather than ignored, because a typo would otherwise look exactly like the
+   * plan working.
+   */
+  const plan = new Map<string, number>();
+  for (const pair of (settings.CYCLE_PLAN ?? '').split(',')) {
+    const [slug, count] = pair.split(':').map((part) => part.trim());
+    if (!slug) continue;
+    if (!categories.some((c) => c.slug === slug)) {
+      log.warn(`cycle: CYCLE_PLAN names "${slug}", which is not a section. Ignored.`);
+      continue;
+    }
+    plan.set(slug, asInt(count, perCategory));
+  }
+
   for (const category of categories) {
     if (budgetStopped) break;
+
+    const wanted = plan.get(category.slug) ?? perCategory;
+    if (wanted <= 0) {
+      log.info(`cycle: ${category.slug} is set to 0 in CYCLE_PLAN, skipped`);
+      counts[category.slug] = 0;
+      continue;
+    }
 
     const others = categories.filter((c) => c.slug !== category.slug).map((c) => c.slug);
     const result = await runPipeline({
       skipIngest: true,
-      limit: perCategory,
+      limit: wanted,
       excludeCategorySlugs: others,
       usedAuthorIds: [...usedAuthorIds],
       // The queue sends these one at a time; sixteen messages at once is the

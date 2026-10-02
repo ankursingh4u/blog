@@ -94,11 +94,33 @@ export interface VerticalSource {
 }
 
 export const VERTICAL_SOURCES: readonly VerticalSource[] = [
+  /*
+   * The three focus verticals carry more queries and more suggest seeds than
+   * the rest. They are where the site is trying to be known, and a section the
+   * pipeline is asked for three articles a day from needs a wider net than one
+   * it visits occasionally.
+   */
   {
     slug: 'tech',
     topic: 'TECHNOLOGY',
-    queries: ['smartphone launch', 'AI tools'],
-    suggestSeeds: ['best phone under', 'how to speed up laptop', 'is it worth upgrading to'],
+    queries: [
+      'smartphone launch',
+      'AI tools',
+      'startup funding round',
+      'startup launches product',
+      'tech layoffs',
+      'app update rollout',
+    ],
+    suggestSeeds: [
+      'best phone under',
+      'how to speed up laptop',
+      'is it worth upgrading to',
+      'how to fix',
+      'why is my phone',
+      'best free alternative to',
+      'how to use ai for',
+      'how do startups',
+    ],
   },
   {
     slug: 'entertainment',
@@ -109,14 +131,38 @@ export const VERTICAL_SOURCES: readonly VerticalSource[] = [
   {
     slug: 'sports',
     topic: 'SPORTS',
-    queries: ['transfer news'],
-    suggestSeeds: ['how does the offside rule', 'when is the next match', 'points table'],
+    queries: ['transfer news', 'match result', 'tournament schedule', 'injury update'],
+    suggestSeeds: [
+      'how does the offside rule',
+      'when is the next match',
+      'points table',
+      'who won',
+      'what time is the',
+      'how to watch',
+      'squad list',
+    ],
   },
   {
     slug: 'money',
     topic: 'BUSINESS',
-    queries: ['interest rates', 'personal finance'],
-    suggestSeeds: ['how to save tax', 'best savings account', 'how much should i invest'],
+    queries: ['interest rates', 'personal finance', 'income tax rules', 'mutual funds'],
+    /*
+     * Money is written as education rather than reporting, so its seeds are
+     * questions rather than events. A rate decision is the occasion for an
+     * article; "how much should i invest" is what somebody actually types, and
+     * keeps being typed long after the decision is old.
+     */
+    suggestSeeds: [
+      'how to save tax',
+      'best savings account',
+      'how much should i invest',
+      'how does sip work',
+      'what is the difference between',
+      'how to calculate emi',
+      'is it better to rent or buy',
+      'how much emergency fund',
+      'how to read a payslip',
+    ],
   },
   {
     slug: 'health',
