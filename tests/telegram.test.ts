@@ -92,6 +92,17 @@ describe('TelegramUpdate', () => {
     expect(parsed.message?.chat?.type).toBe('group');
   });
 
+  it('parses the change-image action', () => {
+    expect(parseCallbackData('image:abc123')).toEqual({ action: 'image', postId: 'abc123' });
+  });
+
+  it('still refuses an action it does not know', () => {
+    // The parser is the only thing standing between a crafted callback and the
+    // moderation path, so it must not coerce anything it was not taught.
+    expect(parseCallbackData('delete:abc123')).toBeNull();
+    expect(parseCallbackData('publish:abc123')).toBeNull();
+  });
+
   it('rejects a callback_query missing its id', () => {
     expect(() => TelegramUpdate.parse({ callback_query: { data: 'approve:x' } })).toThrow();
   });

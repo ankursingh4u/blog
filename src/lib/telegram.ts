@@ -44,7 +44,7 @@ export function telegramConfig(): TelegramConfig | null {
  * webhook checks the chat id as well as the secret, and why this parser refuses
  * anything it does not recognise instead of coercing.
  */
-export type CallbackAction = 'approve' | 'reject';
+export type CallbackAction = 'approve' | 'reject' | 'image';
 
 export interface ParsedCallback {
   action: CallbackAction;
@@ -53,13 +53,36 @@ export interface ParsedCallback {
 
 export function parseCallbackData(data: string | undefined): ParsedCallback | null {
   if (!data) return null;
-  const match = /^(approve|reject):([A-Za-z0-9_-]{1,64})$/.exec(data.trim());
+  const match = /^(approve|reject|image):([A-Za-z0-9_-]{1,64})$/.exec(data.trim());
   if (!match) return null;
   return { action: match[1] as CallbackAction, postId: match[2] };
 }
 
 export function callbackData(action: CallbackAction, postId: string): string {
   return `${action}:${postId}`;
+}
+
+/**
+ * The buttons on a draft card.
+ *
+ * One definition, because the card is rebuilt every time the cover is swapped
+ * and a keyboard that drifted between the two would leave a post reviewable
+ * from one render and not the other.
+ *
+ * "Change image" sits on its own row: it is the one button that does not end
+ * the review, and putting it beside Approve invites a mis-tap that publishes
+ * an article somebody was only reconsidering the photograph for.
+ */
+export function draftKeyboard(postId: string) {
+  return {
+    inline_keyboard: [
+      [
+        { text: '✅ Approve', callback_data: callbackData('approve', postId) },
+        { text: '✕ Reject', callback_data: callbackData('reject', postId) },
+      ],
+      [{ text: '🖼 Change image', callback_data: callbackData('image', postId) }],
+    ],
+  };
 }
 
 /* ----------------------------------------------------------------- incoming */
@@ -168,14 +191,7 @@ export async function notifyDraft(draft: DraftNotification): Promise<boolean> {
     `[Open in admin](${draft.adminUrl})`,
   ].filter(Boolean);
 
-  const reply_markup = {
-    inline_keyboard: [
-      [
-        { text: '✅ Approve', callback_data: callbackData('approve', draft.postId) },
-        { text: '✕ Reject', callback_data: callbackData('reject', draft.postId) },
-      ],
-    ],
-  };
+  const reply_markup = draftKeyboard(draft.postId);
 
   if (draft.imageUrl) {
     const sent = await call(config.token, 'sendPhoto', {
@@ -213,6 +229,41 @@ export async function sendNotice(markdown: string): Promise<boolean> {
     text: markdown,
     parse_mode: 'MarkdownV2',
     disable_web_page_preview: true,
+  });
+}
+
+/**
+ * Swaps the photograph on a card that is already in the chat.
+ *
+ * `editMessageMedia` replaces the image in place, so the reviewer sees the new
+ * cover on the same card rather than a second copy of the article arriving
+ * underneath the first. The buttons are re-sent with it: Telegram drops the
+ * keyboard when the media changes, and a card with no buttons is a draft that
+ * can no longer be approved.
+ *
+ * Returns false when the original message had no photo to replace, which is the
+ * case for a draft that fell back to the branded card. The caller sends a fresh
+ * card instead.
+ */
+export async function replacePhoto(
+  chatId: number | string,
+  messageId: number,
+  imageUrl: string,
+  caption: string,
+  postId: string,
+): Promise<boolean> {
+  const config = telegramConfig();
+  if (!config) return false;
+  return call(config.token, 'editMessageMedia', {
+    chat_id: chatId,
+    message_id: messageId,
+    media: {
+      type: 'photo',
+      media: imageUrl,
+      caption,
+      parse_mode: 'MarkdownV2',
+    },
+    reply_markup: draftKeyboard(postId),
   });
 }
 

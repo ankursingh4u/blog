@@ -4,6 +4,8 @@ import { log } from '@/pipeline/log';
 import { escapeMarkdown, notifyDraft, sendNotice } from '@/lib/telegram';
 import { runPipeline } from '@/pipeline/run';
 import { asInt, getSettings } from '@/lib/settings';
+import { attachCoverPhoto, usedKeysFromCredits } from '@/pipeline/cover-photo';
+import { EMPTY_CREDIT, ImageCreditSchema, parseJson, toJson } from '@/lib/json';
 import {
   clearCycle,
   currentEntry,
@@ -67,6 +69,59 @@ export async function sendNextForReview(): Promise<boolean> {
     adminUrl: absoluteUrl(`/admin/posts/${post.id}`),
     imageUrl: post.featuredImage ? absoluteUrl(post.featuredImage) : null,
   });
+}
+
+/**
+ * Swaps a draft's cover for a different photograph.
+ *
+ * The reviewer is the first person to see the picture next to the headline, and
+ * the pipeline's choice is a keyword search, not a judgement. Sending them to
+ * /admin to change it means the one thing most likely to need a human eye is
+ * the one thing the chat cannot do.
+ *
+ * Every photograph already on the site is excluded, plus the one currently on
+ * this draft, so pressing the button walks through alternatives rather than
+ * offering the same image back. When nothing else is usable the existing cover
+ * is kept: a draft with no picture cannot be published at all.
+ */
+export async function swapCoverPhoto(
+  postId: string,
+): Promise<{ ok: boolean; message: string; imageUrl?: string }> {
+  const post = await prisma.post.findUnique({
+    where: { id: postId },
+    include: { category: true },
+  });
+  if (!post) return { ok: false, message: 'That post no longer exists.' };
+
+  const stored = await prisma.post.findMany({
+    where: { NOT: { imageCredit: '' } },
+    select: { imageCredit: true },
+  });
+  const used = usedKeysFromCredits(
+    stored.map((p) => parseJson(p.imageCredit, ImageCreditSchema, EMPTY_CREDIT)),
+  );
+
+  const replacement = await attachCoverPhoto({
+    title: post.title,
+    categorySlug: post.category.slug,
+    slug: post.slug,
+    used,
+  });
+
+  if (!replacement) {
+    return { ok: false, message: 'No other usable photograph found. Keeping the current one.' };
+  }
+
+  await prisma.post.update({
+    where: { id: postId },
+    data: { featuredImage: replacement.url, imageCredit: toJson(replacement.credit) },
+  });
+
+  return {
+    ok: true,
+    message: `New cover: ${replacement.credit.creator || replacement.credit.sourceName || 'photo'}`,
+    imageUrl: replacement.url,
+  };
 }
 
 /**

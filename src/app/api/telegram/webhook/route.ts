@@ -1,13 +1,17 @@
 import { applyStatus, archivePost } from '@/lib/admin/moderation';
-import { decidedOutcome, recordReviewDecision } from '@/pipeline/review-flow';
+import { decidedOutcome, recordReviewDecision, swapCoverPhoto } from '@/pipeline/review-flow';
 import { rememberChat } from '@/pipeline/backfill';
 import {
   TelegramUpdate,
   answerCallback,
+  escapeMarkdown,
   markResolved,
   parseCallbackData,
+  replacePhoto,
+  sendNotice,
   telegramConfig,
 } from '@/lib/telegram';
+import { absoluteUrl } from '@/lib/site';
 
 /**
  * Approve or reject a draft from Telegram.
@@ -108,6 +112,39 @@ export async function POST(request: Request) {
     pressedBy === 'an unidentified Telegram user'
       ? EDITOR_OF_RECORD
       : `${EDITOR_OF_RECORD}, pressed by ${pressedBy}`;
+
+  /*
+   * Changing the picture is not a decision, so it runs before the
+   * already-decided guard and leaves the queue exactly where it was. The card
+   * stays open afterwards, because the point is to look again and then decide.
+   */
+  if (parsed.action === 'image') {
+    const swap = await swapCoverPhoto(parsed.postId);
+    await answerCallback(query.id, swap.message);
+
+    if (swap.ok && swap.imageUrl && query.message) {
+      const replaced = await replacePhoto(
+        query.message.chat.id,
+        query.message.message_id,
+        absoluteUrl(swap.imageUrl),
+        escapeMarkdown(swap.message),
+        parsed.postId,
+      );
+      // A draft on the branded card has no photo to edit, so Telegram refuses
+      // the swap. Say so rather than leaving the reviewer looking at the old
+      // image wondering whether the button did anything.
+      if (!replaced) {
+        await sendNotice(
+          escapeMarkdown(
+            'The cover was changed, but this card could not be updated in place. ' +
+              'Open it in /admin to see the new photograph.',
+          ),
+        );
+      }
+    }
+
+    return ok({ action: 'image', postId: parsed.postId, swapped: swap.ok });
+  }
 
   /*
    * First decision wins.
