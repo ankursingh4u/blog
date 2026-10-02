@@ -12,8 +12,16 @@ import { categoryPath, postPath, type CategoryRef } from '@/lib/urls';
 import { log, type LogLine } from '@/pipeline/log';
 import { decode, type CategorySlug } from '@/pipeline/parser';
 
-/** Candidates fetched per post wanted, to absorb keywords that cannot be sourced. */
-const KEYWORD_OVERSELECT = 6;
+/**
+ * Candidates fetched per post wanted, to absorb keywords that get skipped.
+ *
+ * Raised from 6 when the search-demand check landed. Two filters can now drop a
+ * keyword before it costs anything - no citable source, and nobody searching
+ * the subject - and a run that skips its whole pool produces nothing at all.
+ * Candidates are a database read; skipping is free compared with writing an
+ * article nobody will look for.
+ */
+const KEYWORD_OVERSELECT = 10;
 
 /**
  * Words a headline uses and a search box never does.
@@ -179,9 +187,11 @@ export async function runPipeline(
   const postsPerRun = Math.min(options.limit ?? asInt(settings.POSTS_PER_DAY, 2), 3);
   const autoPublish = asBool(settings.AUTO_PUBLISH);
   const threshold = asInt(settings.QUALITY_THRESHOLD, 85);
+  const requireDemand = asBool(settings.REQUIRE_SEARCH_DEMAND);
 
   log.info(
-    `run: posts=${postsPerRun} autoPublish=${autoPublish} threshold=${threshold}`,
+    `run: posts=${postsPerRun} autoPublish=${autoPublish} threshold=${threshold} ` +
+      `requireSearchDemand=${requireDemand}`,
   );
 
   let ingested = 0;
@@ -253,6 +263,7 @@ export async function runPipeline(
         usedPhotoKeys,
         usedAuthorIds: options.usedAuthorIds,
         notify: options.notify ?? true,
+        requireDemand,
       });
       outcomes.push(outcome);
       produced += 1;
@@ -324,6 +335,7 @@ async function produceOne({
   usedPhotoKeys,
   usedAuthorIds = [],
   notify = true,
+  requireDemand = true,
 }: {
   keywordId: string;
   autoPublish: boolean;
@@ -335,6 +347,8 @@ async function produceOne({
   usedAuthorIds?: string[];
   /** False when a cycle will do the sending itself, one draft at a time. */
   notify?: boolean;
+  /** Skip the keyword when autocomplete shows nobody searches for it. */
+  requireDemand?: boolean;
 }): Promise<PipelineOutcome> {
   const stored = await prisma.keyword.findUniqueOrThrow({ where: { id: keywordId } });
 
@@ -369,6 +383,36 @@ async function produceOne({
   // should not be averaged in.
   resetUsage();
 
+  /**
+   * Does anybody search for this? Asked before anything is paid for.
+   *
+   * Autocomplete is a demand signal as much as a phrasing aid: Google only
+   * suggests what people type. A subject that returns nothing from every seed
+   * is a subject nobody looks for, and writing it produces a page that can be
+   * perfectly sourced, perfectly structured, and read by no one.
+   *
+   * This is not hypothetical. "Japanese money moving home could impact global
+   * risk assets" is fund-manager commentary; autocomplete had nothing for it,
+   * the model had no query to aim at, and the result scored 63 and reads like
+   * the press release it came from. It cost a full generation call to learn
+   * that. This check costs one free HTTP request.
+   *
+   * Troubleshooting is exempt: somebody hunting an error code is searching the
+   * code, which autocomplete rarely carries, and those pages answer a real need
+   * regardless. REQUIRE_SEARCH_DEMAND turns the whole thing off.
+   */
+  const searches = await searchesFor(keyword.phrase);
+  if (searches.length > 0) {
+    log.info(`searches: ${searches.slice(0, 5).join(' | ')}`);
+  } else if (requireDemand && category.slug !== 'windows') {
+    throw new Error(
+      `no search demand for "${keyword.phrase}" (autocomplete returned nothing for any seed), ` +
+        'skipped before generating',
+    );
+  } else {
+    log.warn(`searches: none found for "${keyword.phrase}", writing it anyway`);
+  }
+
   const sources = await research(keyword, category.slug as CategorySlug);
 
   // Generating without sources is not worth paying for outside troubleshooting.
@@ -381,23 +425,6 @@ async function produceOne({
     throw new Error(
       `no citable sources found for "${keyword.phrase}", skipped before generating`,
     );
-  }
-
-  /**
-   * What people actually type about this subject, before anything is written.
-   *
-   * The feeds say what happened; autocomplete says what is being searched, and
-   * they are rarely the same words. "IHG revamps its credit card lineup" is a
-   * publisher's sentence that nobody queries. Handing the real phrases to the
-   * writer is what turns a story into a page that can be found.
-   *
-   * Keyless, free, and one request per article. It fails soft and returns an
-   * empty list, in which case the prompt tells the model to work the queries out
-   * for itself rather than blocking a draft on a flaky third-party endpoint.
-   */
-  const searches = await searchesFor(keyword.phrase);
-  if (searches.length > 0) {
-    log.info(`searches: ${searches.slice(0, 5).join(' | ')}`);
   }
 
   const draft = await generateDraft({ keyword, category, author, sources, searches });

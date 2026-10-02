@@ -24,6 +24,18 @@ export const SETTING_DEFAULTS = {
    * all of them, and which few is an editorial decision rather than a code one.
    */
   CYCLE_PLAN: '',
+  /**
+   * Skip a topic when Google autocomplete has nothing for it.
+   *
+   * Autocomplete only suggests what people actually type, so silence across
+   * every seed is evidence nobody searches the subject. Writing it anyway
+   * produces a page that can be well sourced, well structured and read by
+   * nobody, and costs a full generation call to find out.
+   *
+   * Set to false to write everything the feeds offer, which is the right answer
+   * if the site ever wants coverage for its own sake rather than for readers.
+   */
+  REQUIRE_SEARCH_DEMAND: 'true',
   /* ------------------------------------------------------- model per task */
   /**
    * Which model does which job. Empty means "use OPENAI_MODEL".
