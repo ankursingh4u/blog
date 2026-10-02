@@ -70,6 +70,21 @@ export async function sendNextForReview(): Promise<boolean> {
 }
 
 /**
+ * What has already been decided about this draft, if anything.
+ *
+ * Two people share one queue now, and Telegram will deliver a second tap if it
+ * lands before the first person's press has finished editing the buttons away.
+ * Without this check, two approvals send the next draft twice, and an approve
+ * followed by a reject publishes an article and then archives it.
+ *
+ * First decision wins. The second is answered rather than applied.
+ */
+export async function decidedOutcome(postId: string): Promise<Outcome | null> {
+  const cycle = await readCycle();
+  return cycle?.outcomes[postId] ?? null;
+}
+
+/**
  * Records a decision and moves the queue on.
  *
  * Returns quietly when there is no open cycle: a draft can be approved from

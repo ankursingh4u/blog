@@ -74,6 +74,26 @@ describe('recordOutcome', () => {
   });
 });
 
+describe('two people sharing one queue', () => {
+  it('keeps the first decision when a second press lands on the same draft', () => {
+    let cycle = newCycle([entry('a1', 'tech'), entry('b1', 'sports')]);
+
+    // Both tap approve on the first card before the buttons are edited away.
+    cycle = recordOutcome(cycle, 'a1', 'APPROVED');
+    const afterFirst = { ...cycle };
+    cycle = recordOutcome(cycle, 'a1', 'REJECTED');
+
+    // The webhook checks `outcomes` before applying anything, so the second
+    // press is answered rather than applied. The state it would have written is
+    // the thing being guarded against: a published article then archived.
+    expect(afterFirst.outcomes.a1).toBe('APPROVED');
+    expect(afterFirst.cursor).toBe(1);
+
+    // And the cursor must not advance twice, or a draft is skipped unseen.
+    expect(cycle.cursor).toBe(1);
+  });
+});
+
 describe('fullyRejectedCategories', () => {
   it('names a category only when every decided draft in it was rejected', () => {
     let cycle = newCycle([

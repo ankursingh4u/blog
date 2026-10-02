@@ -1,5 +1,5 @@
 import { applyStatus, archivePost } from '@/lib/admin/moderation';
-import { recordReviewDecision } from '@/pipeline/review-flow';
+import { decidedOutcome, recordReviewDecision } from '@/pipeline/review-flow';
 import { rememberChat } from '@/pipeline/backfill';
 import {
   TelegramUpdate,
@@ -108,6 +108,33 @@ export async function POST(request: Request) {
     pressedBy === 'an unidentified Telegram user'
       ? EDITOR_OF_RECORD
       : `${EDITOR_OF_RECORD}, pressed by ${pressedBy}`;
+
+  /*
+   * First decision wins.
+   *
+   * In a group two people can tap the same card, and Telegram delivers the
+   * second press if it lands before the first has finished editing the buttons
+   * away. Applied blindly, two approvals send the next draft twice, and an
+   * approve followed by a reject publishes an article and then archives it.
+   *
+   * The second press is answered, not applied: the person is told what already
+   * happened, which is more useful than a silent no-op.
+   */
+  const already = await decidedOutcome(parsed.postId).catch(() => null);
+  if (already) {
+    await answerCallback(
+      query.id,
+      already === 'APPROVED' ? 'Already published by someone else.' : 'Already rejected by someone else.',
+    );
+    if (query.message) {
+      await markResolved(
+        query.message.chat.id,
+        query.message.message_id,
+        already === 'APPROVED' ? '✅ Published · Ankur Singh (editor)' : '✕ Rejected · Ankur Singh (editor)',
+      );
+    }
+    return ok({ ignored: 'already decided', postId: parsed.postId, outcome: already });
+  }
 
   const result =
     parsed.action === 'approve'
