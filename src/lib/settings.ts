@@ -57,7 +57,20 @@ export const SETTING_DEFAULTS = {
    * the run, so naming the setting before creating the author cannot break
    * generation. Existing posts are never touched; this only affects new ones.
    */
-  AI_AUTHOR_SLUG: 'ankur-singh',
+  /**
+   * Pins every generated post to one byline. Empty by default, deliberately.
+   *
+   * It used to default to a slug, which meant the pin was switched on for
+   * anyone who had never touched the setting: `getSetting` returns the default
+   * when no row exists, so sport, health and education were all bylined to the
+   * founder while the section map correctly handled the rest. Nobody had set
+   * anything; the default was doing it. A seed task that cleared the *row*
+   * found nothing to clear and said so.
+   *
+   * src/lib/bylines.ts decides who signs what now. Setting a slug here still
+   * overrides the rotation, which is what it is for, but only if asked.
+   */
+  AI_AUTHOR_SLUG: '',
   AD_SLOT_HEADER: '',
   AD_SLOT_IN_ARTICLE: '',
   AD_SLOT_SIDEBAR: '',

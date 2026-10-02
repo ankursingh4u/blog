@@ -114,11 +114,23 @@ export async function seedHouseBylines(): Promise<BackfillResult> {
     if (!existing) skipped.push(`${person.slug}: created`);
   }
 
+  /*
+   * Write the empty value, rather than only clearing a row that exists.
+   *
+   * The previous version checked for a row and reported nothing when it found
+   * none. But `getSetting` falls back to SETTING_DEFAULTS, which named a slug
+   * here, so "no row" meant the pin was *on* while the task meant to turn it
+   * off concluded there was nothing to do. Sport, health and education were
+   * bylined to the founder for a whole cycle because of it. Writing the row
+   * makes the state explicit either way.
+   */
   const pinned = await prisma.setting.findUnique({ where: { key: 'AI_AUTHOR_SLUG' } });
-  if (pinned?.value) {
-    await setSetting('AI_AUTHOR_SLUG', '');
-    skipped.push(`AI_AUTHOR_SLUG was "${pinned.value}", cleared, the section map now decides`);
-  }
+  await setSetting('AI_AUTHOR_SLUG', '');
+  skipped.push(
+    pinned?.value
+      ? `AI_AUTHOR_SLUG was "${pinned.value}", cleared; the section map decides now`
+      : 'AI_AUTHOR_SLUG written empty; the section map decides now',
+  );
 
   log.info(`backfill: ${changed} house byline(s) written`);
   return { examined: HOUSE_BYLINES.length, changed, skipped };
