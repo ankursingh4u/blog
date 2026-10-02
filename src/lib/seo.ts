@@ -179,11 +179,17 @@ export function articleLd(input: {
   author: { name: string; slug: string; bio: string; avatar?: string | null };
   categoryName: string;
   /**
-   * Chooses the schema.org type. `TechArticle` is only correct for the
-   * troubleshooting back-catalogue; it was hardcoded for every post when the
-   * site was Windows-only, which left a cricket report and a games-industry
-   * piece both declaring themselves technical documentation. Everything outside
-   * `windows` is a plain `Article`.
+   * Chooses the schema.org type.
+   *
+   * `TechArticle` is only correct for the troubleshooting back-catalogue; it was
+   * hardcoded for every post when the site was Windows-only, which left a
+   * cricket report and a games-industry piece both declaring themselves
+   * technical documentation.
+   *
+   * Everything else is `NewsArticle` rather than plain `Article`. This is a news
+   * site reporting current events from dated sources, which is what the narrower
+   * type means, and it is the type Google expects for news surfaces. `Article`
+   * said nothing about what these pages are.
    */
   categorySlug?: string;
   sources: SourceRef[];
@@ -191,7 +197,7 @@ export function articleLd(input: {
 }): Json {
   const url = absoluteUrl(input.path);
   return {
-    '@type': input.categorySlug === 'windows' ? 'TechArticle' : 'Article',
+    '@type': input.categorySlug === 'windows' ? 'TechArticle' : 'NewsArticle',
     '@id': `${url}#article`,
     headline: input.title,
     description: input.description,

@@ -27,9 +27,11 @@ export const DraftSchema = z.object({
     // `metaTitle` keeps its own 60-character SEO limit; this is the H1.
     .max(110)
     .describe(
-      'H1. The target keyword phrased the way a person would type it. No clickbait. ' +
-        'If it will not fit, rewrite it shorter in whole words, never abbreviate, ' +
-        'truncate, or drop letters from a word to fit the limit.',
+      'H1. Must contain, early, the phrase a reader would actually type into Google for ' +
+        'this story, not the publisher-style headline the source used. "IHG credit card ' +
+        'changes 2026: new perks and higher fees" beats "IHG revamps its credit card ' +
+        'lineup". No clickbait. If it will not fit, rewrite it shorter in whole words, ' +
+        'never abbreviate, truncate, or drop letters from a word to fit the limit.',
     ),
   slug: z
     .string()
@@ -62,8 +64,23 @@ export const DraftSchema = z.object({
     .min(3)
     .max(5)
     .describe('Questions a reader would actually ask next. Answers are self-contained.'),
-  metaTitle: z.string().min(20).max(60).describe('Under 60 characters.'),
-  metaDescription: z.string().min(70).max(160).describe('Between 70 and 160 characters.'),
+  metaTitle: z
+    .string()
+    .min(20)
+    .max(60)
+    .describe(
+      'Under 60 characters, because Google truncates past that. Lead with the search ' +
+        'phrase: the first few words are what a reader scans in a result list.',
+    ),
+  metaDescription: z
+    .string()
+    .min(120)
+    .max(158)
+    .describe(
+      'Between 120 and 158 characters. Shorter wastes the space Google gives you; ' +
+        'longer is cut off mid-sentence. Say what the reader will learn, not what the ' +
+        'article is about.',
+    ),
   internalLinkSuggestions: z
     .array(z.string())
     .max(5)
@@ -82,6 +99,19 @@ const UNIVERSAL_STRUCTURE = `Every article on this site follows the same shape:
 1. The H1 is the target keyword phrased naturally (supplied as "title").
 2. A quick answer of 2-3 sentences that resolves the question for most readers
    (a separate field, not part of the body).
+
+Write for the search, not for the press release. Before you start, work out what
+a person types into Google when they want this story, and the three or four
+related things they type next. Those variants become H2 headings where they are
+genuine sections, phrased as the reader would ask them. For the IHG story that
+is "what changed", "new annual fees", "which card is worth it", "what existing
+cardholders should do", not "Portfolio overview" and "Market context".
+
+Do NOT list the variants, repeat the phrase to hit a count, or bend a sentence
+around a keyword. A page that answers the question properly is what ranks; a
+page stuffed with the ways of asking it is what gets filtered. If a variant has
+no real answer in the sources, leave it out rather than padding a section for it.
+
 3. The body OPENS with an introduction of two to three short paragraphs: hook the
    reader with why this matters to them, then say plainly what the article covers.
    Do not start with a dictionary definition or "in today's world".
