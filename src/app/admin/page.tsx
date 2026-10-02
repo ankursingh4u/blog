@@ -10,6 +10,7 @@ import { RunPipelineButton } from '@/components/admin/run-pipeline-button';
 import { StatusPill } from '@/components/admin/status-pill';
 import { ReviewActions } from '@/components/admin/review-actions';
 import { LastRun, type StoredRun } from '@/components/admin/last-run';
+import { AutoRefresh } from '@/components/admin/auto-refresh';
 import { readBudget, readTodayUsage } from '@/pipeline/budget';
 
 export const dynamic = 'force-dynamic';
@@ -55,6 +56,9 @@ export default async function AdminDashboard() {
 
   return (
     <div className="space-y-10">
+      {/* Decisions arrive from a Telegram group, so an open dashboard has to
+          keep up with a phone. See the component for why this is polling. */}
+      <AutoRefresh seconds={20} />
       <section>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Stat label="Total posts" value={total} icon={<FileText className="h-4 w-4" />} />

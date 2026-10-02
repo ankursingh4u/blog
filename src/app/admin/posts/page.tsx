@@ -6,6 +6,7 @@ import { prisma } from '@/lib/db';
 import { formatDate } from '@/lib/utils';
 import { buttonClass } from '@/components/ui/primitives';
 import { StatusPill } from '@/components/admin/status-pill';
+import { AutoRefresh } from '@/components/admin/auto-refresh';
 import { cn } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
@@ -67,6 +68,8 @@ export default async function AdminPostsPage({ searchParams }: { searchParams: S
 
   return (
     <div>
+      {/* Keeps a list left open in step with decisions made in Telegram. */}
+      <AutoRefresh seconds={20} />
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h2 className="text-lg font-semibold">
           {total} post{total === 1 ? '' : 's'}
