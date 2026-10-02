@@ -96,12 +96,18 @@ export const TelegramUpdate = z.object({
    */
   message: z
     .object({
-      chat: z.object({
-        id: z.union([z.number(), z.string()]),
-        type: z.string().optional(),
-        title: z.string().optional(),
-        username: z.string().optional(),
-      }),
+      // Optional even though Telegram always sends it. A message shape this
+      // app does not recognise should be ignored, not throw: the parse failure
+      // would be answered as "unrecognised update" anyway, and an exception on
+      // the shared webhook path is a worse way to arrive at the same place.
+      chat: z
+        .object({
+          id: z.union([z.number(), z.string()]),
+          type: z.string().optional(),
+          title: z.string().optional(),
+          username: z.string().optional(),
+        })
+        .optional(),
     })
     .optional(),
 });

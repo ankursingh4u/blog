@@ -39,7 +39,20 @@ export function publishBlockers(post: {
   return problems;
 }
 
-export async function applyStatus(id: string, status: PostStatus): Promise<ModerationResult> {
+export async function applyStatus(
+  id: string,
+  status: PostStatus,
+  /**
+   * Who decided, where that is known.
+   *
+   * Recorded in the quality notes rather than a column, for the same reason the
+   * rejection reason is: the deployment has no migration step, so a new field
+   * would exist in the generated client and not in the database. It belongs on
+   * the post rather than only in a chat message, because a Telegram card
+   * scrolls away and the editorial claim that a person approved this does not.
+   */
+  decidedBy?: string,
+): Promise<ModerationResult> {
   const existing = await prisma.post.findUnique({
     where: { id },
     include: { category: { include: { parent: { select: { slug: true } } } } },
@@ -89,8 +102,21 @@ export async function applyStatus(id: string, status: PostStatus): Promise<Moder
   revalidatePath('/about');
 
   if (status === 'PUBLISHED') {
+    if (decidedBy) {
+      const stamp = new Date().toISOString().slice(0, 16).replace('T', ' ');
+      await prisma.post
+        .update({
+          where: { id },
+          data: {
+            qualityNotes: [`APPROVED ${stamp} by ${decidedBy}`, existing.qualityNotes]
+              .filter(Boolean)
+              .join('\n\n'),
+          },
+        })
+        .catch(() => undefined);
+    }
     await notifyPublished([path]);
-    return { ok: true, message: 'Published.' };
+    return { ok: true, message: decidedBy ? `Published by ${decidedBy}.` : 'Published.' };
   }
   return { ok: true, message: `Status set to ${status.toLowerCase()}.` };
 }

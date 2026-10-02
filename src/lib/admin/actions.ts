@@ -414,7 +414,11 @@ export async function setPostStatus(id: string, status: string): Promise<ActionS
 
   // The rules live in moderation.ts because the Telegram webhook needs them too
   // and cannot authenticate with a session cookie.
-  const result = await applyStatus(id, parsed.data.status as PostStatus);
+  //
+  // "the admin" rather than a name: /admin is one shared password with no user
+  // identity behind it. Claiming a specific person approved this would be an
+  // invention, and the whole point of recording the decider is that it is true.
+  const result = await applyStatus(id, parsed.data.status as PostStatus, 'the admin (browser)');
   return result.ok ? OK(result.message) : FAIL(result.message);
 }
 

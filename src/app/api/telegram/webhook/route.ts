@@ -85,10 +85,25 @@ export async function POST(request: Request) {
     return ok({ ignored: 'unrecognised callback data' });
   }
 
+  /*
+   * Who pressed the button.
+   *
+   * Telegram sends the username with every callback. It mattered less when one
+   * person reviewed in a private chat; in a group, "a person approved this" is
+   * only true of somebody in particular, and /editorial-policy promises a
+   * person approves each article. An unset username falls back to the numeric
+   * id, which is still an identity, just a less readable one.
+   */
+  const decidedBy = query.from?.username
+    ? `@${query.from.username}`
+    : query.from?.id
+      ? `Telegram user ${query.from.id}`
+      : 'Telegram';
+
   const result =
     parsed.action === 'approve'
-      ? await applyStatus(parsed.postId, 'PUBLISHED')
-      : await archivePost(parsed.postId, 'rejected from Telegram');
+      ? await applyStatus(parsed.postId, 'PUBLISHED', decidedBy)
+      : await archivePost(parsed.postId, `rejected from Telegram by ${decidedBy}`);
 
   await answerCallback(query.id, result.message);
 
@@ -111,7 +126,9 @@ export async function POST(request: Request) {
     await markResolved(
       query.message.chat.id,
       query.message.message_id,
-      parsed.action === 'approve' ? '✅ Published' : '✕ Rejected',
+      parsed.action === 'approve'
+        ? `✅ Published by ${decidedBy}`
+        : `✕ Rejected by ${decidedBy}`,
     );
   }
 

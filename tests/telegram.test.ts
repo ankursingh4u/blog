@@ -76,7 +76,20 @@ describe('TelegramUpdate', () => {
   });
 
   it('accepts an update with no callback at all', () => {
-    expect(TelegramUpdate.parse({ update_id: 1, message: { text: 'hi' } })).toEqual({});
+    // A message with no chat is not something this app can use, and must be
+    // ignored rather than throw on the shared webhook path.
+    expect(TelegramUpdate.parse({ update_id: 1, message: { text: 'hi' } })).toEqual({
+      message: {},
+    });
+  });
+
+  it('reads the chat of a plain message, which is how a group id is learned', () => {
+    const parsed = TelegramUpdate.parse({
+      update_id: 2,
+      message: { text: '/start', chat: { id: -5575392309, type: 'group', title: 'Review' } },
+    });
+    expect(parsed.message?.chat?.id).toBe(-5575392309);
+    expect(parsed.message?.chat?.type).toBe('group');
   });
 
   it('rejects a callback_query missing its id', () => {
