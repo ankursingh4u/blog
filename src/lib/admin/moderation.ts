@@ -62,7 +62,10 @@ export async function applyStatus(id: string, status: PostStatus): Promise<Moder
       publishedAt:
         status === 'PUBLISHED' ? (existing.publishedAt ?? new Date()) : existing.publishedAt,
     },
-    include: { category: { include: { parent: { select: { slug: true } } } } },
+    include: {
+      category: { include: { parent: { select: { slug: true } } } },
+      author: { select: { slug: true } },
+    },
   });
 
   const path = postPath(post);
@@ -72,6 +75,18 @@ export async function applyStatus(id: string, status: PostStatus): Promise<Moder
   revalidatePath(categoryPath(post.category));
   revalidatePath(path);
   revalidatePath('/sitemap.xml');
+
+  /*
+   * The byline's own page, and the masthead.
+   *
+   * Both are built from the database and cached, and neither was refreshed when
+   * an article went live. The result was an author page still saying "has not
+   * published here yet" while their article was already on the homepage, and an
+   * /about card still showing a count of zero. The person who just got their
+   * first byline is exactly the person who goes and looks.
+   */
+  revalidatePath(`/author/${post.author.slug}`);
+  revalidatePath('/about');
 
   if (status === 'PUBLISHED') {
     await notifyPublished([path]);
