@@ -56,7 +56,17 @@ export async function applyRunningPlan(): Promise<BackfillResult> {
   const plan: Array<[Parameters<typeof setSetting>[0], string]> = [
     ['POSTS_PER_CATEGORY', '1'],
     ['DAILY_TOKEN_BUDGET', '700000'],
-    ['AI_MODEL_DRAFT', 'gpt-5.4-mini'],
+    /*
+     * Drafting dropped to nano on the owner's instruction: 0.20/1.25 per
+     * million against mini's 0.75/4.50, and quicker, which also shortens the
+     * wait after a rejection.
+     *
+     * The thing to watch is not the invoice, it is the failure rate. A draft
+     * that misses the length floor, pads, or trips the style gate was paid for
+     * and produces nothing, and a cheap model that fails one article in three
+     * costs more per published piece than a dearer one that does not.
+     */
+    ['AI_MODEL_DRAFT', 'gpt-5.4-nano'],
     ['AI_MODEL_REVIEW', 'gpt-5.4-mini'],
     ['AI_MODEL_META', 'gpt-5.4-nano'],
     // Left empty on purpose: the owner asked for tokens, not a currency
