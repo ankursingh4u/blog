@@ -10,6 +10,7 @@ import {
   type CycleEntry,
 } from '@/lib/review-queue';
 import { sendNextForReview } from '@/pipeline/review-flow';
+import { fixedBylineFor } from '@/lib/bylines';
 
 /**
  * A cycle: every vertical covered once, then handed to the review queue.
@@ -92,6 +93,16 @@ export async function runCycle(
   const counts: Record<string, number> = {};
   let budgetStopped = false;
 
+  /**
+   * Bylines already used this cycle, carried from one category run to the next.
+   *
+   * Without it each run only avoids repeating its own previous author, and a
+   * cycle of eight ended up with one name on two of them. A section with a
+   * standing byline is unaffected: that person signs their section every time,
+   * by design, and the spread applies to the rotating sections.
+   */
+  const usedAuthorIds: string[] = [];
+
   for (const category of categories) {
     if (budgetStopped) break;
 
@@ -100,13 +111,27 @@ export async function runCycle(
       skipIngest: true,
       limit: perCategory,
       excludeCategorySlugs: others,
+      usedAuthorIds: [...usedAuthorIds],
       // The queue sends these one at a time; sixteen messages at once is the
       // thing it exists to prevent.
       notify: false,
     });
 
+    const produced = result.outcomes.filter((o) => o.status === 'REVIEW' && o.postId);
+    if (produced.length > 0) {
+      const written = await prisma.post.findMany({
+        where: { id: { in: produced.map((o) => o.postId!) } },
+        select: { authorId: true, category: { select: { slug: true } } },
+      });
+      for (const post of written) {
+        // Standing bylines are meant to repeat, so they never enter the
+        // used list; excluding them would push a section off its own author.
+        if (!fixedBylineFor(post.category.slug)) usedAuthorIds.push(post.authorId);
+      }
+    }
+
     outcomes.push(...result.outcomes);
-    counts[category.slug] = result.outcomes.filter((o) => o.status === 'REVIEW').length;
+    counts[category.slug] = produced.length;
     if (result.budgetStopped) {
       budgetStopped = true;
       log.warn(`cycle: stopped at ${category.slug}, daily token cap reached.`);
@@ -131,9 +156,23 @@ export async function runCycle(
 
   const cycle = newCycle(entries);
   await writeCycle(cycle);
-  await sendNextForReview();
 
-  log.info(`cycle: ${entries.length} draft(s) queued for review across ${categories.length} sections`);
+  /*
+   * The send is the point of the cycle, so its failure is reported, not
+   * swallowed. A queue nobody is told about is a queue nobody answers.
+   */
+  const notified = await sendNextForReview();
+  if (!notified) {
+    log.error(
+      'cycle: drafts are queued but Telegram would not take the first one. ' +
+        'Check TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID; the queue is intact and /admin still works.',
+    );
+  }
+
+  log.info(
+    `cycle: ${entries.length} draft(s) queued across ${categories.length} sections` +
+      `${notified ? ', first one sent to Telegram' : ', NOT sent to Telegram'}`,
+  );
 
   return {
     startedAt,

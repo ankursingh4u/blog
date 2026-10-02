@@ -72,6 +72,14 @@ export async function runPipeline(
      * over the sending itself, one draft at a time. See `runCycle`.
      */
     notify?: boolean;
+    /**
+     * Bylines already used in the current cycle.
+     *
+     * A run on its own only avoids repeating the previous author. Across eight
+     * category runs that let one name take two drafts out of eight, which
+     * reads as a newsroom of two people rather than the masthead it has.
+     */
+    usedAuthorIds?: string[];
   } = {},
 ): Promise<PipelineRunResult> {
   const startedAt = new Date().toISOString();
@@ -169,6 +177,7 @@ export async function runPipeline(
         threshold,
         previousAuthorId,
         usedPhotoKeys,
+        usedAuthorIds: options.usedAuthorIds,
         notify: options.notify ?? true,
       });
       outcomes.push(outcome);
@@ -239,6 +248,7 @@ async function produceOne({
   threshold,
   previousAuthorId,
   usedPhotoKeys,
+  usedAuthorIds = [],
   notify = true,
 }: {
   keywordId: string;
@@ -247,6 +257,8 @@ async function produceOne({
   previousAuthorId: string | null;
   /** Mutated as photographs are taken, so later posts in the run see them. */
   usedPhotoKeys: Set<string>;
+  /** Bylines already used this cycle, so one cycle spreads across the masthead. */
+  usedAuthorIds?: string[];
   /** False when a cycle will do the sending itself, one draft at a time. */
   notify?: boolean;
 }): Promise<PipelineOutcome> {
@@ -274,7 +286,7 @@ async function produceOne({
     : await prisma.category.findFirst({ orderBy: { position: 'asc' }, include: categoryInclude });
   if (!category) throw new Error('No category available, run the seed first.');
 
-  const author = await assignAuthor(category.slug, previousAuthorId);
+  const author = await assignAuthor(category.slug, previousAuthorId, usedAuthorIds);
   if (!author) throw new Error('No authors exist, run the seed first.');
   log.info(`author: ${author.name}`);
 

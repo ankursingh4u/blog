@@ -94,6 +94,8 @@ export async function selectKeywords(
 export async function assignAuthor(
   categorySlug: string,
   previousAuthorId: string | null,
+  /** Authors already given a draft in this cycle. Skipped while any remain. */
+  usedAuthorIds: string[] = [],
 ): Promise<Author | null> {
   /**
    * A section with a standing byline goes to that person, every time.
@@ -170,8 +172,20 @@ export async function assignAuthor(
   });
 
   const avoid = new Set([previousAuthorId, lastPublished?.authorId].filter(Boolean) as string[]);
-  const preferred = pool.filter((author) => !avoid.has(author.id));
-  const finalPool = preferred.length > 0 ? preferred : pool;
+
+  /**
+   * Names already used in this cycle outrank "not the previous one".
+   *
+   * Avoiding only the immediately preceding author let one person collect two
+   * of eight drafts in a single round, which reads as a newsroom of two people.
+   * A cycle should look like the masthead it has. Exhausting the list is fine
+   * and falls through to the weaker rules rather than failing.
+   */
+  const unused = pool.filter((author) => !usedAuthorIds.includes(author.id));
+  const base = unused.length > 0 ? unused : pool;
+
+  const preferred = base.filter((author) => !avoid.has(author.id));
+  const finalPool = preferred.length > 0 ? preferred : base;
 
   return finalPool[Math.floor(Math.random() * finalPool.length)];
 }

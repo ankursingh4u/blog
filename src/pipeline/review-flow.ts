@@ -3,6 +3,7 @@ import { absoluteUrl } from '@/lib/site';
 import { log } from '@/pipeline/log';
 import { escapeMarkdown, notifyDraft, sendNotice } from '@/lib/telegram';
 import { runPipeline } from '@/pipeline/run';
+import { asInt, getSettings } from '@/lib/settings';
 import {
   clearCycle,
   currentEntry,
@@ -166,10 +167,18 @@ async function regenerateCategories(slugs: string[], previous: ReviewCycle): Pro
   const exclude = all.map((c) => c.slug).filter((slug) => !slugs.includes(slug));
 
   const produced: CycleEntry[] = [];
+  /*
+   * Replacements come from fresh keywords, so the rewrite is a different
+   * story rather than another attempt at the rejected one. The keyword behind
+   * a draft is marked USED the moment that draft is written, and selection
+   * only ever takes QUEUED ones.
+   */
+  const perCategory = asInt((await getSettings()).POSTS_PER_CATEGORY, 1);
+
   for (const slug of slugs) {
     const result = await runPipeline({
       skipIngest: true,
-      limit: 2,
+      limit: perCategory,
       excludeCategorySlugs: [...exclude, ...slugs.filter((s) => s !== slug)],
       notify: false,
     });
