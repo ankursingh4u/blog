@@ -14,7 +14,81 @@ import { decode, type CategorySlug } from '@/pipeline/parser';
 
 /** Candidates fetched per post wanted, to absorb keywords that cannot be sourced. */
 const KEYWORD_OVERSELECT = 6;
+
+/**
+ * Words a headline uses and a search box never does.
+ *
+ * Autocomplete completes what somebody is part-way through typing. Nobody types
+ * "IHG revamps its credit card lineup" or "U.S. FDA approves AbbVie drug", and
+ * both return nothing at all; strip the reporting verb and the grammar around
+ * it and "IHG credit card" returns the queries that matter. Verified against
+ * live headlines rather than assumed.
+ */
+const HEADLINE_NOISE = new Set([
+  'a', 'an', 'the', 'its', 'his', 'her', 'their', 'our', 'this', 'that', 'these',
+  'and', 'or', 'but', 'with', 'for', 'to', 'of', 'in', 'on', 'at', 'by', 'from',
+  'as', 'is', 'are', 'was', 'were', 'be', 'been', 'it', 'he', 'she', 'they',
+  'after', 'before', 'over', 'into', 'amid', 'ahead', 'says', 'said',
+  'revamps', 'launches', 'launch', 'announces', 'approves', 'unveils', 'reveals',
+  'adds', 'gets', 'brings', 'confirms', 'reports', 'plans', 'sets', 'opens',
+  'raises', 'cuts', 'hits', 'wins', 'loses', 'signs', 'names', 'calls', 'urges',
+  'warns', 'backs', 'denies', 'faces', 'seeks', 'eyes', 'weighs', 'debuts',
+  'premieres', 'returns', 'promises', 'examine', 'closes', 'rises', 'falls',
+]);
+
+/**
+ * Candidate seeds, most specific first. The first that answers is used.
+ *
+ * Order is the whole design here. A two-word stub almost always returns
+ * something, and what it returns is almost always useless: "US FDA" gives back
+ * "us fda full form" for an article about a Parkinson's drug. So the narrow
+ * seeds are tried first and the stub is the last resort, with the distinctive
+ * nouns tried in between for headlines that lead with an agency or a wire verb.
+ *
+ * Possessives are stripped rather than kept. "AbbVie's" became "AbbVies" and
+ * matched nothing at all, which is how the FDA headline fell through to the
+ * useless stub in testing.
+ */
+export function searchSeeds(phrase: string): string[] {
+  const words = phrase
+    .replace(/[:,–—|?].*$/, '')
+    .replace(/['’]s\b/g, '')
+    .split(/\s+/)
+    .map((w) => w.replace(/[^\w-]/g, ''))
+    .filter(Boolean)
+    .filter((w) => !HEADLINE_NOISE.has(w.toLowerCase()));
+
+  const longest = [...words].sort((a, b) => b.length - a.length).slice(0, 2);
+
+  const seeds = [
+    words.slice(0, 4),
+    words.slice(0, 3),
+    words.slice(-3),
+    longest,
+    words.slice(0, 2),
+  ]
+    .map((parts) => parts.join(' ').trim())
+    .filter((s) => s.length > 2);
+
+  return [...new Set(seeds)];
+}
+
+/**
+ * The first seed that autocomplete will actually answer.
+ *
+ * Fails soft to an empty list: the prompt then tells the model to work the
+ * queries out for itself, which is worse than real data but better than
+ * blocking a draft on a flaky third-party endpoint.
+ */
+async function searchesFor(phrase: string): Promise<string[]> {
+  for (const seed of searchSeeds(phrase)) {
+    const suggestions = await fetchGoogleSuggest(seed);
+    if (suggestions.length > 0) return suggestions.slice(0, 8);
+  }
+  return [];
+}
 import { ingest } from '@/pipeline/ingest';
+import { fetchGoogleSuggest } from '@/pipeline/discovery';
 import { assignAuthor, selectKeywords } from '@/pipeline/select';
 import { research } from '@/pipeline/research';
 import { generateDraft } from '@/pipeline/generate';
@@ -309,7 +383,24 @@ async function produceOne({
     );
   }
 
-  const draft = await generateDraft({ keyword, category, author, sources });
+  /**
+   * What people actually type about this subject, before anything is written.
+   *
+   * The feeds say what happened; autocomplete says what is being searched, and
+   * they are rarely the same words. "IHG revamps its credit card lineup" is a
+   * publisher's sentence that nobody queries. Handing the real phrases to the
+   * writer is what turns a story into a page that can be found.
+   *
+   * Keyless, free, and one request per article. It fails soft and returns an
+   * empty list, in which case the prompt tells the model to work the queries out
+   * for itself rather than blocking a draft on a flaky third-party endpoint.
+   */
+  const searches = await searchesFor(keyword.phrase);
+  if (searches.length > 0) {
+    log.info(`searches: ${searches.slice(0, 5).join(' | ')}`);
+  }
+
+  const draft = await generateDraft({ keyword, category, author, sources, searches });
   log.info(`draft: "${draft.title}" (${draft.body.length} chars)`);
 
   const verified = [keyword.kbNumber, keyword.buildNumber, keyword.errorCode].filter(

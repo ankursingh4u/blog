@@ -100,12 +100,17 @@ const UNIVERSAL_STRUCTURE = `Every article on this site follows the same shape:
 2. A quick answer of 2-3 sentences that resolves the question for most readers
    (a separate field, not part of the body).
 
-Write for the search, not for the press release. Before you start, work out what
-a person types into Google when they want this story, and the three or four
-related things they type next. Those variants become H2 headings where they are
-genuine sections, phrased as the reader would ask them. For the IHG story that
-is "what changed", "new annual fees", "which card is worth it", "what existing
-cardholders should do", not "Portfolio overview" and "Market context".
+Write for the search, not for the press release. When real autocomplete queries
+are supplied below under SEARCHES, they are what people genuinely type about
+this subject, taken from Google's own suggestions rather than guessed. Build the
+H1 around the closest one and let the others become H2 sections wherever the
+sources actually answer them. Where none are supplied, work out the likely
+queries yourself.
+
+Those variants become H2 headings where they are genuine sections, phrased as
+the reader would ask them. For the IHG story that is "what changed", "new annual
+fees", "which card is worth it", "what existing cardholders should do", not
+"Portfolio overview" and "Market context".
 
 Do NOT list the variants, repeat the phrase to hit a count, or bend a sentence
 around a keyword. A page that answers the question properly is what ranks; a
@@ -223,6 +228,16 @@ interface GenerateDraftInput {
   category: Category;
   author: Author;
   sources: ResearchSource[];
+  /**
+   * Real autocomplete queries for this subject.
+   *
+   * The demand half of the article. A news feed says what happened; these say
+   * what people are typing about it, which is not the same sentence and is
+   * usually not even the same words. The feed supplies the facts, these supply
+   * the framing, and pairing them is the only way a long-tail query gets an
+   * article that is still sourced.
+   */
+  searches?: string[];
 }
 
 export async function generateDraft({
@@ -230,6 +245,7 @@ export async function generateDraft({
   category,
   author,
   sources,
+  searches = [],
 }: GenerateDraftInput): Promise<Draft> {
   const verified = [keyword.kbNumber, keyword.buildNumber, keyword.errorCode].filter(
     (value): value is string => Boolean(value),
@@ -263,6 +279,12 @@ export async function generateDraft({
     verified.length > 0
       ? `VERIFIED IDENTIFIERS (these are confirmed real and may be used): ${verified.join(', ')}`
       : 'VERIFIED IDENTIFIERS: none, do not name any KB, build, or error code.',
+    '',
+    searches.length > 0
+      ? `SEARCHES people actually type about this (Google autocomplete, in order):\n${searches
+          .map((s) => `- ${s}`)
+          .join('\n')}`
+      : 'SEARCHES: none returned, work out the likely queries yourself.',
     '',
     'SOURCES:',
     sourceBlock || '(no sources were reachable, do not invent specifics; write only what is uncontroversially true, and name no identifiers, figures or dates)',
