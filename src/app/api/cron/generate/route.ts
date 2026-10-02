@@ -5,6 +5,7 @@ import { runCycle } from '@/pipeline/cycle';
 import {
   applyRunningPlan,
   pingAllPublished,
+  reassignDraftBylines,
   refreshSeoFields,
   regradeAllFailed,
   seedHouseBylines,
@@ -156,6 +157,7 @@ const BACKFILLS = {
   'refresh-seo': refreshSeoFields,
   'seed-authors': seedHouseBylines,
   'apply-plan': applyRunningPlan,
+  'fix-bylines': reassignDraftBylines,
 } as const;
 
 type BackfillName = keyof typeof BACKFILLS;

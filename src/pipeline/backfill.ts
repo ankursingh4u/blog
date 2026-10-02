@@ -3,7 +3,8 @@ import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { generateJson } from '@/lib/ai';
 import { getSetting, setSetting } from '@/lib/settings';
-import { HOUSE_BYLINES } from '@/lib/bylines';
+import { HOUSE_BYLINES, fixedBylineFor } from '@/lib/bylines';
+import { assignAuthor } from '@/pipeline/select';
 import { parseJson, FaqArray, SourceRefArray, StringArray } from '@/lib/json';
 import { notifyPublished } from '@/lib/indexing';
 import { postPath } from '@/lib/urls';
@@ -134,6 +135,58 @@ export async function seedHouseBylines(): Promise<BackfillResult> {
 
   log.info(`backfill: ${changed} house byline(s) written`);
   return { examined: HOUSE_BYLINES.length, changed, skipped };
+}
+
+/**
+ * Re-byline drafts that the pin sent to the wrong person.
+ *
+ * Only drafts. A published article keeps the name it went out under, for the
+ * same reason the back catalogue was never re-attributed: a byline is a claim
+ * about who stands behind the work, and quietly swapping one after publication
+ * is not a correction, it is a rewrite of the record.
+ *
+ * A draft is left alone unless its current byline is one the rules could not
+ * have produced: either the section has a standing byline and this is not it,
+ * or the author is not eligible for the section at all. Anything the rotation
+ * could legitimately have chosen stays as it is.
+ */
+export async function reassignDraftBylines(): Promise<BackfillResult> {
+  const drafts = await prisma.post.findMany({
+    where: { status: { in: ['REVIEW', 'DRAFT'] } },
+    include: { category: true, author: true },
+    orderBy: { createdAt: 'asc' },
+  });
+
+  const skipped: string[] = [];
+  let changed = 0;
+  let previousAuthorId: string | null = null;
+
+  for (const post of drafts) {
+    const slug = post.category.slug;
+    const standing = fixedBylineFor(slug);
+    const eligible = parseJson(post.author.categoryFocus, StringArray, []).includes(slug);
+
+    const wrong = standing ? post.author.slug !== standing : !eligible;
+    if (!wrong) {
+      skipped.push(`${post.slug}: ${post.author.name} is a valid byline for ${slug}`);
+      previousAuthorId = post.authorId;
+      continue;
+    }
+
+    const author = await assignAuthor(slug, previousAuthorId);
+    if (!author || author.id === post.authorId) {
+      skipped.push(`${post.slug}: no better byline available for ${slug}`);
+      continue;
+    }
+
+    await prisma.post.update({ where: { id: post.id }, data: { authorId: author.id } });
+    skipped.push(`${post.slug}: ${post.author.name} -> ${author.name} (${slug})`);
+    previousAuthorId = author.id;
+    changed += 1;
+  }
+
+  log.info(`backfill: re-bylined ${changed} draft(s)`);
+  return { examined: drafts.length, changed, skipped };
 }
 
 /**
