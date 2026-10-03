@@ -167,6 +167,16 @@ export const SETTING_DEFAULTS = {
    * instead of wedging the schedule permanently.
    */
   PREPARING_SINCE: '',
+  /**
+   * The draft waiting for a photograph the reviewer is about to send, if any.
+   *
+   * Telegram gives a photo message no way to say which article it is for, so
+   * pressing "Send my own" records the intent here and the next picture in the
+   * chat is taken as the answer. Carries a timestamp and expires: a photo posted
+   * hours later is a conversation, not a cover, and must not silently replace
+   * one. See pipeline/cover-upload.ts.
+   */
+  AWAITING_PHOTO: '',
   /** Chats that have messaged the bot, so a group id can be looked up. */
   TELEGRAM_SEEN_CHATS: '',
 } as const;

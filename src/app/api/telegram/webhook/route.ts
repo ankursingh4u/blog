@@ -1,5 +1,11 @@
 import { applyStatus, archivePost } from '@/lib/admin/moderation';
-import { decidedOutcome, recordReviewDecision, swapCoverPhoto } from '@/pipeline/review-flow';
+import {
+  decidedOutcome,
+  recordReviewDecision,
+  sendDraftCard,
+  swapCoverPhoto,
+} from '@/pipeline/review-flow';
+import { applyUploadedCover, isAwaitingCover, requestCoverUpload } from '@/pipeline/cover-upload';
 import { rememberChat } from '@/pipeline/backfill';
 import {
   TelegramUpdate,
@@ -61,6 +67,61 @@ export async function POST(request: Request) {
     update = TelegramUpdate.parse(await request.json());
   } catch {
     return ok({ ignored: 'unrecognised update shape' });
+  }
+
+  /*
+   * A picture, when a draft is waiting for one.
+   *
+   * This has to run before the chat-recording branch below, which answers every
+   * message and returns. The same three checks still apply: the secret header
+   * got us here, the chat id is verified against TELEGRAM_CHAT_ID, and nothing
+   * happens at all unless a "Send my own" press is outstanding, so an ordinary
+   * photo in the group is still just a photo.
+   */
+  const message = update.message;
+  if (message && (message.photo?.length || message.document)) {
+    if (String(message.chat?.id ?? '') !== config.chatId) {
+      return ok({ ignored: 'photo from an unexpected chat' });
+    }
+    if (!(await isAwaitingCover())) {
+      return ok({ ignored: 'no draft is awaiting a cover' });
+    }
+
+    /*
+     * A document is preferred when it is an image: "send as file" is how you
+     * avoid Telegram's compression, and somebody supplying a specific cover is
+     * exactly the person who would do that. Telegram sends both fields for an
+     * uncompressed image, so the order matters.
+     */
+    const asDocument = message.document?.mime_type?.startsWith('image/')
+      ? message.document
+      : null;
+    // Last element only: the earlier ones are thumbnails.
+    const largest = message.photo?.[message.photo.length - 1];
+
+    if (!asDocument && !largest) {
+      await sendNotice(
+        escapeMarkdown('That file is not an image. Send a JPEG, PNG or WebP.'),
+      );
+      return ok({ ignored: 'attachment was not an image' });
+    }
+
+    const applied = await applyUploadedCover(
+      asDocument
+        ? { fileId: asDocument.file_id, mimeType: asDocument.mime_type }
+        : { fileId: largest!.file_id, width: largest!.width },
+    );
+
+    await sendNotice(escapeMarkdown(applied.message));
+    /*
+     * Re-send the card rather than editing the old one: the reviewer needs to
+     * see the picture they just chose next to the headline, and the buttons
+     * have to come back so the draft can still be decided. Approval is
+     * deliberately NOT implied by uploading a photo.
+     */
+    if (applied.ok && applied.postId) await sendDraftCard(applied.postId);
+
+    return ok({ action: 'cover-upload', ok: applied.ok, postId: applied.postId });
   }
 
   /*
@@ -144,6 +205,20 @@ export async function POST(request: Request) {
     }
 
     return ok({ action: 'image', postId: parsed.postId, swapped: swap.ok });
+  }
+
+  /*
+   * "Send my own" only arms the upload; the picture arrives as a separate
+   * message. Like the swap above it is not a decision, so it runs before the
+   * already-decided guard and leaves the queue untouched.
+   */
+  if (parsed.action === 'upload') {
+    const armed = await requestCoverUpload(parsed.postId);
+    await answerCallback(query.id, armed.message);
+    // Also in the chat: a callback toast is brief and easy to miss, and the
+    // reviewer needs to know the bot is waiting for them.
+    if (armed.ok) await sendNotice(escapeMarkdown(armed.message));
+    return ok({ action: 'upload', postId: parsed.postId, armed: armed.ok });
   }
 
   /*

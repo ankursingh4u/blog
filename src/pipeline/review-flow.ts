@@ -56,13 +56,34 @@ export async function sendNextForReview(): Promise<boolean> {
     return sendNextForReview();
   }
 
-  const position = cycle.cursor + 1;
+  return sendDraftCard(post.id, `${cycle.cursor + 1}/${cycle.entries.length}`);
+}
+
+/**
+ * Posts one draft's card, buttons and all.
+ *
+ * Shared with the queue because a card is also re-sent outside it: replacing a
+ * cover from the chat has to show the new picture, and editing the original
+ * message in place does not work when the card was the branded fallback rather
+ * than a photo. Rebuilding one definition of the card keeps the two from
+ * drifting into different button sets.
+ *
+ * `position` is the "3/14" suffix, omitted when the draft is not being shown as
+ * part of a queue.
+ */
+export async function sendDraftCard(postId: string, position?: string): Promise<boolean> {
+  const post = await prisma.post.findUnique({
+    where: { id: postId },
+    include: { author: { select: { name: true } }, category: { select: { name: true } } },
+  });
+  if (!post) return false;
+
   const words = post.body.trim().split(/\s+/).filter(Boolean).length;
 
   return notifyDraft({
     postId: post.id,
     title: post.title,
-    category: `${post.category.name} · ${position}/${cycle.entries.length}`,
+    category: position ? `${post.category.name} · ${position}` : post.category.name,
     author: post.author.name,
     wordCount: words,
     score: post.qualityScore,

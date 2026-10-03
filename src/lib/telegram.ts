@@ -44,7 +44,7 @@ export function telegramConfig(): TelegramConfig | null {
  * webhook checks the chat id as well as the secret, and why this parser refuses
  * anything it does not recognise instead of coercing.
  */
-export type CallbackAction = 'approve' | 'reject' | 'image';
+export type CallbackAction = 'approve' | 'reject' | 'image' | 'upload';
 
 export interface ParsedCallback {
   action: CallbackAction;
@@ -53,7 +53,7 @@ export interface ParsedCallback {
 
 export function parseCallbackData(data: string | undefined): ParsedCallback | null {
   if (!data) return null;
-  const match = /^(approve|reject|image):([A-Za-z0-9_-]{1,64})$/.exec(data.trim());
+  const match = /^(approve|reject|image|upload):([A-Za-z0-9_-]{1,64})$/.exec(data.trim());
   if (!match) return null;
   return { action: match[1] as CallbackAction, postId: match[2] };
 }
@@ -69,9 +69,13 @@ export function callbackData(action: CallbackAction, postId: string): string {
  * and a keyboard that drifted between the two would leave a post reviewable
  * from one render and not the other.
  *
- * "Change image" sits on its own row: it is the one button that does not end
- * the review, and putting it beside Approve invites a mis-tap that publishes
+ * The image buttons sit on their own row: they are the ones that do not end
+ * the review, and putting them beside Approve invites a mis-tap that publishes
  * an article somebody was only reconsidering the photograph for.
+ *
+ * "Change image" picks the next stock photograph automatically. "Send my own"
+ * waits for the reviewer to post a picture into the chat, which is the only way
+ * to get a specific image onto a draft without opening /admin on a desktop.
  */
 export function draftKeyboard(postId: string) {
   return {
@@ -80,7 +84,10 @@ export function draftKeyboard(postId: string) {
         { text: '✅ Approve', callback_data: callbackData('approve', postId) },
         { text: '✕ Reject', callback_data: callbackData('reject', postId) },
       ],
-      [{ text: '🖼 Change image', callback_data: callbackData('image', postId) }],
+      [
+        { text: '🖼 Change image', callback_data: callbackData('image', postId) },
+        { text: '📤 Send my own', callback_data: callbackData('upload', postId) },
+      ],
     ],
   };
 }
@@ -131,6 +138,40 @@ export const TelegramUpdate = z.object({
           username: z.string().optional(),
         })
         .optional(),
+      from: z.object({ id: z.number(), username: z.string().optional() }).optional(),
+      /**
+       * A compressed photo, in Telegram's ascending size order.
+       *
+       * Only the last entry is wanted: the earlier ones are thumbnails, and a
+       * cover has to be at least 1200px wide for Discover. Telegram re-encodes
+       * these as JPEG whatever was sent.
+       */
+      photo: z
+        .array(
+          z.object({
+            file_id: z.string(),
+            file_size: z.number().optional(),
+            width: z.number().optional(),
+            height: z.number().optional(),
+          }),
+        )
+        .optional(),
+      /**
+       * An image sent as a file rather than a photo.
+       *
+       * Worth accepting because "send as file" is how you avoid Telegram's
+       * compression, and somebody supplying a specific cover is exactly the
+       * person who would. The mime type is checked before anything is stored.
+       */
+      document: z
+        .object({
+          file_id: z.string(),
+          file_size: z.number().optional(),
+          mime_type: z.string().optional(),
+          file_name: z.string().optional(),
+        })
+        .optional(),
+      caption: z.string().optional(),
     })
     .optional(),
 });
@@ -293,4 +334,79 @@ export async function markResolved(
     message_id: messageId,
     reply_markup: { inline_keyboard: [[{ text: outcome, callback_data: 'done' }]] },
   });
+}
+
+/* -------------------------------------------------------------- file download */
+
+/** Hard ceiling on what will be pulled from Telegram, before storage's own check. */
+export const MAX_TELEGRAM_FILE_BYTES = 8 * 1024 * 1024;
+
+export interface FetchedFile {
+  body: Buffer;
+  contentType: string;
+}
+
+/**
+ * Downloads a file the reviewer sent, by `file_id`.
+ *
+ * Two hops, which is Telegram's design: `getFile` exchanges the id for a
+ * temporary path, then the file comes from a different host. The bot token sits
+ * in that second URL, so the response is never surfaced to a caller and the URL
+ * is never logged.
+ *
+ * The declared size is checked before the body is read, so an oversized file
+ * costs one small request rather than a download. `content-type` from the file
+ * host is not trusted as the final word: `storage.put` maps it against its own
+ * allow-list and rejects anything else.
+ */
+export async function fetchTelegramFile(fileId: string): Promise<FetchedFile | null> {
+  const config = telegramConfig();
+  if (!config) return null;
+
+  try {
+    const lookup = await fetch(`${API}/bot${config.token}/getFile`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ file_id: fileId }),
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!lookup.ok) return null;
+
+    const parsed = z
+      .object({
+        ok: z.literal(true),
+        result: z.object({
+          file_path: z.string().min(1),
+          file_size: z.number().optional(),
+        }),
+      })
+      .safeParse(await lookup.json());
+    if (!parsed.success) return null;
+
+    const { file_path: filePath, file_size: declared } = parsed.data.result;
+    if (declared !== undefined && declared > MAX_TELEGRAM_FILE_BYTES) return null;
+
+    /*
+     * `file_path` comes from Telegram, but it is interpolated into a URL, so it
+     * is still checked: a path containing ".." or a scheme would point the
+     * download somewhere else entirely.
+     */
+    if (filePath.includes('..') || /^[a-z][a-z0-9+.-]*:/i.test(filePath)) return null;
+
+    const download = await fetch(
+      `https://api.telegram.org/file/bot${config.token}/${filePath}`,
+      { signal: AbortSignal.timeout(30_000) },
+    );
+    if (!download.ok) return null;
+
+    const body = Buffer.from(await download.arrayBuffer());
+    if (body.byteLength === 0 || body.byteLength > MAX_TELEGRAM_FILE_BYTES) return null;
+
+    return {
+      body,
+      contentType: (download.headers.get('content-type') ?? 'image/jpeg').split(';')[0].trim(),
+    };
+  } catch {
+    return null;
+  }
 }

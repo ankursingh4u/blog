@@ -175,6 +175,49 @@ from `/admin/settings` without a deploy: `POSTS_PER_DAY`, `AUTO_PUBLISH`,
    `/api/og` and stores the bytes.
 9. **Publish decision** — see below.
 
+### Evergreen, not bulletins
+
+Every article is written to teach, not to report. The event in the sources is
+the *occasion* for the article, not its subject: a result, a launch or a ruling
+written as news is read on the day and never found again, because within a week
+nobody searches for it. The same facts written as an explanation of how the
+thing works answer a question people type for years.
+
+That is the SEO argument, not a separate one. A page whose only value was its
+recency has no reason to be returned a month later, and a site made of those has
+to re-earn all of its traffic every day.
+
+`EVERGREEN_STRUCTURE` in `generate.ts` carries this, and it applies to all eight
+verticals. It was the `money` block until 2026-10-03, when the owner asked for it
+everywhere. It changes the centre of gravity, **not** the volume or the length:
+same batch size, same 1500–2000 word band. It also does not relax the sourcing
+rules — the sources are still the only permitted facts, and `padding.ts` still
+fails a draft that circles.
+
+### Review from Telegram
+
+The draft card carries four buttons:
+
+| Button | Effect |
+| --- | --- |
+| ✅ Approve | publishes immediately, pings IndexNow, advances the queue |
+| ✕ Reject | archives with the reason, advances the queue |
+| 🖼 Change image | swaps in the next unused stock photograph, card stays open |
+| 📤 Send my own | waits 15 minutes for you to post a picture into the chat |
+
+"Send my own" exists because the stock search is a keyword match, not a
+judgement, and sometimes none of the results is the picture. A Telegram photo
+message carries no reference to an article, so the button records the intent
+(`AWAITING_PHOTO`) and the next picture in the chat is read as the answer. It
+expires deliberately: a photo posted an hour later is a conversation, not a
+cover, and must not silently replace one. Send it as a *file* to skip Telegram's
+compression; a cover under 1200px wide is accepted but flagged, since Discover
+needs 1200.
+
+Uploading a cover never approves anything. Replacing a picture and deciding an
+article are different acts, which is also why the image buttons sit on their own
+row — a mis-tap beside Approve publishes work nobody decided on.
+
 ### The schedule: prepare, then deliver
 
 Writing a cycle takes ten to fifteen minutes (11 min measured on 3 Oct 2026). The Coolify scheduled task that

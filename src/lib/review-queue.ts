@@ -4,9 +4,10 @@ import { setSetting } from '@/lib/settings';
 /**
  * The one-draft-at-a-time review queue behind the Telegram buttons.
  *
- * A cycle produces sixteen drafts at once. Sending sixteen messages would make
- * the chat the thing you have to manage, so the cycle hands them over here and
- * exactly one is in front of you at a time: decide, and the next arrives.
+ * A cycle produces a whole batch at once, fourteen under the current plan.
+ * Sending fourteen messages would make the chat the thing you have to manage,
+ * so the cycle hands them over here and exactly one is in front of you at a
+ * time: decide, and the next arrives.
  *
  * State lives in a Setting row rather than new columns because the deployment
  * runs `prisma generate && next build` with no migration step, a new table

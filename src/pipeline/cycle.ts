@@ -19,9 +19,9 @@ import { fixedBylineFor } from '@/lib/bylines';
  *
  * Runs on a schedule (four times a day by default) and asks each top-level
  * category for POSTS_PER_CATEGORY drafts. The alternative, one run told to
- * produce sixteen, would let the sections that source most easily take the
- * whole quota, which is exactly how this site ended up as a Windows blog with
- * seven empty verticals.
+ * produce the whole batch, would let the sections that source most easily take
+ * the whole quota, which is exactly how this site ended up as a Windows blog
+ * with seven empty verticals.
  *
  * Each category is a separate `runPipeline` call with every other category
  * excluded. That reuses the selection, budget and author rules as they are
@@ -58,7 +58,7 @@ export async function runCycle(
      * Prepare only: write the batch, park it, send nothing.
      *
      * This is what the schedule asks for. The drafts wait in `READY_BATCH` and
-     * the following tick opens them, which is what lets a forty-minute
+     * the following tick opens them, which is what lets a ten to fifteen minute
      * generation sit inside a six-hour window instead of inside the five-minute
      * request that triggered it. See pipeline/release.ts.
      */
@@ -185,7 +185,7 @@ export async function runCycle(
       limit: wanted,
       excludeCategorySlugs: others,
       usedAuthorIds: [...usedAuthorIds],
-      // The queue sends these one at a time; sixteen messages at once is the
+      // The queue sends these one at a time; a batch of messages at once is the
       // thing it exists to prevent.
       notify: false,
     });

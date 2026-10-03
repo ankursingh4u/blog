@@ -151,28 +151,61 @@ Formatting rules for the body, these exist so the page can be skimmed:
   it worked.`;
 
 /**
- * Money, written to teach rather than to report.
+ * Written to teach, not to report. Applies to every vertical.
  *
- * A rate decision reported as news is read once on the day and never found
- * again. The same facts written as an explanation of what a rate decision does
- * to a loan, a deposit and a monthly budget answers a question people type for
- * years. The news event is the occasion for the article, not its subject.
+ * This was the `money` block until 2026-10-03, when the owner asked for it
+ * everywhere: "not only as news, it must be like an educational article, later
+ * demand should remain".
+ *
+ * The reasoning generalises past finance. A result, a launch, a transfer or a
+ * ruling reported as news is read on the day and never found again, because
+ * within a week nobody searches for it. The same facts written as an
+ * explanation of how the thing works answer a question people type for years.
+ * The news event is the occasion for the article, not its subject.
+ *
+ * This is also the SEO argument, not a separate one. An article whose only
+ * value was its recency has no reason to be returned a month later, and a site
+ * made of those has to re-earn all of its traffic every single day.
+ *
+ * It explicitly does NOT mean writing less, or writing fewer articles. Same
+ * count, same length band, different centre of gravity.
  */
-const MONEY_STRUCTURE = `This is personal finance and business, and the reader
-came with a question, not for a bulletin. Write it as teaching:
+const EVERGREEN_STRUCTURE = `Write the lasting article, not the bulletin.
 
-- Explain the mechanism, not just the event. If a rate moved, the article is
-  about what that does to an EMI, a deposit, a mortgage and a monthly budget.
+The event in the sources is the OCCASION for this article, not its subject. A
+reader who finds this page in six months must still get something out of it.
+Assume most of your readers will arrive long after the news has gone cold, from
+a search that contains no dates and no names of the moment.
+
+- Explain the mechanism, not only the event. What actually changed, how the
+  thing works, why it works that way, and what follows from it.
+- Give the background a newcomer needs to understand the subject at all. Someone
+  who has never heard of this competition, product, scheme or rule should be able
+  to follow the article from the top without looking anything up.
 - Define every term the first time it appears, in one clause, without
-  condescending. Assume an intelligent reader who does not work in finance.
+  condescending. Assume an intelligent reader who is not a specialist.
+- Say plainly who this affects and who it does not. Most readers are in neither
+  the best nor the worst case.
+- Prefer framing that stays true. Write "how X works" and "what X means for Y"
+  sections over "what happened on Tuesday". Avoid "this week", "yesterday",
+  "currently" and "recently" as anchors: name the date instead where a source
+  gives one, so the sentence is still correct when read later.
+- Where the subject is genuinely a one-off moment, write the durable part: the
+  rules, the format, the history, the thing that will be asked again next time.
+- End with what the reader can actually do or understand, and be honest when the
+  answer is "nothing, and here is why that is fine".
+
+None of this licenses padding or invention. The sources are still the only
+permitted facts, and the repetition check still fails a draft that circles.
+Teaching means covering more ground, never covering the same ground twice.`;
+
+/** The extras that are specific to money, on top of the evergreen rules above. */
+const MONEY_STRUCTURE = `Additionally, this is personal finance and business:
+
 - Give a worked example with real arithmetic wherever a number is involved: on
   a 30 lakh loan over 20 years, this change means X per month. Use figures from
   the sources; where the sources give none, use a clearly labelled illustration
   and say it is one.
-- Say plainly who this affects and who it does not. Most readers are in neither
-  the best nor the worst case.
-- End with what the reader can actually do, and be honest when the answer is
-  "nothing, and here is why that is fine".
 - Never give individual investment advice, never recommend a specific stock or
   product, and never imply a guaranteed return. Explain the options and the
   trade-offs and let the reader decide.`;
@@ -290,6 +323,8 @@ export async function generateDraft({
     `Category: ${category.name}, ${category.description}`,
     '',
     UNIVERSAL_STRUCTURE,
+    '',
+    EVERGREEN_STRUCTURE,
     '',
     PROSE_RULES,
     ...(isTroubleshooting ? ['', TROUBLESHOOTING_STRUCTURE] : []),

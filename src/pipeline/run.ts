@@ -149,9 +149,9 @@ export async function runPipeline(
      * Push each draft to Telegram as it is produced. True for a one-off run,
      * where the draft is the only thing to look at.
      *
-     * A cycle sets this false: it produces sixteen drafts and sending sixteen
-     * messages at once is the thing the review queue exists to avoid. It takes
-     * over the sending itself, one draft at a time. See `runCycle`.
+     * A cycle sets this false: it produces a whole batch of drafts, and sending
+     * fourteen messages at once is the thing the review queue exists to avoid.
+     * It takes over the sending itself, one draft at a time. See `runCycle`.
      */
     notify?: boolean;
     /**
