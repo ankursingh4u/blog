@@ -175,6 +175,40 @@ from `/admin/settings` without a deploy: `POSTS_PER_DAY`, `AUTO_PUBLISH`,
    `/api/og` and stores the bytes.
 9. **Publish decision** — see below.
 
+### The schedule: prepare, then deliver
+
+Writing a cycle takes about forty minutes. The Coolify scheduled task that
+triggers it is killed after five. Every scheduled run between 1 and 3 October
+2026 was therefore marked failed, and whether any articles actually appeared came
+down to whether the abandoned request happened to outlive the process that made
+it — twice it did not, and two cycles produced nothing at all.
+
+So generation and delivery sit on separate clocks (`src/pipeline/release.ts`):
+
+```
+t+0h     release the batch prepared last tick  ->  Telegram, instant
+         start preparing the next one          ->  detached, ~40 min
+t+0–6h   cooling: generation finishes, drafts park in READY_BATCH
+t+6h     release that batch, start the next
+```
+
+The scheduled call does only the cheap half and returns `202` in about a second,
+so the task timeout is no longer load-bearing. Approval is unchanged and still
+immediate: a tap in Telegram publishes the article there and then.
+
+Two invariants worth not breaking:
+
+- **A release appends to an unfinished queue, it never replaces it.** A tick
+  arrives every six hours whether or not the last batch was reviewed; overwriting
+  would bin drafts that were paid for, written and never seen.
+- **`PREPARING_SINCE` is a timestamp, not a flag.** This work gets killed from
+  time to time, and a flag set by a process that then dies is a flag nobody
+  clears — the schedule would stop forever with no error anywhere. Anything older
+  than 90 minutes is treated as lost.
+
+`?mode=cycle-now` still runs the rounds inline for doing it by hand. Nothing
+should schedule it.
+
 ### The publish rule
 
 With `AUTO_PUBLISH=false` (the default) **nothing** goes live without a human
@@ -306,10 +340,9 @@ Known gaps worth naming:
 - **Generation costs roughly 16k tokens per article** (~7.2k in, ~8.8k out), and
   about 85% of the spend is output, most of it reasoning. The 34 articles now on
   the site were produced this way. Budget before running a large batch.
-- **The scheduled run does not generate anything.** `/api/cron/generate` ingests
-  only unless called with `?mode=generate`, deliberately: discovery is free,
-  writing is not, and an unattended job that spends money cannot be supervised.
-  Articles are written on demand from `/admin`.
+- **The bare scheduled route does not generate anything.** `/api/cron/generate`
+  ingests only unless given a mode, deliberately: discovery is free, writing is
+  not, and an unattended job that spends money cannot be supervised.
 - **`revalidatePath` is skipped in CLI runs.** `npm run generate` has no Next.js
   request context, so pages refresh on their own revalidate interval instead of
   immediately. Runs triggered from `/admin` revalidate properly.
@@ -326,7 +359,7 @@ isolated from everything else on that server.
 | Application `fixdesk-web` | Nixpacks build from the public GitHub repo, branch `main`, port 3000 |
 | Database `fixdesk-postgres` | Postgres, **not** publicly reachable. The app talks to it over the internal Docker network |
 | Volume `uploads` → `/app/public/uploads` | A *named* volume, so Docker seeds it from the image on first mount and admin uploads survive redeploys |
-| Scheduled task | `0 9 * * *`, calls `/api/cron/generate` over loopback inside the container |
+| Scheduled task `cycle-every-6h` | `0 */6 * * *`, calls `/api/cron/generate?mode=cycle` over loopback inside the container |
 
 Deploys are triggered by `POST /api/v1/deploy?uuid=<app>` against the Coolify API.
 

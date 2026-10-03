@@ -2,6 +2,7 @@ import { prisma } from '@/lib/db';
 import { ingest } from '@/pipeline/ingest';
 import { runPipeline } from '@/pipeline/run';
 import { runCycle } from '@/pipeline/cycle';
+import { tick } from '@/pipeline/release';
 import {
   applyRunningPlan,
   clearReviewQueue,
@@ -26,7 +27,14 @@ import {
  *
  * Generation is still reachable, but only when asked for by name:
  *
- *   GET  /api/cron/generate            -> ingest only   (what the schedule calls)
+ *   GET  /api/cron/generate            -> ingest only
+ *   GET  /api/cron/generate?mode=cycle -> a scheduled tick  (what the schedule
+ *                                         calls): deliver the batch that
+ *                                         cooled, start the next. Returns 202
+ *                                         in about a second.
+ *   GET  /api/cron/generate?mode=cycle-now         -> the rounds, inline, for
+ *                                                     running by hand. Takes
+ *                                                     ~40 min. Never schedule it.
  *   GET  /api/cron/generate?mode=generate&limit=2  -> ingest + write up to 2
  *   ...&only=entertainment,travel                  -> aim those articles at
  *                                                     named verticals only
@@ -123,12 +131,38 @@ async function ingestAndGenerate(limit: number, only: string | null): Promise<Re
 }
 
 /**
- * A cycle: every vertical covered, then handed to the one-at-a-time queue.
+ * A scheduled tick: deliver the batch that cooled, start writing the next.
  *
- * This is the scheduled mode. `?mode=generate` stays what it was, a small,
- * aimed run that pushes each draft straight to Telegram, because "fill this
- * one thin section now" and "do the rounds" are different jobs.
+ * This is the scheduled mode, and it returns in about a second. It used to
+ * generate inline, which took forty minutes inside a job the scheduler kills
+ * after five; every run between 1 and 3 October 2026 was marked failed, and
+ * whether articles appeared depended on whether the abandoned request outlived
+ * the process that made it. Delivery and generation are now on separate clocks.
+ * See pipeline/release.ts.
+ *
+ * `?mode=generate` stays what it was, a small, aimed run that pushes each draft
+ * straight to Telegram, because "fill this one thin section now" and "do the
+ * rounds" are different jobs.
+ *
+ * `?mode=cycle-now` is the old inline behaviour, kept for running the rounds by
+ * hand and watching the result. Nothing should schedule it.
  */
+async function runTick(): Promise<Response> {
+  const result = await tick();
+  return Response.json(
+    {
+      ok: true,
+      mode: 'cycle',
+      released: result.released,
+      delivery: result.delivery,
+      preparing: result.preparing,
+      note: result.note,
+    },
+    // Accepted, not completed: the next batch is still being written.
+    { status: 202 },
+  );
+}
+
 async function runFullCycle(url: URL): Promise<Response> {
   const asked = Number.parseInt(url.searchParams.get('perCategory') ?? '', 10);
   const result = await runCycle(
@@ -136,7 +170,7 @@ async function runFullCycle(url: URL): Promise<Response> {
   );
   return Response.json({
     ok: true,
-    mode: 'cycle',
+    mode: 'cycle-now',
     ingested: result.ingested,
     produced: result.produced,
     perCategory: result.perCategory,
@@ -180,7 +214,8 @@ async function trigger(request: Request): Promise<Response> {
       const result = await BACKFILLS[mode]();
       return Response.json({ ok: true, mode, ...result });
     }
-    if (mode === 'cycle') return await runFullCycle(url);
+    if (mode === 'cycle') return await runTick();
+    if (mode === 'cycle-now') return await runFullCycle(url);
     if (!generate) return await ingestOnly();
 
     const asked = Number.parseInt(url.searchParams.get('limit') ?? '', 10);

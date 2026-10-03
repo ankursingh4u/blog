@@ -10,6 +10,7 @@ import { ReviewActions } from '@/components/admin/review-actions';
 import { LastRun, type StoredRun } from '@/components/admin/last-run';
 import { AutoRefresh } from '@/components/admin/auto-refresh';
 import { readBudget, readTodayUsage } from '@/pipeline/budget';
+import { readReady } from '@/lib/review-queue';
 
 export const dynamic = 'force-dynamic';
 
@@ -67,6 +68,15 @@ export default async function AdminDashboard() {
     lastRun = null;
   }
 
+  // Preparing and delivering run on separate clocks, so between ticks the only
+  // evidence the pipeline is alive is a parked batch or a held lock.
+  const ready = await readReady();
+  const schedule = {
+    parked: ready?.entries.length ?? 0,
+    preparedAt: ready?.preparedAt ?? null,
+    preparingSince: settings.PREPARING_SINCE || null,
+  };
+
   return (
     <div className="space-y-10">
       {/* Decisions arrive from a Telegram group, so an open dashboard has to
@@ -104,7 +114,13 @@ export default async function AdminDashboard() {
         panel that states the wrong number is worse than no panel, and the
         schedule itself is the thing that runs, not a button on a dashboard.
       */}
-      <LastRun run={lastRun} usage={usage} budget={budget} prices={settings.AI_TOKEN_PRICES} />
+      <LastRun
+        run={lastRun}
+        usage={usage}
+        budget={budget}
+        prices={settings.AI_TOKEN_PRICES}
+        schedule={schedule}
+      />
 
       {verifyQueue.length > 0 ? (
         <section>

@@ -6,7 +6,9 @@ import { runPipeline, type PipelineOutcome } from '@/pipeline/run';
 import {
   newCycle,
   readCycle,
+  readReady,
   writeCycle,
+  writeReady,
   type CycleEntry,
 } from '@/lib/review-queue';
 import { sendNextForReview } from '@/pipeline/review-flow';
@@ -41,38 +43,83 @@ export interface CycleResult {
   outcomes: PipelineOutcome[];
   /** False when nothing was produced, so no cycle was opened. */
   cycleOpened: boolean;
+  /**
+   * Drafts parked for the next slot instead of sent now. Only set when the
+   * caller asked to prepare rather than deliver.
+   */
+  parked: number;
 }
 
 export async function runCycle(
-  options: { perCategory?: number; skipIngest?: boolean } = {},
+  options: {
+    perCategory?: number;
+    skipIngest?: boolean;
+    /**
+     * Prepare only: write the batch, park it, send nothing.
+     *
+     * This is what the schedule asks for. The drafts wait in `READY_BATCH` and
+     * the following tick opens them, which is what lets a forty-minute
+     * generation sit inside a six-hour window instead of inside the five-minute
+     * request that triggered it. See pipeline/release.ts.
+     */
+    park?: boolean;
+  } = {},
 ): Promise<CycleResult> {
   const startedAt = new Date().toISOString();
   const settings = await getSettings();
   const perCategory = options.perCategory ?? asInt(settings.POSTS_PER_CATEGORY, 2);
+  const park = options.park ?? false;
 
-  const open = await readCycle();
-  if (open && open.cursor < open.entries.length) {
-    /**
-     * Refuse to start a second cycle on top of an unfinished one.
-     *
-     * Opening a new cycle would overwrite the queue and silently abandon every
-     * draft still waiting for a decision, paid for, written, and never seen.
-     * Better to skip a cycle than to throw one away.
-     */
-    log.warn(
-      `cycle: ${open.entries.length - open.cursor} draft(s) still awaiting review, ` +
-        'skipping this cycle. Finish the queue in Telegram or /admin.',
-    );
-    return {
-      startedAt,
-      finishedAt: new Date().toISOString(),
-      ingested: 0,
-      produced: 0,
-      perCategory: {},
-      budgetStopped: false,
-      outcomes: [],
-      cycleOpened: false,
-    };
+  const nothing = (ingested = 0): CycleResult => ({
+    startedAt,
+    finishedAt: new Date().toISOString(),
+    ingested,
+    produced: 0,
+    perCategory: {},
+    budgetStopped: false,
+    outcomes: [],
+    cycleOpened: false,
+    parked: 0,
+  });
+
+  /**
+   * One batch waiting is enough.
+   *
+   * Preparing on top of an unopened batch pays for two and can only ever show
+   * one, so the second is money spent on drafts that go straight past the
+   * reviewer. This is the guard that matters when preparing, and it replaces the
+   * old "is a cycle open?" check: writing the next batch *while* the current one
+   * is being reviewed is the entire point of the split.
+   */
+  if (park) {
+    const ready = await readReady();
+    if (ready) {
+      log.warn(
+        `cycle: ${ready.entries.length} draft(s) prepared at ${ready.preparedAt} are still ` +
+          'waiting for a slot, so nothing new was written. They go out at the next tick.',
+      );
+      return nothing();
+    }
+  } else {
+    const open = await readCycle();
+    if (open && open.cursor < open.entries.length) {
+      /**
+       * Refuse to open a second cycle on top of an unfinished one.
+       *
+       * Opening a new cycle would overwrite the queue and silently abandon every
+       * draft still waiting for a decision, paid for, written, and never seen.
+       * Better to skip a cycle than to throw one away.
+       *
+       * This path is the immediate "do the rounds now" run, by hand. The
+       * scheduled path parks instead, and a parked batch is appended to an open
+       * queue rather than replacing it, so it has no need of this.
+       */
+      log.warn(
+        `cycle: ${open.entries.length - open.cursor} draft(s) still awaiting review, ` +
+          'skipping this cycle. Finish the queue in Telegram or /admin.',
+      );
+      return nothing();
+    }
   }
 
   let ingested = 0;
@@ -169,14 +216,35 @@ export async function runCycle(
   if (entries.length === 0) {
     log.warn('cycle: no drafts were produced, so no review cycle was opened.');
     return {
+      ...nothing(ingested),
+      perCategory: counts,
+      budgetStopped,
+      outcomes,
+    };
+  }
+
+  /**
+   * Prepared, not delivered. The next tick opens it.
+   *
+   * Deliberately silent: the point of a cooling window is that it happens
+   * without anyone being told. The batch announces itself when it is shown.
+   */
+  if (park) {
+    await writeReady(entries);
+    log.info(
+      `cycle: ${entries.length} draft(s) prepared across ${categories.length} sections ` +
+        'and parked for the next slot.',
+    );
+    return {
       startedAt,
       finishedAt: new Date().toISOString(),
       ingested,
-      produced: 0,
+      produced: entries.length,
       perCategory: counts,
       budgetStopped,
       outcomes,
       cycleOpened: false,
+      parked: entries.length,
     };
   }
 
@@ -209,6 +277,7 @@ export async function runCycle(
     budgetStopped,
     outcomes,
     cycleOpened: true,
+    parked: 0,
   };
 }
 

@@ -148,6 +148,25 @@ export const SETTING_DEFAULTS = {
    * Written by the pipeline and the Telegram webhook. See lib/review-queue.ts.
    */
   REVIEW_CYCLE: '',
+  /**
+   * The batch written during the last cooling window, waiting for its slot.
+   *
+   * Generation and delivery are deliberately not the same event. Writing a
+   * cycle takes about forty minutes; the scheduler that triggers it is killed
+   * after five, so a schedule that generates *and* sends in one request only
+   * ever finishes by accident. The batch is prepared into here, and the next
+   * scheduled tick opens it. See lib/review-queue.ts and pipeline/release.ts.
+   */
+  READY_BATCH: '',
+  /**
+   * When the current preparation started, ISO. Empty when none is running.
+   *
+   * A second preparation on top of a running one would pay for two batches and
+   * keep whichever finished last. This is the guard, and it is a timestamp
+   * rather than a flag so a preparation lost to a container restart expires
+   * instead of wedging the schedule permanently.
+   */
+  PREPARING_SINCE: '',
   /** Chats that have messaged the bot, so a group id can be looked up. */
   TELEGRAM_SEEN_CHATS: '',
 } as const;

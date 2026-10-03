@@ -203,3 +203,48 @@ export async function writeCycle(cycle: ReviewCycle): Promise<void> {
 export async function clearCycle(): Promise<void> {
   await setSetting(SETTING_KEY, '');
 }
+
+/* ------------------------------------------------- the batch waiting its turn */
+
+const READY_KEY = 'READY_BATCH' as const;
+
+/**
+ * Drafts written during a cooling window, not yet shown to anyone.
+ *
+ * This exists because preparing and sending are on different clocks. A batch is
+ * generated over the roughly forty minutes after a tick, parked here, and opened
+ * by the *next* tick six hours later. The scheduler's own call therefore only
+ * ever does the cheap half, which is what stops it being killed mid-run.
+ *
+ * Parked drafts are real rows in the database, at status REVIEW, so a batch lost
+ * from here is still recoverable from /admin. It is the ordering and the "these
+ * belong together" grouping that lives in this setting.
+ */
+export interface ReadyBatch {
+  preparedAt: string;
+  entries: CycleEntry[];
+}
+
+export async function readReady(): Promise<ReadyBatch | null> {
+  const row = await prisma.setting.findUnique({ where: { key: READY_KEY } });
+  if (!row?.value) return null;
+  try {
+    const parsed = JSON.parse(row.value) as Partial<ReadyBatch>;
+    if (!Array.isArray(parsed.entries) || parsed.entries.length === 0) return null;
+    return {
+      preparedAt: parsed.preparedAt ?? new Date().toISOString(),
+      entries: parsed.entries,
+    };
+  } catch {
+    // Same reasoning as readCycle: a corrupt batch must not wedge the schedule.
+    return null;
+  }
+}
+
+export async function writeReady(entries: CycleEntry[]): Promise<void> {
+  await setSetting(READY_KEY, JSON.stringify({ preparedAt: new Date().toISOString(), entries }));
+}
+
+export async function clearReady(): Promise<void> {
+  await setSetting(READY_KEY, '');
+}

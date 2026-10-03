@@ -20,16 +20,45 @@ export interface StoredRun {
   outcomes?: Array<{ keyword: string; status: string; score?: number; error?: string }>;
 }
 
+/**
+ * Where the schedule is between ticks.
+ *
+ * Preparing and delivering are on separate clocks now, which means there are
+ * stretches where the pipeline is working and nothing at all is on screen: a
+ * batch being written, or one written and waiting for its slot. Invisible work
+ * is the reason "did it run?" was unanswerable in the first place, so it gets a
+ * line here rather than living only in the container log.
+ */
+export interface ScheduleState {
+  parked: number;
+  preparedAt: string | null;
+  preparingSince: string | null;
+}
+
+function describeSchedule(state: ScheduleState): string {
+  if (state.preparingSince) {
+    const minutes = Math.round((Date.now() - new Date(state.preparingSince).getTime()) / 60_000);
+    return `Writing the next batch, started ${minutes} min ago.`;
+  }
+  if (state.parked > 0) {
+    const at = state.preparedAt ? new Date(state.preparedAt).toLocaleTimeString() : 'earlier';
+    return `${state.parked} draft${state.parked === 1 ? '' : 's'} ready since ${at}, waiting for the next slot.`;
+  }
+  return 'Nothing prepared. The next tick will start a batch.';
+}
+
 export function LastRun({
   run,
   usage,
   budget,
   prices,
+  schedule,
 }: {
   run: StoredRun | null;
   usage: StoredUsage;
   budget: BudgetState;
   prices: string;
+  schedule: ScheduleState;
 }) {
   const cost = estimateCost(usage, prices);
 
@@ -44,10 +73,16 @@ export function LastRun({
               : 'No run has been recorded yet.'}
           </p>
         </div>
-        {run?.budgetStopped ? (
-          <Badge tone="warn">Stopped on token cap</Badge>
-        ) : null}
+        <div className="flex items-center gap-2">
+          {schedule.preparingSince ? <Badge tone="ok">Preparing</Badge> : null}
+          {!schedule.preparingSince && schedule.parked > 0 ? (
+            <Badge>{schedule.parked} ready</Badge>
+          ) : null}
+          {run?.budgetStopped ? <Badge tone="warn">Stopped on token cap</Badge> : null}
+        </div>
       </div>
+
+      <p className="mt-3 text-sm text-muted-foreground">{describeSchedule(schedule)}</p>
 
       {run?.finishedAt ? (
         <dl className="mt-5 grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
