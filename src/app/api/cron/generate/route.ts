@@ -34,7 +34,7 @@ import {
  *                                         in about a second.
  *   GET  /api/cron/generate?mode=cycle-now         -> the rounds, inline, for
  *                                                     running by hand. Takes
- *                                                     ~40 min. Never schedule it.
+ *                                                     ~10-15 min. Never schedule it.
  *   GET  /api/cron/generate?mode=generate&limit=2  -> ingest + write up to 2
  *   ...&only=entertainment,travel                  -> aim those articles at
  *                                                     named verticals only
@@ -134,8 +134,8 @@ async function ingestAndGenerate(limit: number, only: string | null): Promise<Re
  * A scheduled tick: deliver the batch that cooled, start writing the next.
  *
  * This is the scheduled mode, and it returns in about a second. It used to
- * generate inline, which took forty minutes inside a job the scheduler kills
- * after five; every run between 1 and 3 October 2026 was marked failed, and
+ * generate inline, which took ten to fifteen minutes inside a job the scheduler
+ * kills after five; every run between 1 and 3 October 2026 was marked failed, and
  * whether articles appeared depended on whether the abandoned request outlived
  * the process that made it. Delivery and generation are now on separate clocks.
  * See pipeline/release.ts.

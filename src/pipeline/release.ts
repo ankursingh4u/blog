@@ -15,7 +15,7 @@ import {
 /**
  * The two halves of a scheduled tick: deliver what is ready, start the next lot.
  *
- * Generating a cycle takes about forty minutes. The scheduler that triggers it
+ * Generating a cycle takes ten to fifteen minutes. The scheduler that triggers it
  * is killed after five. Every scheduled run between 1 and 3 October failed for
  * exactly that reason, and whether any articles appeared came down to whether
  * the orphaned request happened to outlive the process that started it.
@@ -23,7 +23,7 @@ import {
  * So the tick no longer *is* the work:
  *
  *   t+0h    release the batch prepared last time   (one Telegram call, instant)
- *           start preparing the next one           (detached, ~40 min)
+ *           start preparing the next one           (detached, ~10-15 min)
  *   t+0-6h  cooling: generation finishes, drafts park, nobody is waiting
  *   t+6h    release that batch, start the next
  *

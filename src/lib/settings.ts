@@ -152,7 +152,7 @@ export const SETTING_DEFAULTS = {
    * The batch written during the last cooling window, waiting for its slot.
    *
    * Generation and delivery are deliberately not the same event. Writing a
-   * cycle takes about forty minutes; the scheduler that triggers it is killed
+   * cycle takes ten to fifteen minutes; the scheduler that triggers it is killed
    * after five, so a schedule that generates *and* sends in one request only
    * ever finishes by accident. The batch is prepared into here, and the next
    * scheduled tick opens it. See lib/review-queue.ts and pipeline/release.ts.

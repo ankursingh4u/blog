@@ -177,7 +177,7 @@ from `/admin/settings` without a deploy: `POSTS_PER_DAY`, `AUTO_PUBLISH`,
 
 ### The schedule: prepare, then deliver
 
-Writing a cycle takes about forty minutes. The Coolify scheduled task that
+Writing a cycle takes ten to fifteen minutes (11 min measured on 3 Oct 2026). The Coolify scheduled task that
 triggers it is killed after five. Every scheduled run between 1 and 3 October
 2026 was therefore marked failed, and whether any articles actually appeared came
 down to whether the abandoned request happened to outlive the process that made
@@ -187,7 +187,7 @@ So generation and delivery sit on separate clocks (`src/pipeline/release.ts`):
 
 ```
 t+0h     release the batch prepared last tick  ->  Telegram, instant
-         start preparing the next one          ->  detached, ~40 min
+         start preparing the next one          ->  detached, ~10-15 min
 t+0–6h   cooling: generation finishes, drafts park in READY_BATCH
 t+6h     release that batch, start the next
 ```

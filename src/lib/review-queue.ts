@@ -212,7 +212,7 @@ const READY_KEY = 'READY_BATCH' as const;
  * Drafts written during a cooling window, not yet shown to anyone.
  *
  * This exists because preparing and sending are on different clocks. A batch is
- * generated over the roughly forty minutes after a tick, parked here, and opened
+ * generated over the ten to fifteen minutes after a tick, parked here, and opened
  * by the *next* tick six hours later. The scheduler's own call therefore only
  * ever does the cheap half, which is what stops it being killed mid-run.
  *
