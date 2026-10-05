@@ -56,14 +56,23 @@ export async function applyRunningPlan(): Promise<BackfillResult> {
   const plan: Array<[Parameters<typeof setSetting>[0], string]> = [
     ['POSTS_PER_CATEGORY', '1'],
     /*
-     * Depth in three sections rather than presence in eight.
+     * One article from each section, every cycle. No section is favoured.
      *
-     * Sports for constant search volume, tech and startups for the
-     * troubleshooting and how-to loops, money written as education. The other
-     * five keep one article each so they stay alive without diluting the
-     * effort. Twelve a day at nano is still well inside the token cap.
+     * Empty rather than spelled out: with every section on the same number,
+     * a plan listing `sports:1,tech:1,...` would say exactly what
+     * POSTS_PER_CATEGORY above already says, and the two would drift.
+     *
+     * This replaces a 3/3/3 override on sports, tech and money, which was
+     * depth-in-three rather than presence-in-eight. The owner levelled it on
+     * 2026-10-03 after the arithmetic was put in front of him: the override
+     * made fourteen a cycle, so fifty-six a day at ~14.1k tokens each, about
+     * 790k against a 700,000 cap. It would have been truncated every
+     * afternoon, silently dropping whichever sections ran last. Eight a cycle
+     * is thirty-two a day, roughly 451k, which fits with room to spare.
+     *
+     * Change this from /admin/settings rather than here.
      */
-    ['CYCLE_PLAN', 'sports:3,tech:3,money:3,entertainment:1,health:1,gaming:1,travel:1,education:1'],
+    ['CYCLE_PLAN', ''],
     ['DAILY_TOKEN_BUDGET', '700000'],
     /*
      * Drafting dropped to nano on the owner's instruction: 0.20/1.25 per

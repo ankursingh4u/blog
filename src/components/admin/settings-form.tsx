@@ -236,7 +236,7 @@ export function SettingsForm({ values }: { values: Record<SettingKey, string> })
           <Field
             label="Drafts per category, per cycle"
             htmlFor="POSTS_PER_CATEGORY"
-            hint="A cycle covers all 8 verticals, so 2 here is 16 articles a cycle."
+            hint="A cycle covers all 8 verticals and runs every 6 hours, so 1 here is 8 a cycle and 32 a day."
           >
             <input
               id="POSTS_PER_CATEGORY"
@@ -244,7 +244,28 @@ export function SettingsForm({ values }: { values: Record<SettingKey, string> })
               inputMode="numeric"
               defaultValue={values.POSTS_PER_CATEGORY}
               className={inputClass}
-              placeholder="2"
+              placeholder="1"
+            />
+          </Field>
+
+          {/*
+            The per-section override, which drives the whole schedule and until
+            now could only be changed by editing backfill.ts and deploying.
+            That is how a 3/3/3 override on three sections went unnoticed while
+            the number everyone quoted was one-per-category: the setting was
+            real, load-bearing, and invisible.
+          */}
+          <Field
+            label="Per-section override"
+            htmlFor="CYCLE_PLAN"
+            hint="slug:count pairs, e.g. sports:3,money:2. Sections not named use the number above; 0 skips one. Empty means every section gets the same."
+          >
+            <input
+              id="CYCLE_PLAN"
+              name="CYCLE_PLAN"
+              defaultValue={values.CYCLE_PLAN}
+              className={inputClass}
+              placeholder="empty: one from each section"
             />
           </Field>
 
